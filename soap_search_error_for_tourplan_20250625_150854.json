@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-06-25T15:08:54.276579",
+  "ip_address": "84.46.231.251",
+  "agent_credentials": "SAMAGT",
+  "api_endpoint": "https://pa-thisis.nx.tourplan.net/hostconnect_test/api/hostConnectApi",
+  "request": {
+    "method": "POST",
+    "headers": {
+      "Content-Type": "text/xml; charset=utf-8",
+      "SOAPAction": ""
+    },
+    "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Header>\n    <Authentication>\n      <Username>SAMAGT</Username>\n      <Password>S@MAgt01</Password>\n      <AgentId>SAMAGT</AgentId>\n    </Authentication>\n  </soap:Header>\n  <soap:Body>\n    <SearchTours>\n      <Country>South Africa</Country>\n      <Destination>Cape Town</Destination>\n      <IncludeCancellationDeadlines>true</IncludeCancellationDeadlines>\n    </SearchTours>\n  </soap:Body>\n</soap:Envelope>"
+  },
+  "response": {
+    "status_code": 200,
+    "headers": {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
+      "Transfer-Encoding": "chunked",
+      "Content-Type": "application/xml; charset=utf-8",
+      "Content-Encoding": "gzip",
+      "Expires": "-1",
+      "Vary": "Accept-Encoding",
+      "Server": "Microsoft-IIS/10.0",
+      "X-AspNet-Version": "4.0.30319",
+      "X-Powered-By": "ASP.NET",
+      "Date": "Wed, 25 Jun 2025 05:08:54 GMT"
+    },
+    "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><!DOCTYPE Reply SYSTEM \"hostConnect_5_05_000.dtd\"><Reply><ErrorReply><Error>1000 SCN System.InvalidOperationException: There is an error in XML document (2, 2). (&lt;Envelope xmlns='http://schemas.xmlsoap.org/soap/envelope/'&gt; was not expected.)</Error></ErrorReply></Reply>"
+  },
+  "issue_description": "SOAP Search API access denied - HostConnect XML API works but SOAP Search API fails"
+}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourplan OptionInfoRequest Test Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .info-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .info-type {
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Tourplan OptionInfoRequest Test Interface</h1>
+        
+        <form id="optionInfoForm">
+            <div class="form-group">
+                <label for="buttonName">Button Name:</label>
+                <input type="text" id="buttonName" name="buttonName" value="service_button" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="destinationName">Destination Name:</label>
+                <input type="text" id="destinationName" name="destinationName" value="Cape Town" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="info">Info Type:</label>
+                <select id="info" name="info" required>
+                    <option value="G">G - General Information</option>
+                    <option value="S">S - Stay Pricing</option>
+                    <option value="R">R - Rates</option>
+                    <option value="A">A - Availability</option>
+                </select>
+            </div>
+            
+            <div class="info-types">
+                <div class="info-type">
+                    <strong>G - General:</strong> Basic product information
+                </div>
+                <div class="info-type">
+                    <strong>S - Stay Pricing:</strong> Accommodation pricing details
+                </div>
+                <div class="info-type">
+                    <strong>R - Rates:</strong> Rate information
+                </div>
+                <div class="info-type">
+                    <strong>A - Availability:</strong> Availability status
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button type="submit" id="submitBtn">Send OptionInfoRequest</button>
+                <button type="button" onclick="testAllTypes()">Test All Info Types</button>
+                <button type="button" onclick="clearResults()">Clear Results</button>
+            </div>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Sending request to Tourplan API...</p>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        document.getElementById('optionInfoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await sendOptionInfoRequest();
+        });
+        
+        async function sendOptionInfoRequest() {
+            const formData = new FormData(document.getElementById('optionInfoForm'));
+            const data = {
+                buttonName: formData.get('buttonName'),
+                destinationName: formData.get('destinationName'),
+                info: formData.get('info')
+            };
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/tourplan/option-info`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                displayResult({
+                    request: data,
+                    response: result,
+                    status: response.status,
+                    success: response.ok
+                });
+                
+            } catch (error) {
+                displayResult({
+                    request: data,
+                    error: error.message,
+                    success: false
+                });
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function testAllTypes() {
+            const buttonName = document.getElementById('buttonName').value;
+            const destinationName = document.getElementById('destinationName').value;
+            const infoTypes = ['G', 'S', 'R', 'A'];
+            
+            clearResults();
+            
+            for (const infoType of infoTypes) {
+                const data = {
+                    buttonName,
+                    destinationName,
+                    info: infoType
+                };
+                
+                showLoading(true);
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/tourplan/option-info`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    displayResult({
+                        request: data,
+                        response: result,
+                        status: response.status,
+                        success: response.ok
+                    }, true);
+                    
+                } catch (error) {
+                    displayResult({
+                        request: data,
+                        error: error.message,
+                        success: false
+                    }, true);
+                }
+                
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            showLoading(false);
+        }
+        
+        function displayResult(result, append = false) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!append) {
+                resultsDiv.innerHTML = '';
+            }
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `results ${result.success ? 'success' : 'error'}`;
+            
+            const timestamp = new Date().toLocaleString();
+            const infoTypeNames = {
+                'G': 'General Information',
+                'S': 'Stay Pricing',
+                'R': 'Rates',
+                'A': 'Availability'
+            };
+            
+            resultDiv.innerHTML = `
+                <h3>${result.success ? '✅' : '❌'} ${infoTypeNames[result.request.info]} (${result.request.info})</h3>
+                <p><strong>Timestamp:</strong> ${timestamp}</p>
+                <p><strong>Status:</strong> ${result.status || 'Network Error'}</p>
+                
+                <h4>Request:</h4>
+                <pre>${JSON.stringify(result.request, null, 2)}</pre>
+                
+                <h4>Response:</h4>
+                <pre>${JSON.stringify(result.response || result.error, null, 2)}</pre>
+            `;
+            
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('submitBtn').disabled = show;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Test endpoint availability on page load
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/tourplan/option-info`);
+                if (response.ok) {
+                    console.log('✅ OptionInfo endpoint is available');
+                } else {
+                    console.log('⚠️ OptionInfo endpoint returned:', response.status);
+                }
+            } catch (error) {
+                console.log('❌ Cannot reach local API:', error.message);
+            }
+        });
+    </script>
+</body>
+</html>

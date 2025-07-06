@@ -1,0 +1,14 @@
+{
+  "request": {
+    "tourId": "TOUR_001",
+    "date": "2024-07-01"
+  },
+  "response": {
+    "available": true,
+    "price": 750,
+    "currency": "ZAR",
+    "maxParticipants": 20,
+    "currentBookings": 5
+  },
+  "timestamp": "2025-06-24T01:36:26.781Z"
+}

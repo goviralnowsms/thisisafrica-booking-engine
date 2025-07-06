@@ -1,0 +1,110 @@
+{
+  "summary": {
+    "total_tests": 14,
+    "passed": 9,
+    "failed": 5,
+    "success_rate": 64.28571428571429,
+    "start_time": "2025-06-25T11:59:15.327420",
+    "end_time": "2025-06-25T11:59:36.937628"
+  },
+  "results": [
+    {
+      "test": "Basic Connectivity",
+      "success": true,
+      "message": "API endpoint reachable (Status: 200)",
+      "timestamp": "2025-06-25T11:59:16.330464",
+      "response_time": 1002
+    },
+    {
+      "test": "Authentication",
+      "success": true,
+      "message": "Auth successful - Agent: Unknown",
+      "timestamp": "2025-06-25T11:59:17.397550",
+      "response_time": 1066
+    },
+    {
+      "test": "Database Connection",
+      "success": true,
+      "message": "Endpoint working correctly",
+      "timestamp": "2025-06-25T11:59:17.487003",
+      "response_time": 88
+    },
+    {
+      "test": "Tour Search",
+      "success": true,
+      "message": "Endpoint working correctly",
+      "timestamp": "2025-06-25T11:59:19.003007",
+      "response_time": 1516
+    },
+    {
+      "test": "Tour Availability",
+      "success": false,
+      "message": "HTTP 500",
+      "timestamp": "2025-06-25T11:59:19.090394",
+      "response_time": 86
+    },
+    {
+      "test": "Create Booking",
+      "success": true,
+      "message": "Endpoint working correctly",
+      "timestamp": "2025-06-25T11:59:22.093532",
+      "response_time": 3003
+    },
+    {
+      "test": "Process Payment",
+      "success": true,
+      "message": "Endpoint working correctly",
+      "timestamp": "2025-06-25T11:59:25.483731",
+      "response_time": 3389
+    },
+    {
+      "test": "Invalid Tour ID",
+      "success": false,
+      "message": "Unexpected status: 500",
+      "timestamp": "2025-06-25T11:59:25.631629",
+      "response_time": 147
+    },
+    {
+      "test": "Invalid Date Format",
+      "success": false,
+      "message": "Unexpected status: 500",
+      "timestamp": "2025-06-25T11:59:25.703868",
+      "response_time": 72
+    },
+    {
+      "test": "Missing Required Fields",
+      "success": true,
+      "message": "Error handled gracefully",
+      "timestamp": "2025-06-25T11:59:27.760254",
+      "response_time": 2056
+    },
+    {
+      "test": "Invalid JSON",
+      "success": false,
+      "message": "Unexpected status: 500",
+      "timestamp": "2025-06-25T11:59:27.823650",
+      "response_time": 63
+    },
+    {
+      "test": "Search Performance",
+      "success": true,
+      "message": "Avg: 1518ms, Min: 1512ms, Max: 1525ms",
+      "timestamp": "2025-06-25T11:59:35.415638",
+      "response_time": null
+    },
+    {
+      "test": "Response Format",
+      "success": true,
+      "message": "Valid JSON structure",
+      "timestamp": "2025-06-25T11:59:36.935404",
+      "response_time": null
+    },
+    {
+      "test": "Tour Data Fields",
+      "success": false,
+      "message": "Missing fields: ['tourId', 'tourName', 'priceFrom']",
+      "timestamp": "2025-06-25T11:59:36.935977",
+      "response_time": null
+    }
+  ]
+}

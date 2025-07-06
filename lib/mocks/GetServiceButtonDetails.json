@@ -1,0 +1,4 @@
+{
+  "request": "Sample request",
+  "response": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n  <Response>\n    <GetServiceButtonDetailsResponse>\n      <ButtonName>Group Tours</ButtonName>\n      <Description>Group Tours and Activities</Description>\n      <ButtonText>Group Tours</ButtonText>\n      <ButtonType>Tours</ButtonType>\n      <Status>OK</Status>\n    </GetServiceButtonDetailsResponse>\n  </Response>"
+}

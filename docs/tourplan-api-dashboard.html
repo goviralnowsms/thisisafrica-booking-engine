@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourplan API Testing Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .status-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .status-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .status-online {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .status-offline {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .status-testing {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+        }
+        
+        .status-unknown {
+            background: linear-gradient(135deg, #9e9e9e, #757575);
+            color: white;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .test-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .test-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .test-section:hover {
+            border-color: #667eea;
+        }
+        
+        .test-section h3 {
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .method-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .method-get { background: #4CAF50; color: white; }
+        .method-post { background: #2196F3; color: white; }
+        .method-put { background: #FF9800; color: white; }
+        .method-delete { background: #f44336; color: white; }
+        
+        .test-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+        
+        .clear-button {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .response-area {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .response-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .response-error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .response-loading {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+        
+        .config-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .config-item {
+            padding: 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+        }
+        
+        .config-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .config-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .config-item input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .logs-panel {
+            grid-column: 1 / -1;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .logs-panel h2 {
+            color: #00ff00;
+            margin-bottom: 20px;
+        }
+        
+        .logs-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <h1>🧪 Tourplan API Testing Dashboard</h1>
+            <p>Comprehensive testing interface for Tourplan HostConnect API integration</p>
+        </div>
+
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <h2>System Status</h2>
+            <div class="status-grid">
+                <div id="server-status" class="status-item status-unknown">
+                    <h3>Local Server</h3>
+                    <p id="server-status-text">Checking...</p>
+                </div>
+                <div id="vpn-status" class="status-item status-unknown">
+                    <h3>VPN Connection</h3>
+                    <p id="vpn-status-text">Checking...</p>
+                </div>
+                <div id="api-status" class="status-item status-unknown">
+                    <h3>Tourplan API</h3>
+                    <p id="api-status-text">Checking...</p>
+                </div>
+                <div id="auth-status" class="status-item status-unknown">
+                    <h3>Authentication</h3>
+                    <p id="auth-status-text">Not tested</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+            <h2>API Configuration</h2>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label for="api-url">API URL:</label>
+                    <input type="text" id="api-url" value="http://localhost:3000" placeholder="http://localhost:3000">
+                </div>
+                <div class="config-item">
+                    <label for="use-mocks">Use Mock Data:</label>
+                    <select id="use-mocks">
+                        <option value="true">Yes (Development)</option>
+                        <option value="false">No (Live API)</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label for="timeout">Request Timeout (ms):</label>
+                    <input type="number" id="timeout" value="30000" min="5000" max="60000">
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- API Tests Panel -->
+            <div class="test-panel">
+                <h2>API Endpoint Tests</h2>
+
+                <!-- Database Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-get">GET</span>
+                        Database Connection
+                    </h3>
+                    <p>Test database connectivity and health check</p>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testDatabase()">Test Database</button>
+                        <button class="clear-button" onclick="clearResponse('db-response')">Clear</button>
+                    </div>
+                    <div id="db-response" class="response-area"></div>
+                </div>
+
+                <!-- Tour Search Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-post">POST</span>
+                        Tour Search
+                    </h3>
+                    <p>Search for tours based on criteria</p>
+                    <textarea id="search-payload" placeholder="Enter JSON payload">
+{
+  "destination": "Cape Town",
+  "country": "South Africa",
+  "tourLevel": "standard",
+  "startDate": "2024-07-01",
+  "endDate": "2024-07-03",
+  "adults": 2,
+  "children": 0
+}</textarea>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testTourSearch()">Search Tours</button>
+                        <button onclick="loadSampleData('search-payload', 'search')">Load Sample</button>
+                        <button class="clear-button" onclick="clearResponse('search-response')">Clear</button>
+                    </div>
+                    <div id="search-response" class="response-area"></div>
+                </div>
+
+                <!-- Availability Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-post">POST</span>
+                        Tour Availability
+                    </h3>
+                    <p>Check availability for specific tour and date</p>
+                    <textarea id="availability-payload" placeholder="Enter JSON payload">
+{
+  "tourId": "tour-001",
+  "date": "2024-07-01",
+  "adults": 2,
+  "children": 0
+}</textarea>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testAvailability()">Check Availability</button>
+                        <button onclick="loadSampleData('availability-payload', 'availability')">Load Sample</button>
+                        <button class="clear-button" onclick="clearResponse('availability-response')">Clear</button>
+                    </div>
+                    <div id="availability-response" class="response-area"></div>
+                </div>
+            </div>
+
+            <!-- Booking Tests Panel -->
+            <div class="test-panel">
+                <h2>Booking & Payment Tests</h2>
+
+                <!-- Create Booking Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-post">POST</span>
+                        Create Booking
+                    </h3>
+                    <p>Create a new tour booking</p>
+                    <textarea id="booking-payload" placeholder="Enter JSON payload">
+{
+  "tourId": "tour-001",
+  "startDate": "2024-07-01",
+  "endDate": "2024-07-03",
+  "adults": 2,
+  "children": 0,
+  "selectedExtras": ["extra-001"],
+  "customerDetails": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "+27123456789",
+    "address": "123 Main St, Cape Town"
+  },
+  "createAsProvisional": true
+}</textarea>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testCreateBooking()">Create Booking</button>
+                        <button onclick="loadSampleData('booking-payload', 'booking')">Load Sample</button>
+                        <button class="clear-button" onclick="clearResponse('booking-response')">Clear</button>
+                    </div>
+                    <div id="booking-response" class="response-area"></div>
+                </div>
+
+                <!-- Payment Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-post">POST</span>
+                        Process Payment
+                    </h3>
+                    <p>Process payment for a booking</p>
+                    <textarea id="payment-payload" placeholder="Enter JSON payload">
+{
+  "amount": 150000,
+  "currency": "ZAR",
+  "bookingId": "booking-001",
+  "paymentMethod": "card"
+}</textarea>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testPayment()">Process Payment</button>
+                        <button onclick="loadSampleData('payment-payload', 'payment')">Load Sample</button>
+                        <button class="clear-button" onclick="clearResponse('payment-response')">Clear</button>
+                    </div>
+                    <div id="payment-response" class="response-area"></div>
+                </div>
+
+                <!-- Authentication Test -->
+                <div class="test-section">
+                    <h3>
+                        <span class="method-badge method-post">POST</span>
+                        Authentication Test
+                    </h3>
+                    <p>Test Tourplan API authentication</p>
+                    <div class="test-controls">
+                        <button class="test-button" onclick="testAuthentication()">Test Auth</button>
+                        <button class="clear-button" onclick="clearResponse('auth-response')">Clear</button>
+                    </div>
+                    <div id="auth-response" class="response-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Panel -->
+        <div class="logs-panel">
+            <h2>📋 Test Logs</h2>
+            <div class="test-controls">
+                <button onclick="clearLogs()">Clear Logs</button>
+                <button onclick="exportLogs()">Export Logs</button>
+            </div>
+            <div id="logs-content" class="logs-content">
+                <span class="timestamp">[${new Date().toISOString()}]</span> Dashboard initialized
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let config = {
+            baseUrl: 'http://localhost:3000',
+            useMocks: true,
+            timeout: 30000
+        };
+
+        // Sample data templates
+        const sampleData = {
+            search: {
+                destination: "Cape Town",
+                country: "South Africa",
+                tourLevel: "standard",
+                startDate: "2024-07-01",
+                endDate: "2024-07-03",
+                adults: 2,
+                children: 0
+            },
+            availability: {
+                tourId: "tour-001",
+                date: "2024-07-01",
+                adults: 2,
+                children: 0
+            },
+            booking: {
+                tourId: "tour-001",
+                startDate: "2024-07-01",
+                endDate: "2024-07-03",
+                adults: 2,
+                children: 0,
+                selectedExtras: ["extra-001"],
+                customerDetails: {
+                    firstName: "John",
+                    lastName: "Doe",
+                    email: "john.doe@example.com",
+                    phone: "+27123456789",
+                    address: "123 Main St, Cape Town"
+                },
+                createAsProvisional: true
+            },
+            payment: {
+                amount: 150000,
+                currency: "ZAR",
+                bookingId: "booking-001",
+                paymentMethod: "card"
+            }
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAllStatus();
+            setupConfigListeners();
+            log('Dashboard ready for testing');
+        });
+
+        // Setup configuration listeners
+        function setupConfigListeners() {
+            document.getElementById('api-url').addEventListener('change', function() {
+                config.baseUrl = this.value;
+                log(`API URL updated to: ${this.value}`);
+            });
+
+            document.getElementById('use-mocks').addEventListener('change', function() {
+                config.useMocks = this.value === 'true';
+                log(`Mock mode: ${config.useMocks ? 'enabled' : 'disabled'}`);
+            });
+
+            document.getElementById('timeout').addEventListener('change', function() {
+                config.timeout = parseInt(this.value);
+                log(`Timeout updated to: ${this.value}ms`);
+            });
+        }
+
+        // Status checking functions
+        async function checkAllStatus() {
+            await checkServerStatus();
+            await checkVPNStatus();
+            await checkAPIStatus();
+        }
+
+        async function checkServerStatus() {
+            const statusElement = document.getElementById('server-status');
+            const textElement = document.getElementById('server-status-text');
+            
+            try {
+                const response = await fetch(`${config.baseUrl}/api/test-db`, {
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    statusElement.className = 'status-item status-online';
+                    textElement.textContent = 'Online and ready';
+                    log('✅ Local server is online');
+                } else {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+            } catch (error) {
+                statusElement.className = 'status-item status-offline';
+                textElement.textContent = 'Offline or unreachable';
+                log(`❌ Local server check failed: ${error.message}`);
+            }
+        }
+
+        async function checkVPNStatus() {
+            const statusElement = document.getElementById('vpn-status');
+            const textElement = document.getElementById('vpn-status-text');
+            
+            try {
+                // This would need to be implemented based on your VPN checking logic
+                statusElement.className = 'status-item status-testing';
+                textElement.textContent = 'Check manually';
+                log('ℹ️ VPN status requires manual verification');
+            } catch (error) {
+                statusElement.className = 'status-item status-unknown';
+                textElement.textContent = 'Unknown';
+                log(`⚠️ VPN status check failed: ${error.message}`);
+            }
+        }
+
+        async function checkAPIStatus() {
+            const statusElement = document.getElementById('api-status');
+            const textElement = document.getElementById('api-status-text');
+            
+            try {
+                // This would test actual Tourplan API connectivity
+                statusElement.className = 'status-item status-testing';
+                textElement.textContent = 'Test with auth button';
+                log('ℹ️ Tourplan API status requires authentication test');
+            } catch (error) {
+                statusElement.className = 'status-item status-unknown';
+                textElement.textContent = 'Unknown';
+                log(`⚠️ API status check failed: ${error.message}`);
+            }
+        }
+
+        // Test functions
+        async function testDatabase() {
+            await makeRequest('/api/test-db', 'GET', null, 'db-response');
+        }
+
+        async function testTourSearch() {
+            const payload = document.getElementById('search-payload').value;
+            await makeRequest('/api/tours/search', 'POST', payload, 'search-response');
+        }
+
+        async function testAvailability() {
+            const payload = document.getElementById('availability-payload').value;
+            await makeRequest('/api/tours/availability', 'POST', payload, 'availability-response');
+        }
+
+        async function testCreateBooking() {
+            const payload = document.getElementById('booking-payload').value;
+            await makeRequest('/api/bookings/create', 'POST', payload, 'booking-response');
+        }
+
+        async function testPayment() {
+            const payload = document.getElementById('payment-payload').value;
+            await makeRequest('/api/payments/process', 'POST', payload, 'payment-response');
+        }
+
+        async function testAuthentication() {
+            // This would test Tourplan authentication specifically
+            await makeRequest('/api/test-auth', 'POST', null, 'auth-response');
+            
+            // Update auth status
+            const statusElement = document.getElementById('auth-status');
+            const textElement = document.getElementById('auth-status-text');
+            statusElement.className = 'status-item status-testing';
+            textElement.textContent = 'Testing...';
+        }
+
+        // Generic request function
+        async function makeRequest(endpoint, method, payload, responseElementId) {
+            const responseElement = document.getElementById(responseElementId);
+            
+            // Show loading state
+            responseElement.style.display = 'block';
+            responseElement.className = 'response-area response-loading';
+            responseElement.textContent = 'Loading...';
+            
+            log(`🔄 ${method} ${endpoint} - Request started`);
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (payload && method !== 'GET') {
+                    try {
+                        JSON.parse(payload); // Validate JSON
+                        options.body = payload;
+                    } catch (e) {
+                        throw new Error('Invalid JSON in request payload');
+                    }
+                }
+                
+                const startTime = Date.now();
+                const response = await fetch(`${config.baseUrl}${endpoint}`, options);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                const data = await response.text();
+                let parsedData;
+                
+                try {
+                    parsedData = JSON.parse(data);
+                } catch (e) {
+                    parsedData = data;
+                }
+                
+                if (response.ok) {
+                    responseElement.className = 'response-area response-success';
+                    responseElement.textContent = `✅ Success (${response.status}) - ${duration}ms\n\n${JSON.stringify(parsedData, null, 2)}`;
+                    log(`✅ ${method} ${endpoint} - Success (${response.status}) in ${duration}ms`);
+                } else {
+                    responseElement.className = 'response-area response-error';
+                    responseElement.textContent = `❌ Error (${response.status}) - ${duration}ms\n\n${JSON.stringify(parsedData, null, 2)}`;
+                    log(`❌ ${method} ${endpoint} - Error (${response.status}) in ${duration}ms`);
+                }
+                
+            } catch (error) {
+                responseElement.className = 'response-area response-error';
+                responseElement.textContent = `❌ Network Error\n\n${error.message}`;
+                log(`❌ ${method} ${endpoint} - Network error: ${error.message}`);
+            }
+        }
+
+        // Utility functions
+        function loadSampleData(textareaId, dataType) {
+            const textarea = document.getElementById(textareaId);
+            textarea.value = JSON.stringify(sampleData[dataType], null, 2);
+            log(`📝 Loaded sample data for ${dataType}`);
+        }
+
+        function clearResponse(responseId) {
+            const responseElement = document.getElementById(responseId);
+            responseElement.style.display = 'none';
+            responseElement.textContent = '';
+        }
+
+        function log(message) {
+            const logsContent = document.getElementById('logs-content');
+            const timestamp = new Date().toISOString();
+            logsContent.innerHTML += `\n<span class="timestamp">[${timestamp}]</span> ${message}`;
+            logsContent.scrollTop = logsContent.scrollHeight;
+        }
+
+        function clearLogs() {
+            const logsContent = document.getElementById('logs-content');
+            logsContent.innerHTML = `<span class="timestamp">[${new Date().toISOString()}]</span> Logs cleared`;
+        }
+
+        function exportLogs() {
+            const logsContent = document.getElementById('logs-content').textContent;
+            const blob = new Blob([logsContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tourplan-api-test-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log('📁 Logs exported to file');
+        }
+
+        // Auto-refresh status every 30 seconds
+        setInterval(checkAllStatus, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+Booking System Overview for thisisafrica.com.au — Explained Simply
+
+Here’s how the booking system for your website will work, step-by-step, including what’s possible and what has some limitations based on the Tourplan system and API:
+1. Searching for Tours
+
+    Customers visit the website and search for tours.
+    The website will show real-time availability and pricing by checking directly with Tourplan’s system.
+    This means customers only see tours and dates that are actually available.
+
+2. Booking a Tour
+
+    When a customer selects a tour and fills in their details, the website will:
+        Create a booking in Tourplan via their API.
+        Add the customer’s details as part of the booking.
+    If the customer wants to add extras (like gorilla permits), these can be selected and priced during booking.
+    Before finalizing the booking, the system will double-check availability to avoid overbooking.
+
+3. Customer Accounts and Editing Bookings
+
+    Customers can have an account on the website to:
+        View their booking details.
+        Possibly update some personal information.
+    Limitation: Due to how Tourplan manages customer data, some details (especially if linked to a “reusable” customer profile in Tourplan) may not be editable after booking.
+    To work around this, the system can create a new passenger record if changes are needed, ensuring flexibility.
+    Full integration with Tourplan means all booking updates sync back and forth automatically.
+
+4. Payments
+
+    Deposit Payment: Customers pay a deposit (usually 30% of the total price) at the time of booking.
+    Extras Payment: Extras like gorilla permits can be included in the deposit or paid separately.
+    Final Payment: The remaining balance is due 2-4 weeks before the trip.
+    Important:
+        Tourplan recommends that all payment logic (how much to pay, when, and how) is handled on your website, not inside Tourplan.
+        This means your website will control payment amounts, schedules, and processing (e.g., via Stripe or another payment gateway).
+        After a payment is made, your website will notify Tourplan via their API to update the booking payment status.
+    Refunds: These are handled manually outside the system.
+
+5. Automated Payment Reminders
+
+    The system can send automated email reminders to customers 2-4 weeks before their trip to pay the remaining balance.
+    This is possible if Tourplan’s cancellation and payment deadlines are set up correctly in their system.
+    If not, reminders can still be sent using a semi-automated or manual process managed on your website.
+
+6. Syncing with Tourplan
+
+    All bookings, updates, and payments are synced with Tourplan in real-time via their API.
+    This keeps Tourplan’s inventory and bookings up to date, avoiding double bookings or errors.
+    Your website acts as the front-end interface, while Tourplan manages the backend tour data and booking records.
+
+Summary: What Can and Can’t Be Done
+Feature	What Can Be Done	Limitations / Notes
+Search tours	Real-time availability and pricing from Tourplan	None
+Book tours	Create bookings and add extras via API	Must confirm availability just before booking
+Customer accounts	View bookings, update some details	Some passenger details may be locked by Tourplan
+Deposit and extras payment	Pay deposit and extras on website	Payment logic fully controlled on your site
+Final payment reminders	Automated reminders if Tourplan cancellation rules are structured	Otherwise, semi-automated/manual reminders
+Refunds	Handled manually outside the system	No API support for refunds
+Sync bookings/payments	Full two-way sync with Tourplan	Requires correct API implementation

@@ -1,0 +1,33 @@
+{
+  "request": {
+    "tourId": "TEST_TOUR_001",
+    "customerInfo": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "+27123456789"
+    },
+    "participants": 2,
+    "selectedDate": "2024-07-01"
+  },
+  "response": {
+    "bookingId": "BOOKING_001",
+    "status": "confirmed",
+    "totalAmount": 1500,
+    "currency": "ZAR",
+    "bookingReference": "TIA-2024-001",
+    "customerInfo": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "+27123456789"
+    },
+    "tourDetails": {
+      "id": "TOUR_001",
+      "name": "Cape Town City Tour",
+      "date": "2024-07-01",
+      "participants": 2
+    }
+  },
+  "timestamp": "2025-06-24T01:36:26.781Z"
+}

@@ -1,0 +1,65 @@
+{
+  "request": {
+    "destination": "Cape Town",
+    "checkIn": "2024-07-01",
+    "checkOut": "2024-07-03",
+    "adults": 2,
+    "children": 0
+  },
+  "response": {
+    "tours": [
+      {
+        "id": "TOUR_001",
+        "name": "Cape Town City Tour",
+        "description": "Explore the beautiful city of Cape Town",
+        "price": 750,
+        "currency": "ZAR",
+        "duration": "4 hours",
+        "availability": [
+          {
+            "date": "2024-07-01",
+            "available": true,
+            "price": 750
+          },
+          {
+            "date": "2024-07-02",
+            "available": true,
+            "price": 750
+          },
+          {
+            "date": "2024-07-03",
+            "available": false,
+            "price": 750
+          }
+        ]
+      },
+      {
+        "id": "TOUR_002",
+        "name": "Table Mountain Cable Car",
+        "description": "Scenic cable car ride to Table Mountain summit",
+        "price": 450,
+        "currency": "ZAR",
+        "duration": "2 hours",
+        "availability": [
+          {
+            "date": "2024-07-01",
+            "available": true,
+            "price": 450
+          },
+          {
+            "date": "2024-07-02",
+            "available": true,
+            "price": 450
+          },
+          {
+            "date": "2024-07-03",
+            "available": true,
+            "price": 450
+          }
+        ]
+      }
+    ],
+    "totalResults": 2
+  },
+  "timestamp": "2025-06-24T01:36:26.780Z"
+}

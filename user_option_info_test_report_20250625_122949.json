@@ -1,0 +1,68 @@
+{
+  "summary": {
+    "total_tests": 8,
+    "passed": 2,
+    "failed": 6,
+    "success_rate": 25.0,
+    "start_time": "2025-06-25T12:29:30.883972",
+    "end_time": "2025-06-25T12:29:49.385322"
+  },
+  "results": [
+    {
+      "test": "XML Structure Validation",
+      "success": true,
+      "message": "XML structure is valid",
+      "timestamp": "2025-06-25T12:29:30.891588",
+      "response_time": null
+    },
+    {
+      "test": "User XML Format (Direct API)",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:44.138149",
+      "response_time": 13244
+    },
+    {
+      "test": "User XML Format (Local API)",
+      "success": true,
+      "message": "OptionInfo request successful",
+      "timestamp": "2025-06-25T12:29:44.615674",
+      "response_time": 476
+    },
+    {
+      "test": "General Search Variation",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:45.556957",
+      "response_time": 940
+    },
+    {
+      "test": "General Variation",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:46.428526",
+      "response_time": 871
+    },
+    {
+      "test": "Stay Pricing Variation",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:47.393624",
+      "response_time": 964
+    },
+    {
+      "test": "Rates Variation",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:48.429909",
+      "response_time": 1036
+    },
+    {
+      "test": "Availability Variation",
+      "success": false,
+      "message": "Unexpected response format",
+      "timestamp": "2025-06-25T12:29:49.383754",
+      "response_time": 953
+    }
+  ]
+}

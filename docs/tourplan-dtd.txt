@@ -1,0 +1,28 @@
+©Tourplan 2021
+p.1
+HostConnect Version 5.05.000 DTD
+Last Modified on 29/01/2025 4:24 pm NZDT
+<!-- hostConnect_5_05_000.dtd -->
+<!-- Tourplan Pacific Ltd reserves the right to change, modify, add or
+     remove portions of this interface at any time.
+  -->
+<!-- Request elements -->
+<!ELEMENT Request (TourplanUser?, BookingUpdateCount?, ServiceLineUpdateCount?,
+   (PingRequest | AgentInfoRequest | OptionInfoRequest | 
+    AddServiceRequest | UpdateServiceRequest | UpdateBookingRequest |
+    AmendServiceRemarksRequest | DeleteServiceRequest | CancelServicesRequest |
+    QuoteToBookRequest | GetBookingRequest | 
+    SetBookingRemarksRequest | RecordBookingPaymentRequest |
+    GetBookingPaymentSummaryRequest |
+    GetBookingMessageRequest | ResequenceRequest | AddDialogueEntryRequest |
+    GetLocationsRequest | GetServicesRequest | SupplierInfoRequest | 
+    ListBookingsRequest | GetAgentSubloginsRequest | AddAgentSubloginRequest |
+    UpdateAgentSubloginRequest | DeleteAgentSubloginRequest | 
+    GetCurrencyConversionsRequest | GetServiceButtonsRequest |
+    GetServiceButtonDetailsRequest | GetSystemSettingsRequest |
+    AcceptServiceRequest | GetSendSupplierMessageRequest | 
+    GetSupplierServiceLinesRequest | 
+    ExternalAirInfoRequest | SupplierUpdateServiceLinesRequest |
+    GetProductSearchDataRequest | GetAccountingMessageRequest | SetServicePriceRequest))>
+
+[Content continues with full DTD specification...]
