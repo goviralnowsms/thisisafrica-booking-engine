@@ -1,6 +1,3 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
 export async function GET() {
   try {
     console.log("=== Database Test Starting ===")
@@ -18,7 +15,7 @@ export async function GET() {
     })
 
     if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({
+      return Response.json({
         success: false,
         status: "❌ Supabase environment variables not found",
         details: {
@@ -31,12 +28,31 @@ export async function GET() {
 
     // Validate URL format
     if (!supabaseUrl.startsWith("https://") || !supabaseUrl.includes(".supabase.co")) {
-      return NextResponse.json({
+      return Response.json({
         success: false,
         status: "❌ Invalid Supabase URL format",
         details: {
           url: supabaseUrl.substring(0, 30) + "...",
           expected: "https://your-project.supabase.co",
+        },
+      })
+    }
+
+    // Try to import Supabase with better error handling
+    let createClient
+    try {
+      console.log("Importing Supabase client...")
+      const supabaseModule = await import("@supabase/supabase-js")
+      createClient = supabaseModule.createClient
+      console.log("Supabase import successful")
+    } catch (importError) {
+      console.error("Supabase import failed:", importError)
+      return Response.json({
+        success: false,
+        status: "❌ Supabase package not available",
+        details: {
+          error: importError instanceof Error ? importError.message : "Import failed",
+          suggestion: "Check if @supabase/supabase-js is installed",
         },
       })
     }
@@ -59,54 +75,47 @@ export async function GET() {
 
     console.log("Testing database connection...")
 
-    // Simple test response
-    return NextResponse.json({
-      success: true,
-      message: "API is working",
-      timestamp: new Date().toISOString(),
-    })
-
     // Test with a simple query that should work even without tables
-    // const { data, error } = await supabase.from("customers").select("count", { count: "exact", head: true })
+    const { data, error } = await supabase.from("customers").select("count", { count: "exact", head: true })
 
-    // if (error) {
-    //   console.log("Query error:", error)
+    if (error) {
+      console.log("Query error:", error)
 
-    //   // If it's a table not found error, that's actually good - connection works
-    //   if (error.code === "42P01") {
-    //     return NextResponse.json({
-    //       success: true,
-    //       status: "✅ Database Connected - Tables Need Setup",
-    //       details: {
-    //         message: "Connection successful but tables don't exist yet",
-    //         suggestion: "Run the table creation script in Supabase SQL Editor",
-    //         timestamp: new Date().toISOString(),
-    //       },
-    //     })
-    //   }
+      // If it's a table not found error, that's actually good - connection works
+      if (error.code === "42P01") {
+        return Response.json({
+          success: true,
+          status: "✅ Database Connected - Tables Need Setup",
+          details: {
+            message: "Connection successful but tables don't exist yet",
+            suggestion: "Run the table creation script in Supabase SQL Editor",
+            timestamp: new Date().toISOString(),
+          },
+        })
+      }
 
-    //   return NextResponse.json({
-    //     success: false,
-    //     status: `❌ Database Error: ${error.message}`,
-    //     details: {
-    //       code: error.code,
-    //       hint: error.hint,
-    //       details: error.details,
-    //       suggestion: "Check your Supabase project status and permissions",
-    //     },
-    //   })
-    // }
+      return Response.json({
+        success: false,
+        status: `❌ Database Error: ${error.message}`,
+        details: {
+          code: error.code,
+          hint: error.hint,
+          details: error.details,
+          suggestion: "Check your Supabase project status and permissions",
+        },
+      })
+    }
 
-    // console.log("Database test successful!")
-    // return NextResponse.json({
-    //   success: true,
-    //   status: "✅ Database Connected Successfully",
-    //   details: {
-    //     timestamp: new Date().toISOString(),
-    //     tablesFound: true,
-    //     message: "All systems operational",
-    //   },
-    // })
+    console.log("Database test successful!")
+    return Response.json({
+      success: true,
+      status: "✅ Database Connected Successfully",
+      details: {
+        timestamp: new Date().toISOString(),
+        tablesFound: true,
+        message: "All systems operational",
+      },
+    })
   } catch (err) {
     console.error("Database test error:", err)
 
@@ -126,13 +135,20 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Database connection failed",
+    return Response.json({
+      success: false,
+      status: `❌ Connection Error: ${errorMessage}`,
+      details: {
         error: errorMessage,
+        suggestion,
+        timestamp: new Date().toISOString(),
+        troubleshooting: [
+          "1. Check if Supabase project is active (not paused)",
+          "2. Verify Supabase integration in Vercel dashboard",
+          "3. Check Supabase project billing status",
+          "4. Try redeploying the application",
+        ],
       },
-      { status: 500 },
-    )
+    })
   }
 }

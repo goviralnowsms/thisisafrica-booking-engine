@@ -1,245 +1,242 @@
-interface Customer {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  createdAt: Date
-  updatedAt: Date
+import { createClient } from "@supabase/supabase-js"
+import { neon } from "@neondatabase/serverless"
+import { env } from "./env"
+
+// Supabase client (singleton pattern)
+let supabaseClient: ReturnType<typeof createClient> | null = null
+
+export function getSupabaseClient() {
+  if (!supabaseClient && env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+    supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+  }
+  return supabaseClient
 }
 
-interface Booking {
+// Server-side Supabase client with service role
+export function getSupabaseServiceClient() {
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase service role configuration missing")
+  }
+  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+}
+
+// Neon database client
+export function getNeonClient() {
+  if (!env.NEON_NEON_DATABASE_URL) {
+    throw new Error("Neon database URL not configured")
+  }
+  return neon(env.NEON_DATABASE_URL)
+}
+
+// Generic database query function
+export async function executeQuery(query: string, params?: any[]) {
+  try {
+    // Try Neon first if available
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      return await sql(query, params)
+    }
+
+    // Fallback to Supabase
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase.rpc("execute_sql", { query, params })
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
+  } catch (error) {
+    console.error("Database query failed:", error)
+    throw error
+  }
+}
+
+// Health check for database connectivity
+export async function checkDatabaseHealth() {
+  try {
+    // Test Neon connection
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      await sql`SELECT 1 as test`
+      return { status: "healthy", provider: "neon" }
+    }
+
+    // Test Supabase connection
+    if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase!.from("health_check").select("*").limit(1)
+      if (error && !error.message.includes("relation") && !error.message.includes("does not exist")) {
+        throw error
+      }
+      return { status: "healthy", provider: "supabase" }
+    }
+
+    return { status: "warning", message: "No database configured" }
+  } catch (error) {
+    return {
+      status: "unhealthy",
+      error: error instanceof Error ? error.message : "Unknown database error",
+    }
+  }
+}
+
+// Database schema types
+export interface Booking {
   id: string
-  customerId: string
-  tourId: string
-  tourName: string
-  startDate: string
-  endDate: string
+  booking_reference: string
+  tour_id: string
+  customer_name: string
+  customer_email: string
+  customer_phone?: string
+  tour_date: string
   adults: number
   children: number
-  totalPrice: number
-  status: "pending" | "confirmed" | "cancelled"
-  paymentStatus: "pending" | "paid" | "failed"
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface Payment {
-  id: string
-  bookingId: string
-  amount: number
+  total_amount: number
   currency: string
-  status: "pending" | "completed" | "failed"
-  paymentMethod: string
-  transactionId?: string
-  createdAt: Date
-  updatedAt: Date
+  payment_status: "pending" | "paid" | "failed" | "refunded"
+  booking_status: "confirmed" | "pending" | "cancelled"
+  created_at: string
+  updated_at: string
 }
 
-// Mock database service for demo purposes
-const db = {
-  async query(sql: string, params?: any[]) {
-    console.log("Mock DB Query:", sql, params)
-    return { rows: [], rowCount: 0 }
+export interface Tour {
+  id: string
+  tour_id: string
+  name: string
+  description: string
+  duration: string
+  price_adult: number
+  price_child: number
+  max_passengers: number
+  location: string
+  category: string
+  available_dates: string[]
+  images: string[]
+  inclusions: string[]
+  exclusions: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Database operations
+export const db = {
+  // Bookings
+  async createBooking(booking: Omit<Booking, "id" | "created_at" | "updated_at">) {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      const result = await sql`
+        INSERT INTO bookings (
+          booking_reference, tour_id, customer_name, customer_email, customer_phone,
+          tour_date, adults, children, total_amount, currency, payment_status, booking_status
+        ) VALUES (
+          ${booking.booking_reference}, ${booking.tour_id}, ${booking.customer_name}, 
+          ${booking.customer_email}, ${booking.customer_phone}, ${booking.tour_date},
+          ${booking.adults}, ${booking.children}, ${booking.total_amount}, ${booking.currency},
+          ${booking.payment_status}, ${booking.booking_status}
+        ) RETURNING *
+      `
+      return result[0]
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase.from("bookings").insert(booking).select().single()
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
   },
 
-  async insert(table: string, data: any) {
-    console.log("Mock DB Insert:", table, data)
-    return { id: Math.random().toString(36).substr(2, 9) }
+  async getBooking(id: string) {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      const result = await sql`SELECT * FROM bookings WHERE id = ${id}`
+      return result[0] || null
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase.from("bookings").select("*").eq("id", id).single()
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
   },
 
-  async update(table: string, id: string, data: any) {
-    console.log("Mock DB Update:", table, id, data)
-    return { success: true }
+  async updateBooking(id: string, updates: Partial<Booking>) {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      const setClause = Object.keys(updates)
+        .map((key) => `${key} = $${Object.keys(updates).indexOf(key) + 2}`)
+        .join(", ")
+
+      const values = [id, ...Object.values(updates)]
+      const result = await sql(
+        `
+        UPDATE bookings 
+        SET ${setClause}, updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+        values,
+      )
+      return result[0]
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("bookings")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
   },
 
-  async delete(table: string, id: string) {
-    console.log("Mock DB Delete:", table, id)
-    return { success: true }
+  // Tours
+  async getTours() {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      return await sql`SELECT * FROM tours WHERE is_active = true ORDER BY created_at DESC`
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("tours")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
   },
 
-  async find(table: string, conditions: any) {
-    console.log("Mock DB Find:", table, conditions)
-    return []
+  async getTour(id: string) {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      const result = await sql`SELECT * FROM tours WHERE id = ${id} AND is_active = true`
+      return result[0] || null
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase.from("tours").select("*").eq("id", id).eq("is_active", true).single()
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
   },
 }
-
-export class DatabaseService {
-  // Customer operations
-  async createCustomer(customerData: Omit<Customer, "id" | "createdAt" | "updatedAt">): Promise<Customer> {
-    const customer: Customer = {
-      ...customerData,
-      id: `cust_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    await db.insert("customers", customer)
-    return customer
-  }
-
-  async getCustomer(id: string): Promise<Customer | null> {
-    const result = await db.find("customers", { id })
-    return result.length > 0 ? result[0] : null
-  }
-
-  async getCustomerByEmail(email: string): Promise<Customer | null> {
-    const result = await db.find("customers", { email })
-    return result.length > 0 ? result[0] : null
-  }
-
-  async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer | null> {
-    const result = await db.update("customers", id, updates)
-    if (result.success) {
-      const updatedCustomer = { ...updates, id, updatedAt: new Date() }
-      return updatedCustomer
-    }
-    return null
-  }
-
-  // Booking operations
-  async createBooking(bookingData: Omit<Booking, "id" | "createdAt" | "updatedAt">): Promise<Booking> {
-    const booking: Booking = {
-      ...bookingData,
-      id: `book_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    await db.insert("bookings", booking)
-    return booking
-  }
-
-  async getBooking(id: string): Promise<Booking | null> {
-    const result = await db.find("bookings", { id })
-    return result.length > 0 ? result[0] : null
-  }
-
-  async getBookingsByCustomer(customerId: string): Promise<Booking[]> {
-    return await db.find("bookings", { customerId })
-  }
-
-  async updateBooking(id: string, updates: Partial<Booking>): Promise<Booking | null> {
-    const result = await db.update("bookings", id, updates)
-    if (result.success) {
-      const updatedBooking = { ...updates, id, updatedAt: new Date() }
-      return updatedBooking
-    }
-    return null
-  }
-
-  // Payment operations
-  async createPayment(paymentData: Omit<Payment, "id" | "createdAt" | "updatedAt">): Promise<Payment> {
-    const payment: Payment = {
-      ...paymentData,
-      id: `pay_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    await db.insert("payments", payment)
-    return payment
-  }
-
-  async getPayment(id: string): Promise<Payment | null> {
-    const result = await db.find("payments", { id })
-    return result.length > 0 ? result[0] : null
-  }
-
-  async getPaymentsByBooking(bookingId: string): Promise<Payment[]> {
-    return await db.find("payments", { bookingId })
-  }
-
-  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | null> {
-    const result = await db.update("payments", id, updates)
-    if (result.success) {
-      const updatedPayment = { ...updates, id, updatedAt: new Date() }
-      return updatedPayment
-    }
-    return null
-  }
-
-  // Generic operations
-  async create(table: string, data: any): Promise<any> {
-    return await db.insert(table, data)
-  }
-
-  async findById(table: string, id: string): Promise<any | null> {
-    const result = await db.find(table, { id })
-    return result.length > 0 ? result[0] : null
-  }
-
-  async update(table: string, id: string, data: any): Promise<any> {
-    return await db.update(table, id, data)
-  }
-
-  async delete(table: string, id: string): Promise<boolean> {
-    const result = await db.delete(table, id)
-    return result.success
-  }
-
-  async query(sql: string, params?: any[]): Promise<any> {
-    return await db.query(sql, params)
-  }
-
-  // Health check
-  async testConnection(): Promise<{ success: boolean; message: string }> {
-    return {
-      success: true,
-      message: "Database connection successful (mock mode)",
-    }
-  }
-}
-
-// Legacy exports for backward compatibility
-export async function createCustomer(customerData: any) {
-  return new DatabaseService().createCustomer(customerData)
-}
-
-export async function getCustomer(id: string) {
-  return new DatabaseService().getCustomer(id)
-}
-
-export async function getCustomerByEmail(email: string) {
-  return new DatabaseService().getCustomerByEmail(email)
-}
-
-export async function updateCustomer(id: string, updates: any) {
-  return new DatabaseService().updateCustomer(id, updates)
-}
-
-export async function createBooking(bookingData: any) {
-  return new DatabaseService().createBooking(bookingData)
-}
-
-export async function getBooking(id: string) {
-  return new DatabaseService().getBooking(id)
-}
-
-export async function getBookingsByCustomer(customerId: string) {
-  return new DatabaseService().getBookingsByCustomer(customerId)
-}
-
-export async function updateBooking(id: string, updates: any) {
-  return new DatabaseService().updateBooking(id, updates)
-}
-
-export async function createPayment(paymentData: any) {
-  return new DatabaseService().createPayment(paymentData)
-}
-
-export async function getPayment(id: string) {
-  return new DatabaseService().getPayment(id)
-}
-
-export async function getPaymentsByBooking(bookingId: string) {
-  return new DatabaseService().getPaymentsByBooking(bookingId)
-}
-
-export async function updatePayment(id: string, updates: any) {
-  return new DatabaseService().updatePayment(id, updates)
-}
-
-export async function testDatabaseConnection() {
-  return new DatabaseService().testConnection()
-}
-
-// Export the singleton instance
-export { db }

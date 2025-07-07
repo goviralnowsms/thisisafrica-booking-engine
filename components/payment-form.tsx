@@ -1,202 +1,231 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, CreditCard, Shield, MapPin, Clock } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2, CreditCard, CheckCircle, AlertCircle } from "lucide-react"
 import type { BookingData } from "@/app/page"
 
 interface PaymentFormProps {
   bookingData: BookingData
-  onPaymentComplete: (reference: string) => void
-  onBack: () => void
+  onPaymentSuccess: (bookingResult: any) => void
+  onPaymentError: (error: string) => void
 }
 
-export function PaymentForm({ bookingData, onPaymentComplete, onBack }: PaymentFormProps) {
-  const [processing, setProcessing] = useState(false)
+export function PaymentForm({ bookingData, onPaymentSuccess, onPaymentError }: PaymentFormProps) {
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "processing" | "success" | "error">("pending")
+  const [paymentSessionId, setPaymentSessionId] = useState<string>("")
+  const { toast } = useToast()
 
   const handlePayment = async () => {
-    setProcessing(true)
+    setIsProcessing(true)
+    setPaymentStatus("processing")
 
     try {
-      // Simulate payment processing
+      // Step 1: Create payment session
+      console.log("Creating payment session for deposit:", bookingData.depositAmount)
+      
+      const paymentResponse = await fetch("/api/create-payment-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: bookingData.depositAmount,
+          currency: "usd",
+          description: `Deposit for ${bookingData.tour.name}`,
+          customerEmail: bookingData.customerDetails.email,
+          bookingData,
+        }),
+      })
+
+      if (!paymentResponse.ok) {
+        throw new Error("Failed to create payment session")
+      }
+
+      const paymentData = await paymentResponse.json()
+      console.log("Payment session created:", paymentData)
+
+      if (!paymentData.success) {
+        throw new Error(paymentData.error || "Payment session creation failed")
+      }
+
+      setPaymentSessionId(paymentData.sessionId)
+
+      // Step 2: Simulate payment processing (in demo mode)
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Generate booking reference
-      const reference = `TIA${Date.now().toString().slice(-6)}`
+      // Step 3: Verify payment
+      console.log("Verifying payment...")
+      const verifyResponse = await fetch("/api/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: paymentData.sessionId,
+          bookingData,
+        }),
+      })
 
-      onPaymentComplete(reference)
+      if (!verifyResponse.ok) {
+        throw new Error("Payment verification failed")
+      }
+
+      const verifyData = await verifyResponse.json()
+      console.log("Payment verification result:", verifyData)
+
+      if (!verifyData.success) {
+        throw new Error(verifyData.error || "Payment verification failed")
+      }
+
+      setPaymentStatus("success")
+
+      // Step 4: Create booking after successful payment
+      console.log("Creating booking after successful payment...")
+      const bookingResponse = await fetch("/api/bookings/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookingData,
+          paymentSessionId: paymentData.sessionId,
+          paymentStatus: "paid",
+        }),
+      })
+
+      if (!bookingResponse.ok) {
+        throw new Error("Booking creation failed after payment")
+      }
+
+      const bookingResult = await bookingResponse.json()
+      console.log("Booking created after payment:", bookingResult)
+
+      if (!bookingResult.success) {
+        throw new Error(bookingResult.error || "Booking creation failed")
+      }
+
+      toast({
+        title: "Payment Successful!",
+        description: `Deposit of $${bookingData.depositAmount} processed. Booking confirmed.`,
+      })
+
+      onPaymentSuccess(bookingResult)
     } catch (error) {
-      console.error("Payment failed:", error)
-      setProcessing(false)
+      console.error("Payment process failed:", error)
+      setPaymentStatus("error")
+      
+      const errorMessage = error instanceof Error ? error.message : "Payment failed"
+      onPaymentError(errorMessage)
+      
+      toast({
+        title: "Payment Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "basic":
-        return "bg-blue-100 text-blue-800"
-      case "standard":
-        return "bg-green-100 text-green-800"
-      case "luxury":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount)
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <Button variant="outline" onClick={onBack} disabled={processing}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Booking
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Payment Details
+        </CardTitle>
+        <CardDescription>
+          Secure payment for your tour booking
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Payment Summary */}
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span>Tour:</span>
+            <span className="font-medium">{bookingData.tour.name}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Total Price:</span>
+            <span className="font-medium">{formatPrice(bookingData.totalPrice)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Deposit Required (30%):</span>
+            <span className="font-medium text-green-600">{formatPrice(bookingData.depositAmount)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Remaining Balance:</span>
+            <span className="font-medium">{formatPrice(bookingData.totalPrice - bookingData.depositAmount)}</span>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="text-xs text-muted-foreground mb-4">
+            <p>• 30% deposit required to confirm booking</p>
+            <p>• Remaining balance due 21 days before departure</p>
+            <p>• Secure payment processed by Stripe</p>
+          </div>
+        </div>
+
+        {/* Payment Status */}
+        {paymentStatus === "processing" && (
+          <div className="flex items-center gap-2 text-blue-600">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Processing payment...</span>
+          </div>
+        )}
+
+        {paymentStatus === "success" && (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle className="h-4 w-4" />
+            <span>Payment successful!</span>
+          </div>
+        )}
+
+        {paymentStatus === "error" && (
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="h-4 w-4" />
+            <span>Payment failed</span>
+          </div>
+        )}
+
+        {/* Payment Button */}
+        <Button
+          onClick={handlePayment}
+          disabled={isProcessing}
+          className="w-full"
+          size="lg"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing Payment...
+            </>
+          ) : (
+            <>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay Deposit ${formatPrice(bookingData.depositAmount)}
+            </>
+          )}
         </Button>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Booking Summary */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-green-600" />
-                Booking Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-lg">{bookingData.tour.name}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {bookingData.tour.location}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {bookingData.tour.duration} days
-                    </div>
-                  </div>
-                  <Badge className={getLevelColor(bookingData.tour.level)} variant="secondary" className="mt-2">
-                    {bookingData.tour.level}
-                  </Badge>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h4 className="font-semibold mb-2">Customer Details</h4>
-                  <div className="text-sm space-y-1">
-                    <p>
-                      {bookingData.customerDetails.firstName} {bookingData.customerDetails.lastName}
-                    </p>
-                    <p>{bookingData.customerDetails.email}</p>
-                    <p>{bookingData.customerDetails.phone}</p>
-                    <p>{bookingData.customerDetails.address}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h4 className="font-semibold mb-2">Selected Extras</h4>
-                  <div className="space-y-1 text-sm">
-                    {bookingData.selectedExtras.map((extraId) => {
-                      const extra = bookingData.tour.extras.find((e) => e.id === extraId)
-                      return extra ? (
-                        <div key={extraId} className="flex justify-between">
-                          <span>{extra.name}</span>
-                          <span>${extra.price}</span>
-                        </div>
-                      ) : null
-                    })}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-lg font-semibold">
-                    <span>Total Tour Price</span>
-                    <span>${bookingData.totalPrice}</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-bold text-orange-600">
-                    <span>Deposit Due Today</span>
-                    <span>${bookingData.depositAmount}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>Remaining Balance</span>
-                    <span>${bookingData.totalPrice - bookingData.depositAmount}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="text-xs text-muted-foreground text-center">
+          Your payment information is secure and encrypted
         </div>
-
-        {/* Payment Form */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Payment Details
-              </CardTitle>
-              <CardDescription>Secure payment processing - Pay your deposit to confirm booking</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-blue-800 mb-2">
-                    <Shield className="w-4 h-4" />
-                    <span className="font-semibold">Secure Payment</span>
-                  </div>
-                  <p className="text-sm text-blue-700">
-                    Your payment is processed securely. We accept all major credit cards and PayPal.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-orange-600 mb-2">${bookingData.depositAmount}</div>
-                    <p className="text-sm text-gray-600">Deposit amount (30% of total tour price)</p>
-                  </div>
-
-                  <Button
-                    onClick={handlePayment}
-                    disabled={processing}
-                    size="lg"
-                    className="w-full bg-orange-500 hover:bg-orange-600"
-                  >
-                    {processing ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Processing Payment...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Pay Deposit ${bookingData.depositAmount}
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="text-xs text-gray-500 text-center">
-                    <p>By proceeding, you agree to our Terms of Service and Privacy Policy.</p>
-                    <p className="mt-1">
-                      The remaining balance of ${bookingData.totalPrice - bookingData.depositAmount} will be due before
-                      your tour departure.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

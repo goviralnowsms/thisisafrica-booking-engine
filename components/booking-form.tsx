@@ -3,21 +3,22 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, MapPin, Clock, Users } from "lucide-react"
-import type { Tour, SearchCriteria, BookingData } from "@/app/page"
+import { ArrowLeft, Calendar, Users, Clock } from "lucide-react"
+import type { SearchCriteria, Tour, BookingData, ChildInfo } from "@/app/page"
 
 interface BookingFormProps {
   tour: Tour
   searchCriteria: SearchCriteria
   onSubmit: (booking: BookingData) => void
   onBack: () => void
+  onError?: (errorMessage: string) => void
 }
 
 export function BookingForm({ tour, searchCriteria, onSubmit, onBack }: BookingFormProps) {
@@ -29,53 +30,83 @@ export function BookingForm({ tour, searchCriteria, onSubmit, onBack }: BookingF
     lastName: "",
     email: "",
     phone: "",
-    address: "",
   })
 
   const handleExtraToggle = (extraId: string, isCompulsory: boolean) => {
-    if (isCompulsory) return // Can't toggle compulsory extras
+    if (isCompulsory) return
 
     setSelectedExtras((prev) => (prev.includes(extraId) ? prev.filter((id) => id !== extraId) : [...prev, extraId]))
   }
 
+  // Helper function to calculate child pricing based on age
+  const getChildPriceMultiplier = (age: number) => {
+    if (age <= 2) return 0 // Infants travel free
+    if (age <= 5) return 0.25 // 25% of adult price for young children
+    if (age <= 11) return 0.5 // 50% of adult price for children
+    if (age <= 17) return 0.75 // 75% of adult price for teens
+    return 1 // Full adult price for 18+
+  }
+
   const calculateTotal = () => {
-    const basePrice = tour.price * (searchCriteria.adults || 1)
+    const adults = searchCriteria.adults || 2
+    const childrenAges = searchCriteria.childrenAges || []
+    
+    // Calculate adult pricing
+    const adultPrice = tour.price * adults
+    
+    // Calculate children pricing based on ages
+    const childrenPrice = childrenAges.reduce((total, child) => {
+      return total + (tour.price * getChildPriceMultiplier(child.age))
+    }, 0)
+    
+    const basePrice = adultPrice + childrenPrice
+    
+    // Calculate extras pricing (same logic for adults and children)
+    const totalPeople = adults + childrenAges.length
     const extrasPrice = selectedExtras.reduce((total, extraId) => {
       const extra = tour.extras.find((e) => e.id === extraId)
-      return total + (extra ? extra.price : 0)
+      if (!extra) return total
+      
+      // Apply same age-based pricing for extras
+      const adultExtrasPrice = extra.price * adults
+      const childrenExtrasPrice = childrenAges.reduce((childTotal, child) => {
+        return childTotal + (extra.price * getChildPriceMultiplier(child.age))
+      }, 0)
+      
+      return total + adultExtrasPrice + childrenExtrasPrice
     }, 0)
+    
     return basePrice + extrasPrice
   }
+
+  const totalPrice = calculateTotal()
+  const depositAmount = Math.round(totalPrice * 0.3)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const totalPrice = calculateTotal()
-    const depositAmount = Math.round(totalPrice * 0.3) // 30% deposit
+    if (!customerDetails.firstName || !customerDetails.lastName || !customerDetails.email) {
+      alert("Please fill in all required fields")
+      return
+    }
 
-    const booking: BookingData = {
+    const bookingData: BookingData = {
       tour,
       selectedExtras,
-      customerDetails,
+      customerDetails: {
+        ...customerDetails,
+        address: "", // Address will be collected during payment
+      },
       totalPrice,
       depositAmount,
     }
 
-    onSubmit(booking)
+    onSubmit(bookingData)
   }
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "basic":
-        return "bg-blue-100 text-blue-800"
-      case "standard":
-        return "bg-green-100 text-green-800"
-      case "luxury":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
+  const adults = searchCriteria.adults || 2
+  const children = searchCriteria.children || 0
+  const childrenAges = searchCriteria.childrenAges || []
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -87,178 +118,264 @@ export function BookingForm({ tour, searchCriteria, onSubmit, onBack }: BookingF
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Tour Summary */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-4">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{tour.name}</CardTitle>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {tour.location}
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {tour.duration} days
-                </div>
-              </div>
-              <Badge className={getLevelColor(tour.level)} variant="secondary" className="w-fit">
-                {tour.level}
-              </Badge>
+              <CardTitle>Tour Details</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold mb-2">Travelers</h4>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <h3 className="text-lg font-semibold">{tour.name}</h3>
+                  <p className="text-gray-600">{tour.description}</p>
+                </div>
+
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {searchCriteria.startDate} to {searchCriteria.endDate}
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {tour.duration} days
+                  </div>
+                  <div className="flex items-center">
                     <Users className="w-4 h-4 mr-1" />
-                    {searchCriteria.adults || 1} Adult{(searchCriteria.adults || 1) > 1 ? "s" : ""}
-                    {searchCriteria.children && searchCriteria.children > 0 && (
+                    {adults} adults
+                    {children > 0 && (
                       <span>
-                        , {searchCriteria.children} Child{searchCriteria.children > 1 ? "ren" : ""}
+                        , {children} children
+                        {childrenAges.length > 0 && (
+                          <span className="text-xs text-gray-500 ml-1">
+                            (ages: {childrenAges.map(child => child.age).join(', ')})
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <Separator />
-
-                <div>
-                  <h4 className="font-semibold mb-2">Price Breakdown</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>
-                        Base price ({searchCriteria.adults || 1} adult{(searchCriteria.adults || 1) > 1 ? "s" : ""})
-                      </span>
-                      <span>${tour.price * (searchCriteria.adults || 1)}</span>
-                    </div>
-                    {selectedExtras.map((extraId) => {
-                      const extra = tour.extras.find((e) => e.id === extraId)
-                      return extra ? (
-                        <div key={extraId} className="flex justify-between">
-                          <span>{extra.name}</span>
-                          <span>${extra.price}</span>
-                        </div>
-                      ) : null
-                    })}
-                    <Separator />
-                    <div className="flex justify-between font-semibold text-lg">
-                      <span>Total</span>
-                      <span className="text-orange-600">${calculateTotal()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Deposit (30%)</span>
-                      <span>${Math.round(calculateTotal() * 0.3)}</span>
+                {/* Age-based pricing information */}
+                {childrenAges.length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-800 mb-2">Children's Pricing</h4>
+                    <div className="text-xs text-blue-700 space-y-1">
+                      <div>• Ages 0-2: Free</div>
+                      <div>• Ages 3-5: 25% of adult price</div>
+                      <div>• Ages 6-11: 50% of adult price</div>
+                      <div>• Ages 12-17: 75% of adult price</div>
+                      <div>• Ages 18+: Full adult price</div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Booking Form */}
-        <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Tour Extras */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Tour Extras</CardTitle>
-                <CardDescription>Enhance your experience with these optional extras</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tour.extras.map((extra) => (
-                    <div key={extra.id} className="flex items-start space-x-3">
-                      <Checkbox
-                        id={extra.id}
-                        checked={selectedExtras.includes(extra.id)}
-                        onCheckedChange={() => handleExtraToggle(extra.id, extra.isCompulsory)}
-                        disabled={extra.isCompulsory}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor={extra.id} className="font-medium">
-                            {extra.name}
-                            {extra.isCompulsory && (
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                Required
-                              </Badge>
-                            )}
-                          </Label>
-                          <span className="font-semibold">${extra.price}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">{extra.description}</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Select Extras</CardTitle>
+              <CardDescription>Enhance your tour with additional experiences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {tour.extras.map((extra) => (
+                  <div key={extra.id} className="flex items-start space-x-3 p-3 border rounded-lg">
+                    <Checkbox
+                      checked={selectedExtras.includes(extra.id)}
+                      onCheckedChange={() => handleExtraToggle(extra.id, extra.isCompulsory)}
+                      disabled={extra.isCompulsory}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="font-medium">{extra.name}</h4>
+                        {extra.isCompulsory && (
+                          <Badge variant="secondary" className="text-xs">
+                            Required
+                          </Badge>
+                        )}
                       </div>
+                      <p className="text-sm text-gray-600">{extra.description}</p>
+                      <p className="text-sm font-medium text-green-600">+${extra.price} per person</p>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Customer Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Details</CardTitle>
-                <CardDescription>Please provide your contact information for the booking</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Details</CardTitle>
+              <CardDescription>Please provide your contact information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name *</Label>
                     <Input
                       id="firstName"
-                      required
                       value={customerDetails.firstName}
-                      onChange={(e) => setCustomerDetails((prev) => ({ ...prev, firstName: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomerDetails((prev) => ({
+                          ...prev,
+                          firstName: e.target.value,
+                        }))
+                      }
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name *</Label>
                     <Input
                       id="lastName"
-                      required
                       value={customerDetails.lastName}
-                      onChange={(e) => setCustomerDetails((prev) => ({ ...prev, lastName: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
+                      onChange={(e) =>
+                        setCustomerDetails((prev) => ({
+                          ...prev,
+                          lastName: e.target.value,
+                        }))
+                      }
                       required
-                      value={customerDetails.email}
-                      onChange={(e) => setCustomerDetails((prev) => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      required
-                      value={customerDetails.phone}
-                      onChange={(e) => setCustomerDetails((prev) => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="address">Address *</Label>
-                    <Input
-                      id="address"
-                      required
-                      value={customerDetails.address}
-                      onChange={(e) => setCustomerDetails((prev) => ({ ...prev, address: e.target.value }))}
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Button type="submit" size="lg" className="w-full bg-orange-500 hover:bg-orange-600">
-              Proceed to Payment - ${Math.round(calculateTotal() * 0.3)} Deposit
-            </Button>
-          </form>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={customerDetails.email}
+                    onChange={(e) =>
+                      setCustomerDetails((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={customerDetails.phone}
+                    onChange={(e) =>
+                      setCustomerDetails((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-1">
+          <Card className="sticky top-4">
+            <CardHeader>
+              <CardTitle>Booking Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium">{tour.name}</h4>
+                <p className="text-sm text-gray-600">{tour.level} level</p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                {/* Adult pricing */}
+                <div className="flex justify-between text-sm">
+                  <span>Adults ({adults} × ${tour.price})</span>
+                  <span>${tour.price * adults}</span>
+                </div>
+
+                {/* Children pricing breakdown */}
+                {childrenAges.length > 0 && (
+                  <>
+                    {childrenAges.map((child, index) => {
+                      const childPrice = tour.price * getChildPriceMultiplier(child.age)
+                      const discountPercent = Math.round((1 - getChildPriceMultiplier(child.age)) * 100)
+                      return (
+                        <div key={child.id} className="flex justify-between text-sm">
+                          <span>
+                            Child {index + 1} (age {child.age})
+                            {discountPercent > 0 && (
+                              <span className="text-green-600 ml-1">
+                                -{discountPercent}%
+                              </span>
+                            )}
+                            {child.age <= 2 && (
+                              <span className="text-green-600 ml-1">FREE</span>
+                            )}
+                          </span>
+                          <span>${childPrice}</span>
+                        </div>
+                      )
+                    })}
+                  </>
+                )}
+
+                {/* Extras pricing */}
+                {selectedExtras.map((extraId) => {
+                  const extra = tour.extras.find((e) => e.id === extraId)
+                  if (!extra) return null
+                  
+                  const adultExtrasPrice = extra.price * adults
+                  const childrenExtrasPrice = childrenAges.reduce((total, child) => {
+                    return total + (extra.price * getChildPriceMultiplier(child.age))
+                  }, 0)
+                  const totalExtrasPrice = adultExtrasPrice + childrenExtrasPrice
+                  
+                  return (
+                    <div key={extraId} className="flex justify-between text-sm">
+                      <span>{extra.name}</span>
+                      <span>+${totalExtrasPrice}</span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex justify-between font-medium">
+                  <span>Total Price</span>
+                  <span>${totalPrice}</span>
+                </div>
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Deposit Required (30%)</span>
+                  <span>${depositAmount}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Remaining Balance</span>
+                  <span>${totalPrice - depositAmount}</span>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleSubmit}
+                className="w-full"
+                size="lg"
+                disabled={!customerDetails.firstName || !customerDetails.lastName || !customerDetails.email}
+              >
+                Proceed to Payment
+              </Button>
+
+              <p className="text-xs text-gray-500 text-center">
+                You will only be charged the deposit amount today. The remaining balance is due 2-4 weeks before
+                departure.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

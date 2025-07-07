@@ -1,14 +1,10 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
-  title: "This is Africa - Discover Your Adventure",
-  description:
-    "From thrilling safaris to cultural immersions, find the perfect African experience tailored to your dreams.",
+  title: "This is Africa",
+  description: "Book Your African Adventure",
     generator: 'v0.dev'
 }
 
@@ -19,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   )
 }

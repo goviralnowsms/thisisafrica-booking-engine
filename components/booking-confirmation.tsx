@@ -1,205 +1,127 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle, Download, Mail, MapPin, Clock, Calendar } from "lucide-react"
-import type { BookingData } from "@/app/page"
+import { CheckCircle, Calendar, MapPin, Users, Mail, Phone, CreditCard, Search } from "lucide-react"
 
 interface BookingConfirmationProps {
-  bookingData: BookingData
   bookingReference: string
-  onNewSearch: () => void
+  onBackToSearch: () => void
 }
 
-export function BookingConfirmation({ bookingData, bookingReference, onNewSearch }: BookingConfirmationProps) {
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "basic":
-        return "bg-blue-100 text-blue-800"
-      case "standard":
-        return "bg-green-100 text-green-800"
-      case "luxury":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
+export function BookingConfirmation({ bookingReference, onBackToSearch }: BookingConfirmationProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
-          <CheckCircle className="w-16 h-16 text-green-600" />
+          <CheckCircle className="w-16 h-16 text-green-500" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-        <p className="text-lg text-gray-600">Thank you for choosing This is Africa. Your adventure awaits!</p>
+        <p className="text-lg text-gray-600">Your African adventure is secured. We'll be in touch soon!</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Booking Details */}
         <Card>
           <CardHeader>
             <CardTitle>Booking Details</CardTitle>
             <CardDescription>
-              Reference: <span className="font-mono font-semibold">{bookingReference}</span>
+              Reference: <span className="font-mono font-bold">{bookingReference}</span>
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg">{bookingData.tour.name}</h3>
-                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {bookingData.tour.location}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {bookingData.tour.duration} days
-                  </div>
-                </div>
-                <Badge className={getLevelColor(bookingData.tour.level)} variant="secondary" className="mt-2">
-                  {bookingData.tour.level}
-                </Badge>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-lg">African Safari Tour</h3>
+              <p className="text-gray-600">Your selected tour has been confirmed</p>
+            </div>
+
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center">
+                <MapPin className="w-4 h-4 mr-1 text-gray-500" />
+                <span>Africa</span>
               </div>
-
-              <Separator />
-
-              <div>
-                <h4 className="font-semibold mb-2">Customer Information</h4>
-                <div className="text-sm space-y-1">
-                  <p>
-                    <strong>Name:</strong> {bookingData.customerDetails.firstName}{" "}
-                    {bookingData.customerDetails.lastName}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {bookingData.customerDetails.email}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {bookingData.customerDetails.phone}
-                  </p>
-                  <p>
-                    <strong>Address:</strong> {bookingData.customerDetails.address}
-                  </p>
-                </div>
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-1 text-gray-500" />
+                <span>Multiple days</span>
               </div>
+            </div>
 
-              <Separator />
+            <Separator />
 
-              <div>
-                <h4 className="font-semibold mb-2">Selected Extras</h4>
-                <div className="space-y-1 text-sm">
-                  {bookingData.selectedExtras.map((extraId) => {
-                    const extra = bookingData.tour.extras.find((e) => e.id === extraId)
-                    return extra ? (
-                      <div key={extraId} className="flex justify-between">
-                        <span>{extra.name}</span>
-                        <span>${extra.price}</span>
-                      </div>
-                    ) : null
-                  })}
-                </div>
+            <div>
+              <h4 className="font-medium mb-2">What's Included</h4>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div>• Professional tour guide</div>
+                <div>• Accommodation as specified</div>
+                <div>• Transportation during tour</div>
+                <div>• Meals as per itinerary</div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div>
+              <h4 className="font-medium mb-2">Next Steps</h4>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div>• Confirmation email sent</div>
+                <div>• We'll verify availability</div>
+                <div>• Detailed itinerary to follow</div>
+                <div>• Final payment due before departure</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Payment Summary */}
         <Card>
           <CardHeader>
             <CardTitle>Payment Summary</CardTitle>
-            <CardDescription>Your deposit has been successfully processed</CardDescription>
+            <CardDescription>Your deposit has been processed successfully</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-green-800 mb-2">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="font-semibold">Payment Confirmed</span>
-                </div>
-                <p className="text-sm text-green-700">
-                  Your deposit of ${bookingData.depositAmount} has been successfully processed.
-                </p>
-              </div>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
+              <CreditCard className="w-5 h-5" />
+              <span className="font-medium">Payment Successful</span>
+            </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total Tour Price</span>
-                  <span>${bookingData.totalPrice}</span>
-                </div>
-                <div className="flex justify-between text-green-600">
-                  <span>Deposit Paid</span>
-                  <span>-${bookingData.depositAmount}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Remaining Balance</span>
-                  <span className="text-orange-600">${bookingData.totalPrice - bookingData.depositAmount}</span>
-                </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Deposit Paid</span>
+                <span className="text-green-600 font-medium">✓ Confirmed</span>
               </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-blue-800 mb-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-semibold">Payment Schedule</span>
-                </div>
-                <p className="text-sm text-blue-700">
-                  The remaining balance of ${bookingData.totalPrice - bookingData.depositAmount} is due 30 days before
-                  your tour departure date.
-                </p>
+              <div className="flex justify-between text-orange-600">
+                <span>Remaining Balance</span>
+                <span>Due before departure</span>
               </div>
             </div>
+
+            <Separator />
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">What happens next?</h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Confirmation email sent to your email</li>
+                <li>• We'll verify availability with suppliers</li>
+                <li>• Final balance due 2-4 weeks before departure</li>
+                <li>• Detailed itinerary will be provided</li>
+              </ul>
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h4 className="font-medium text-yellow-900 mb-2">Important Notes</h4>
+              <ul className="text-sm text-yellow-800 space-y-1">
+                <li>• All bookings are subject to supplier confirmation</li>
+                <li>• Cancellation policy applies as per terms</li>
+                <li>• Travel insurance is recommended</li>
+                <li>• Contact us for any changes or questions</li>
+              </ul>
+            </div>
+
+            <Button onClick={onBackToSearch} className="w-full" variant="outline">
+              <Search className="w-4 h-4 mr-2" />
+              Book Another Tour
+            </Button>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Next Steps */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>What Happens Next?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <Mail className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-              <h4 className="font-semibold mb-1">Confirmation Email</h4>
-              <p className="text-sm text-gray-600">
-                You'll receive a detailed confirmation email within 24 hours with your itinerary and travel documents.
-              </p>
-            </div>
-            <div className="text-center">
-              <Calendar className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-              <h4 className="font-semibold mb-1">Pre-Tour Contact</h4>
-              <p className="text-sm text-gray-600">
-                Our team will contact you 2 weeks before departure to finalize details and answer any questions.
-              </p>
-            </div>
-            <div className="text-center">
-              <CheckCircle className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-              <h4 className="font-semibold mb-1">Final Payment</h4>
-              <p className="text-sm text-gray-600">
-                Complete your payment 30 days before departure and get ready for your African adventure!
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-          <Download className="w-4 h-4" />
-          Download Confirmation
-        </Button>
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-          <Mail className="w-4 h-4" />
-          Email Confirmation
-        </Button>
-        <Button onClick={onNewSearch} className="bg-orange-500 hover:bg-orange-600">
-          Book Another Tour
-        </Button>
       </div>
     </div>
   )

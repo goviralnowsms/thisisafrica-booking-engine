@@ -1,168 +1,313 @@
-import type { SearchCriteria, Tour } from "@/app/page"
-import { TourplanAPI } from "@/app/tourplan-api"
+import { env } from "./env"
 
-// Mock data for development/demo
-const mockTours: Tour[] = [
-  {
-    id: "tour-1",
-    name: "Sydney Harbour Bridge Climb",
-    description: "Experience breathtaking views of Sydney from the top of the iconic Harbour Bridge",
-    duration: 3,
-    price: 299,
-    level: "Moderate",
-    availability: "OK",
-    supplier: "BridgeClimb Sydney",
-    location: "Sydney, NSW",
-    extras: [
-      {
-        id: "photo-1",
-        name: "Professional Photo Package",
-        description: "High-quality photos of your climb experience",
-        price: 49,
-        isCompulsory: false,
-      },
-    ],
-  },
-  {
-    id: "tour-2",
-    name: "Great Ocean Road Day Tour",
-    description: "Discover the stunning coastline and famous rock formations along Victoria's Great Ocean Road",
-    duration: 12,
-    price: 189,
-    level: "Easy",
-    availability: "OK",
-    supplier: "Gray Line Tours",
-    location: "Melbourne, VIC",
-    extras: [
-      {
-        id: "lunch-1",
-        name: "Gourmet Lunch",
-        description: "Three-course meal at a local restaurant",
-        price: 35,
-        isCompulsory: false,
-      },
-    ],
-  },
-  {
-    id: "tour-3",
-    name: "Uluru Sunrise & Kata Tjuta Tour",
-    description: "Watch the sunrise over Uluru and explore the ancient rock formations of Kata Tjuta",
-    duration: 6,
-    price: 145,
-    level: "Easy",
-    availability: "RQ",
-    supplier: "Ayers Rock Resort",
-    location: "Uluru, NT",
-    extras: [],
-  },
-  {
-    id: "tour-4",
-    name: "Blue Mountains Day Trip",
-    description: "Explore the stunning Blue Mountains with scenic railway rides and bushwalking",
-    duration: 8,
-    price: 129,
-    level: "Moderate",
-    availability: "OK",
-    supplier: "Blue Mountains Tours",
-    location: "Blue Mountains, NSW",
-    extras: [
-      {
-        id: "cable-car-1",
-        name: "Scenic Skyway Upgrade",
-        description: "Premium glass-floor cable car experience",
-        price: 25,
-        isCompulsory: false,
-      },
-    ],
-  },
-]
+export interface TourplanConfig {
+  apiUrl: string
+  username: string
+  password: string
+  agentId: string
+  proxyUrl?: string
+  useProxy?: boolean
+}
 
-// Create singleton instance
-const tourplanAPI = new TourplanAPI()
+export interface TourplanSearchParams {
+  destination?: string
+  startDate?: string
+  endDate?: string
+  adults?: number
+  children?: number
+  serviceType?: string
+  region?: string
+}
 
-export async function searchTours(criteria: SearchCriteria): Promise<Tour[]> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  try {
-    // For demo purposes, return mock data
-    // In production, this would make actual API calls to Tourplan
-    let filteredTours = mockTours
-
-    // Apply filters based on search criteria
-    if (criteria.destination) {
-      filteredTours = filteredTours.filter((tour) =>
-        tour.location.toLowerCase().includes(criteria.destination!.toLowerCase()),
-      )
-    }
-
-    if (criteria.tourLevel) {
-      filteredTours = filteredTours.filter((tour) => tour.level.toLowerCase() === criteria.tourLevel!.toLowerCase())
-    }
-
-    if (criteria.budget) {
-      const maxBudget = Number.parseInt(criteria.budget)
-      if (!isNaN(maxBudget)) {
-        filteredTours = filteredTours.filter((tour) => tour.price <= maxBudget)
-      }
-    }
-
-    if (criteria.duration) {
-      const maxDuration = Number.parseInt(criteria.duration)
-      if (!isNaN(maxDuration)) {
-        filteredTours = filteredTours.filter((tour) => tour.duration <= maxDuration)
-      }
-    }
-
-    return filteredTours
-  } catch (error) {
-    console.error("Error searching tours:", error)
-    throw new Error("Failed to search tours")
+export interface TourplanBookingParams {
+  tourId: string
+  startDate: string
+  endDate: string
+  adults: number
+  children: number
+  customerDetails: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
   }
 }
 
-export async function getTourDetails(tourId: string): Promise<Tour | null> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  const tour = mockTours.find((t) => t.id === tourId)
-  return tour || null
+export interface TourplanResponse {
+  success: boolean
+  data?: any
+  error?: string
+  rawResponse?: string
 }
 
-export async function createBooking(
-  bookingData: any,
-): Promise<{ success: boolean; bookingId?: string; error?: string }> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 2000))
+export function getTourplanConfig(): TourplanConfig {
+  if (!env.TOURPLAN_API_URL || !env.TOURPLAN_USERNAME || !env.TOURPLAN_PASSWORD || !env.TOURPLAN_AGENT_ID) {
+    throw new Error("Tourplan configuration incomplete")
+  }
 
+  return {
+    apiUrl: env.TOURPLAN_API_URL,
+    username: env.TOURPLAN_USERNAME,
+    password: env.TOURPLAN_PASSWORD,
+    agentId: env.TOURPLAN_AGENT_ID,
+    proxyUrl: env.TOURPLAN_PROXY_URL,
+    useProxy: env.USE_TOURPLAN_PROXY,
+  }
+}
+
+export async function testTourplanConnection(): Promise<{ success: boolean; error?: string }> {
   try {
-    // In production, this would create a real booking via Tourplan API
-    const bookingId = `BK${Date.now()}`
+    const config = getTourplanConfig()
+    const url = config.useProxy && config.proxyUrl ? config.proxyUrl : config.apiUrl
 
-    return {
-      success: true,
-      bookingId,
-    }
+    // Simple connectivity test
+    const response = await fetch(url, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(10000),
+    })
+
+    return { success: response.ok }
   } catch (error) {
     return {
       success: false,
-      error: "Failed to create booking",
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }
 
-/**
- * Returns the singleton instance of the TourplanAPI class.
- */
-export function getTourplanAPI(): TourplanAPI {
-  return tourplanAPI
+export class TourplanAPI {
+  private config: TourplanConfig
+
+  constructor() {
+    try {
+      this.config = getTourplanConfig()
+    } catch (error) {
+      console.warn("Tourplan API not configured:", error)
+      this.config = {
+        apiUrl: "",
+        username: "",
+        password: "",
+        agentId: "",
+      }
+    }
+  }
+
+  private createAuthXml(): string {
+    return `
+    <AgentID>${this.config.agentId}</AgentID>
+    <Password>${this.config.password}</Password>`
+  }
+
+  private createTourplanUserXml(): string {
+    return `
+    <TourplanUser>
+      <AgentID>${this.config.agentId}</AgentID>
+      <Password>${this.config.password}</Password>
+    </TourplanUser>`
+  }
+
+  private createSoapEnvelope(body: string): string {
+    return `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+              xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    ${body}
+  </soap:Body>
+</soap:Envelope>`
+  }
+
+  private async makeRequest(soapAction: string, body: string): Promise<TourplanResponse> {
+    if (!this.isConfigured()) {
+      return {
+        success: false,
+        error: "Tourplan API not configured",
+      }
+    }
+
+    // Send plain XML instead of SOAP envelope
+    const xmlBody = body
+    const url = this.config.useProxy && this.config.proxyUrl ? this.config.proxyUrl : this.config.apiUrl
+
+    if (!url) {
+      return {
+        success: false,
+        error: "No API URL configured",
+      }
+    }
+
+    console.log("Making Tourplan API request:", {
+      url,
+      action: soapAction,
+      bodyLength: xmlBody.length,
+      useProxy: this.config.useProxy,
+    })
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          "User-Agent": "TourplanBookingEngine/1.0",
+          Authorization: `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString("base64")}`,
+        },
+        body: xmlBody,
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      })
+
+      const responseText = await response.text()
+
+      if (!response.ok) {
+        console.error("Tourplan API error:", {
+          status: response.status,
+          statusText: response.statusText,
+          response: responseText.substring(0, 500),
+        })
+        return {
+          success: false,
+          error: `Tourplan API error: ${response.status} ${response.statusText}`,
+          rawResponse: responseText,
+        }
+      }
+
+      return this.parseXmlResponse(responseText)
+    } catch (error) {
+      console.error("Tourplan API request failed:", error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+  }
+
+  private parseXmlResponse(xmlString: string): TourplanResponse {
+    try {
+      // Check for errors first
+      const errorMatch = xmlString.match(/<Error[^>]*>(.*?)<\/Error>/s)
+      if (errorMatch) {
+        return {
+          success: false,
+          error: errorMatch[1],
+          rawResponse: xmlString,
+        }
+      }
+
+      // Return the full XML response since we're not using SOAP envelopes
+      return {
+        success: true,
+        data: xmlString,
+        rawResponse: xmlString,
+      }
+    } catch (error) {
+      console.error("XML parsing error:", error)
+      return {
+        success: false,
+        error: "Failed to parse XML response",
+        rawResponse: xmlString,
+      }
+    }
+  }
+
+  async searchTours(params: TourplanSearchParams): Promise<TourplanResponse> {
+    const searchBody = `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  ${this.createTourplanUserXml()}
+  <GetServicesRequest>
+    <ServiceType>${params.serviceType || "Tour"}</ServiceType>
+    <Destination>${params.destination || ""}</Destination>
+    <Region>${params.region || ""}</Region>
+    <StartDate>${params.startDate || ""}</StartDate>
+    <EndDate>${params.endDate || ""}</EndDate>
+    <Adults>${params.adults || 2}</Adults>
+    <Children>${params.children || 0}</Children>
+  </GetServicesRequest>
+</Request>`
+
+    return this.makeRequest("GetServices", searchBody)
+  }
+
+  async getTourDetails(tourId: string): Promise<TourplanResponse> {
+    const detailsBody = `
+    <GetTourDetails xmlns="http://tempuri.org/">
+      ${this.createAuthXml()}
+      <TourID>${tourId}</TourID>
+    </GetTourDetails>`
+
+    return this.makeRequest("http://tempuri.org/GetTourDetails", detailsBody)
+  }
+
+  async getOptionInfo(optionId: string): Promise<TourplanResponse> {
+    const optionBody = `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  ${this.createTourplanUserXml()}
+  <OptionInfoRequest>
+    <OptionID>${optionId}</OptionID>
+  </OptionInfoRequest>
+</Request>`
+
+    return this.makeRequest("OptionInfo", optionBody)
+  }
+
+  async checkAvailability(tourId: string, date: string, adults: number, children: number): Promise<TourplanResponse> {
+    const availabilityBody = `
+    <CheckAvailability xmlns="http://tempuri.org/">
+      ${this.createAuthXml()}
+      <TourID>${tourId}</TourID>
+      <Date>${date}</Date>
+      <Adults>${adults}</Adults>
+      <Children>${children}</Children>
+    </CheckAvailability>`
+
+    return this.makeRequest("http://tempuri.org/CheckAvailability", availabilityBody)
+  }
+
+  async createBooking(params: TourplanBookingParams): Promise<TourplanResponse> {
+    const bookingBody = `
+    <CreateBooking xmlns="http://tempuri.org/">
+      ${this.createAuthXml()}
+      <BookingRequest>
+        <TourID>${params.tourId}</TourID>
+        <StartDate>${params.startDate}</StartDate>
+        <EndDate>${params.endDate}</EndDate>
+        <Adults>${params.adults}</Adults>
+        <Children>${params.children}</Children>
+        <Customer>
+          <FirstName>${params.customerDetails.firstName}</FirstName>
+          <LastName>${params.customerDetails.lastName}</LastName>
+          <Email>${params.customerDetails.email}</Email>
+          <Phone>${params.customerDetails.phone}</Phone>
+        </Customer>
+      </BookingRequest>
+    </CreateBooking>`
+
+    return this.makeRequest("http://tempuri.org/CreateBooking", bookingBody)
+  }
+
+  async testConnection(): Promise<TourplanResponse> {
+    const testBody = `
+    <TestConnection xmlns="http://tempuri.org/">
+      ${this.createAuthXml()}
+    </TestConnection>`
+
+    return this.makeRequest("http://tempuri.org/TestConnection", testBody)
+  }
+
+  isConfigured(): boolean {
+    return !!(this.config.apiUrl && this.config.username && this.config.password && this.config.agentId)
+  }
+
+  getConfig() {
+    return {
+      apiUrl: this.config.apiUrl,
+      username: this.config.username,
+      agentId: this.config.agentId,
+      configured: this.isConfigured(),
+      useProxy: this.config.useProxy,
+      proxyUrl: this.config.proxyUrl,
+    }
+  }
 }
 
-/**
- * Convenience wrapper around tourplanAPI.getOptionInfo(...).
- */
-export async function getOptionInfo(tourId: string) {
-  return await tourplanAPI.getOptionInfo(tourId)
-}
-
-export { tourplanAPI }
+export const tourplanAPI = new TourplanAPI()

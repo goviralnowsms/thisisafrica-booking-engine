@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { searchTours, getOptionInfo } from "@/lib/tourplan-api"
+import { TourplanAPI } from "@/lib/tourplan-api"
 
 export const runtime = "nodejs"
 
@@ -7,27 +7,33 @@ export async function GET() {
   try {
     console.log("Testing Tourplan API integration...")
 
+    const tourplanAPI = new TourplanAPI()
+
     // Test search
-    const searchResult = await searchTours({
-      country: "Tanzania",
+    const searchResult = await tourplanAPI.searchTours({
       destination: "Serengeti",
-      tourLevel: "Moderate",
+      startDate: "2025-08-01",
+      endDate: "2025-08-07",
+      adults: 2,
+      children: 0,
     })
 
     // Test option info
-    const optionResult = await getOptionInfo("MOCK001")
+    const optionResult = await tourplanAPI.getOptionInfo("MOCK001")
 
     return NextResponse.json({
       success: true,
       message: "Tourplan API test completed",
       results: {
         search: {
-          tours_found: searchResult.length,
-          sample_tour: searchResult[0]?.name || "None",
+          success: searchResult.success,
+          error: searchResult.error,
+          data: searchResult.data,
         },
         option_info: {
-          tour_name: optionResult?.name || "None",
-          tour_id: optionResult?.id || "None",
+          success: optionResult.success,
+          error: optionResult.error,
+          data: optionResult.data,
         },
       },
       environment: {
