@@ -239,4 +239,35 @@ export const db = {
 
     throw new Error("No database connection available")
   },
+
+  // Get bookings that need payment reminders (2 weeks before tour date)
+  async getBookingsNeedingPaymentReminders(startDate: string, endDate: string) {
+    if (env.NEON_DATABASE_URL) {
+      const sql = getNeonClient()
+      const result = await sql`
+        SELECT * FROM bookings 
+        WHERE tour_date BETWEEN ${startDate} AND ${endDate}
+        AND payment_status = 'pending'
+        AND booking_status = 'confirmed'
+        ORDER BY tour_date ASC
+      `
+      return result
+    }
+
+    const supabase = getSupabaseClient()
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("*")
+        .gte("tour_date", startDate)
+        .lte("tour_date", endDate)
+        .eq("payment_status", "pending")
+        .eq("booking_status", "confirmed")
+        .order("tour_date", { ascending: true })
+      if (error) throw error
+      return data
+    }
+
+    throw new Error("No database connection available")
+  },
 }

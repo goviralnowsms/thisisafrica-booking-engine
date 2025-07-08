@@ -75,6 +75,10 @@ export async function testTourplanConnection(): Promise<{ success: boolean; erro
   }
 }
 
+export function getTourplanAPI(): TourplanAPI {
+  return new TourplanAPI()
+}
+
 export class TourplanAPI {
   private config: TourplanConfig
 
@@ -183,7 +187,7 @@ export class TourplanAPI {
   private parseXmlResponse(xmlString: string): TourplanResponse {
     try {
       // Check for errors first
-      const errorMatch = xmlString.match(/<Error[^>]*>(.*?)<\/Error>/s)
+      const errorMatch = xmlString.match(/<Error[^>]*>([\s\S]*?)<\/Error>/)
       if (errorMatch) {
         return {
           success: false,

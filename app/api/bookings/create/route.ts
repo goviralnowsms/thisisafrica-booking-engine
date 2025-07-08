@@ -1,6 +1,7 @@
 export const runtime = "nodejs"
 import { NextResponse } from "next/server"
 import type { BookingData } from "@/app/page"
+import { getTourplanAPI } from "@/lib/tourplan-api"
 
 export async function POST(request: Request) {
   try {
@@ -45,9 +46,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
     // Generate booking reference
     const timestamp = Date.now().toString().slice(-6)
     const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase()
@@ -58,14 +56,51 @@ export async function POST(request: Request) {
     const depositAmount = bookingData.depositAmount
     const remainingBalance = totalPrice - depositAmount
 
+    // Create booking in Tourplan API
+    let tourplanBookingId = null
+    let tourplanReference = null
+    let tourplanError = null
+
+    try {
+      console.log("Creating booking in Tourplan API...")
+      const tourplanAPI = getTourplanAPI()
+      
+      const tourplanResponse = await tourplanAPI.createBooking({
+        tourId: bookingData.tour.id,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        adults: bookingData.adults || 2,
+        children: bookingData.children || 0,
+        customerDetails: {
+          firstName: bookingData.customerDetails.firstName,
+          lastName: bookingData.customerDetails.lastName,
+          email: bookingData.customerDetails.email,
+          phone: bookingData.customerDetails.phone || "",
+        }
+      })
+
+      if (tourplanResponse.success) {
+        tourplanBookingId = tourplanResponse.bookingId
+        tourplanReference = tourplanResponse.bookingReference
+        console.log("Tourplan booking created successfully:", { tourplanBookingId, tourplanReference })
+      } else {
+        tourplanError = tourplanResponse.error || "Failed to create Tourplan booking"
+        console.error("Tourplan booking creation failed:", tourplanError)
+      }
+    } catch (error) {
+      tourplanError = error instanceof Error ? error.message : "Unknown Tourplan error"
+      console.error("Tourplan API error:", error)
+    }
+
     // Create booking response
     const bookingResult = {
       success: true,
       bookingId: `booking-${Date.now()}`,
       bookingReference,
-      tourplanBookingId: `tp-${Date.now()}`,
-      tourplanReference: `TP${bookingReference}`,
-      status: "confirmed",
+      tourplanBookingId,
+      tourplanReference,
+      tourplanError, // Include any Tourplan errors for debugging
+      status: tourplanBookingId ? "confirmed" : "pending_tourplan",
       paymentVerified: true,
       paymentSessionId,
       tour: {
@@ -94,18 +129,17 @@ export async function POST(request: Request) {
         cancellationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
         finalPaymentDue: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(), // 21 days
       },
-      message: "Booking created successfully after payment verification",
-      demo: true,
+      message: tourplanBookingId 
+        ? "Booking created successfully in Tourplan after payment verification"
+        : "Booking created locally. Tourplan integration failed - manual intervention may be required.",
+      demo: false, // Now using real Tourplan integration
     }
 
-    // In a real implementation, you would:
-    // 1. Verify payment with Stripe/Tyro
-    // 2. Save to database
-    // 3. Create booking in Tourplan API
-    // 4. Send confirmation email
-    // 5. Send notification to suppliers
+    // TODO: Save to database
+    // TODO: Send confirmation email
+    // TODO: Send notification to suppliers
 
-    console.log("Booking created successfully after payment verification:", bookingResult)
+    console.log("Booking creation completed:", bookingResult)
 
     return NextResponse.json(bookingResult)
   } catch (error) {
@@ -132,5 +166,6 @@ export async function GET() {
     ],
     paymentFirst: true,
     depositRequired: "30%",
+    tourplanIntegration: true,
   })
 }
