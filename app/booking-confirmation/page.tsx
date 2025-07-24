@@ -1,94 +1,228 @@
 "use client"
 
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle2, Download, Mail, Phone } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle2, Calendar, MapPin, Users, Phone, Mail, Home, Loader2 } from "lucide-react"
 
-export default function BookingConfirmationPage() {
+function BookingConfirmationContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const reference = searchParams.get("reference")
+  const bookingReference = searchParams.get("reference")
+
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate loading confirmation details
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-amber-500 animate-spin mb-4 mx-auto" />
+          <p className="text-lg text-gray-600">Processing your booking...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!bookingReference) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Booking Not Found</h2>
+          <p className="text-gray-600 mb-6">We couldn't find your booking confirmation.</p>
+          <Button onClick={() => router.push("/booking-new")}>Start New Booking</Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="text-center">
-            <CardContent className="p-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-              </div>
+    <main className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
+        {/* Success Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
+          <p className="text-xl text-gray-600">Your African adventure awaits</p>
+        </div>
 
-              <h1 className="text-3xl font-bold mb-4">Booking Confirmed!</h1>
-              <p className="text-gray-600 mb-6">Thank you for booking with This is Africa. Your adventure awaits!</p>
+        {/* Booking Reference */}
+        <Card className="mb-8 border-green-200 bg-green-50">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Booking Reference</h2>
+            <div className="text-3xl font-bold text-green-600 mb-2">{bookingReference}</div>
+            <p className="text-sm text-gray-600">Please save this reference number for your records</p>
+          </CardContent>
+        </Card>
 
-              {reference && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 mb-8">
-                  <h2 className="text-lg font-semibold mb-2">Booking Reference</h2>
-                  <p className="text-2xl font-bold text-amber-700">{reference}</p>
-                  <p className="text-sm text-gray-600 mt-2">Please save this reference number for your records</p>
-                </div>
-              )}
-
-              <div className="space-y-4 mb-8">
-                <h3 className="text-lg font-semibold">What happens next?</h3>
-                <div className="text-left space-y-3">
-                  <div className="flex items-start">
-                    <Mail className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Confirmation Email</p>
-                      <p className="text-sm text-gray-600">
-                        You'll receive a detailed confirmation email within 15 minutes
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Phone className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Personal Contact</p>
-                      <p className="text-sm text-gray-600">
-                        Our travel specialist will contact you within 24 hours to finalize details
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Download className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Travel Documents</p>
-                      <p className="text-sm text-gray-600">
-                        Complete itinerary and travel documents will be sent 2 weeks before departure
-                      </p>
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Booking Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Booking Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-5 w-5 text-amber-500 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold">Ultimate Safari Adventure</h3>
+                  <p className="text-gray-600">Kenya & Tanzania</p>
+                  <Badge variant="secondary" className="mt-1">
+                    SAF001
+                  </Badge>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button onClick={() => router.push("/")} variant="outline">
-                  Return to Homepage
-                </Button>
-                <Button onClick={() => router.push("/booking-new")} className="bg-amber-500 hover:bg-amber-600">
-                  Book Another Tour
-                </Button>
+              <div className="flex items-center space-x-3">
+                <Calendar className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h4 className="font-medium">Departure Date</h4>
+                  <p className="text-gray-600">March 15, 2025</p>
+                </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
-                  Need help? Contact us at{" "}
-                  <a href="mailto:bookings@thisisafrica.com" className="text-amber-600 hover:underline">
-                    bookings@thisisafrica.com
-                  </a>{" "}
-                  or call{" "}
-                  <a href="tel:+27123456789" className="text-amber-600 hover:underline">
-                    +27 12 345 6789
-                  </a>
-                </p>
+              <div className="flex items-center space-x-3">
+                <Users className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h4 className="font-medium">Travelers</h4>
+                  <p className="text-gray-600">2 Adults</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total Amount</span>
+                  <span className="text-2xl font-bold text-amber-600">$8,047</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Including taxes and fees</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Next Steps */}
+          <Card>
+            <CardHeader>
+              <CardTitle>What Happens Next?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-medium">Confirmation Email</h4>
+                  <p className="text-gray-600 text-sm">
+                    You'll receive a detailed confirmation email within 15 minutes with your itinerary and travel
+                    documents.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-medium">Travel Consultant Contact</h4>
+                  <p className="text-gray-600 text-sm">
+                    Our travel consultant will contact you within 24 hours to discuss your preferences and finalize
+                    details.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-medium">Pre-Departure Information</h4>
+                  <p className="text-gray-600 text-sm">
+                    30 days before departure, you'll receive detailed pre-departure information including packing lists
+                    and travel tips.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Contact Information */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Need Help?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-3">
+                <Phone className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h4 className="font-medium">Call Us</h4>
+                  <p className="text-gray-600">+1 (555) 123-4567</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Mail className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h4 className="font-medium">Email Us</h4>
+                  <p className="text-gray-600">bookings@thisisafrica.com</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Home className="h-5 w-5 text-amber-500" />
+                <div>
+                  <h4 className="font-medium">Visit Us</h4>
+                  <p className="text-gray-600">Mon-Fri, 9AM-6PM EST</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
+          <Button onClick={() => router.push("/my-bookings")} variant="outline" size="lg">
+            View My Bookings
+          </Button>
+          <Button onClick={() => router.push("/")} className="bg-amber-500 hover:bg-amber-600" size="lg">
+            Back to Home
+          </Button>
+          <Button onClick={() => router.push("/booking-new")} variant="outline" size="lg">
+            Book Another Tour
+          </Button>
+        </div>
       </div>
     </main>
+  )
+}
+
+export default function BookingConfirmationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 text-amber-500 animate-spin mb-4 mx-auto" />
+            <p className="text-lg text-gray-600">Loading confirmation...</p>
+          </div>
+        </div>
+      }
+    >
+      <BookingConfirmationContent />
+    </Suspense>
   )
 }

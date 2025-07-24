@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,7 @@ interface TourDetails {
   rating: number
 }
 
-export default function ProductDetailsPage() {
+function ProductDetailsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const tourCode = searchParams.get("code")
@@ -550,5 +550,22 @@ export default function ProductDetailsPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function ProductDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 text-amber-500 animate-spin mb-4 mx-auto" />
+            <p className="text-lg text-gray-600">Loading tour details...</p>
+          </div>
+        </div>
+      }
+    >
+      <ProductDetailsContent />
+    </Suspense>
   )
 }
