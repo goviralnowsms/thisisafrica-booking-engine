@@ -1,15 +1,14 @@
 import type React from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Toaster } from "@/components/ui/toaster"
-import { ThemeProvider } from "@/components/theme-provider"
-import { RecommendationAssistant } from "@/components/recommendation-assistant"
 import "./globals.css"
+import { Inter } from "next/font/google"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "This is Africa - Authentic African Travel Experiences",
-  description:
-    "Experience the magic of Africa with our expertly crafted tours and safaris. Book your unforgettable African adventure today.",
+  title: "This is Africa - Travel with Experience",
+  description: "Specializing in tailor-made and package tours to Africa",
     generator: 'v0.dev'
 }
 
@@ -20,14 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <Header />
-          {children}
-          <Footer />
-          <RecommendationAssistant />
-          <Toaster />
-        </ThemeProvider>
+      <body className={inter.className}>
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   )

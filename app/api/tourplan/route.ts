@@ -1,48 +1,34 @@
 import { type NextRequest, NextResponse } from "next/server"
-import * as TourPlanAPI from "@/lib/tourplan-api"
 
-/**
- * API route for searching tours
- */
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
-  const destination = searchParams.get("destination") || undefined
-  const startDate = searchParams.get("startDate") || undefined
-  const endDate = searchParams.get("endDate") || undefined
-  const travelers = searchParams.get("travelers") ? Number.parseInt(searchParams.get("travelers")!) : undefined
-
-  try {
-    const result = await TourPlanAPI.searchTours({
-      destination,
-      startDate,
-      endDate,
-      travelers,
-    })
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error("API error searching tours:", error)
-    return NextResponse.json({ success: false, error: "Failed to search tours" }, { status: 500 })
-  }
-}
-
-/**
- * API route for creating a booking
- */
+// This is where you'll integrate with the Tourplan API
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const searchParams = await request.json()
 
-    // Validate required fields
-    if (!body.customer || !body.itinerary) {
-      return NextResponse.json({ success: false, error: "Missing required booking information" }, { status: 400 })
+    // Replace this with actual Tourplan API integration
+    const tourplanResponse = await fetch("YOUR_TOURPLAN_API_ENDPOINT", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.TOURPLAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        startingCountry: searchParams.startingCountry,
+        destination: searchParams.destination,
+        class: searchParams.class,
+        // Add other required Tourplan parameters
+      }),
+    })
+
+    if (!tourplanResponse.ok) {
+      throw new Error("Failed to fetch from Tourplan API")
     }
 
-    const result = await TourPlanAPI.createBooking(body)
+    const data = await tourplanResponse.json()
 
-    return NextResponse.json(result)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("API error creating booking:", error)
-    return NextResponse.json({ success: false, error: "Failed to create booking" }, { status: 500 })
+    console.error("Tourplan API error:", error)
+    return NextResponse.json({ error: "Failed to search packages" }, { status: 500 })
   }
 }
