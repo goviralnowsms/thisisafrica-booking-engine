@@ -2,7 +2,6 @@ import type React from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Toaster } from "@/components/ui/toaster"
-import { ThemeProvider } from "@/components/theme-provider"
 import { RecommendationAssistant } from "@/components/recommendation-assistant"
 import "./globals.css"
 
@@ -21,13 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeProvider attribute="class" defaultTheme="light">
-          <Header />
-          {children}
-          <Footer />
-          <RecommendationAssistant />
-          <Toaster />
-        </ThemeProvider>
+        <Header />
+        {children}
+        <Footer />
+        <RecommendationAssistant />
+        <Toaster />
       </body>
     </html>
   )

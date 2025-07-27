@@ -105,7 +105,9 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <a href="/booking?type=tours&productType=Group%20Tours" className="w-full">
+                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                </a>
               </div>
             </div>
 

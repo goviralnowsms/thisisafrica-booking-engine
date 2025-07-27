@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import * as TourPlanAPI from "@/lib/tourplan-api"
+import { searchProducts, createBooking } from "@/lib/tourplan/services"
 
 /**
  * API route for searching tours
@@ -12,14 +12,19 @@ export async function GET(request: NextRequest) {
   const travelers = searchParams.get("travelers") ? Number.parseInt(searchParams.get("travelers")!) : undefined
 
   try {
-    const result = await TourPlanAPI.searchTours({
+    const result = await searchProducts({
+      productType: searchParams.get("productType") || 'Group Tours',
       destination,
-      startDate,
-      endDate,
-      travelers,
+      dateFrom: startDate,
+      dateTo: endDate,
+      adults: travelers,
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      tours: result.products,
+      totalResults: result.totalResults,
+    })
   } catch (error) {
     console.error("API error searching tours:", error)
     return NextResponse.json({ success: false, error: "Failed to search tours" }, { status: 500 })
@@ -38,9 +43,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing required booking information" }, { status: 400 })
     }
 
-    const result = await TourPlanAPI.createBooking(body)
+    const result = await createBooking({
+      customerName: body.customer.name,
+      email: body.customer.email,
+      mobile: body.customer.mobile,
+      productCode: body.itinerary.tourId,
+      rateId: body.itinerary.rateId || 'Default',
+      dateFrom: body.itinerary.startDate,
+      dateTo: body.itinerary.endDate,
+      adults: body.itinerary.adults,
+      children: body.itinerary.children,
+      isQuote: false,
+    })
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      ...result
+    })
   } catch (error) {
     console.error("API error creating booking:", error)
     return NextResponse.json({ success: false, error: "Failed to create booking" }, { status: 500 })

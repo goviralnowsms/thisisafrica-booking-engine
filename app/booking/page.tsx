@@ -22,15 +22,19 @@ export default function BookingPage() {
 
     try {
       console.log("Search params:", searchParams)
-      const result = await searchTours({
-        destination: searchParams.destination,
-        startDate: searchParams.startDate,
-        endDate: searchParams.endDate,
-        travelers: searchParams.travelers,
-      })
+      // Build search URL with parameters
+      const searchUrl = new URL('/api/tourplan', window.location.origin);
+      if (searchParams.destination) searchUrl.searchParams.set('destination', searchParams.destination);
+      if (searchParams.departureDate) searchUrl.searchParams.set('startDate', searchParams.departureDate.toISOString().split('T')[0]);
+      if (searchParams.returnDate) searchUrl.searchParams.set('endDate', searchParams.returnDate.toISOString().split('T')[0]);
+      if (searchParams.travelers) searchUrl.searchParams.set('travelers', searchParams.travelers);
+      searchUrl.searchParams.set('productType', searchParams.type === 'tours' ? 'Group Tours' : 'Accommodation');
+      
+      const response = await fetch(searchUrl);
+      const result = await response.json();
 
       if (result.success) {
-        setSearchResults(result.data)
+        setSearchResults(result.tours)
       } else {
         console.error("Search failed:", result.error)
         setSearchResults([])
@@ -99,7 +103,7 @@ export default function BookingPage() {
                   {searchResults.map((tour) => (
                     <div key={tour.id} className="bg-white rounded-xl overflow-hidden shadow-lg">
                       <div className="relative h-48">
-                        <Image src={tour.image || "/placeholder.svg"} alt={tour.name} fill className="object-cover" />
+                        <Image src={tour.image || "/images/safari-lion.png"} alt={tour.name} fill className="object-cover" />
                       </div>
                       <div className="p-5">
                         <h3 className="text-xl font-bold mb-2">{tour.name}</h3>
@@ -107,25 +111,28 @@ export default function BookingPage() {
                         <div className="flex justify-between items-center mb-4">
                           <div>
                             <div className="flex items-center text-sm text-gray-500 mb-1">
-                              <span className="font-medium mr-2">Duration:</span> {tour.duration} days
+                              <span className="font-medium mr-2">Duration:</span> {tour.duration || 'Multiple days'}
                             </div>
                             <div className="flex items-center text-sm text-gray-500">
-                              <span className="font-medium mr-2">Destination:</span> {tour.destination}
+                              <span className="font-medium mr-2">Supplier:</span> {tour.supplier}
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-gray-500">From</p>
-                            <p className="text-xl font-bold">${tour.price.toLocaleString()}</p>
+                            <p className="text-xl font-bold">
+                              ${tour.rates[0]?.singleRate ? tour.rates[0].singleRate.toLocaleString() : 'POA'}
+                            </p>
                           </div>
                         </div>
                         <div className="flex gap-3">
-                          <Button
-                            variant="outline"
-                            className="flex-1 bg-transparent"
-                            onClick={() => handleSelectTour(tour)}
-                          >
-                            View Details
-                          </Button>
+                          <Link href={`/products/${tour.code}`} className="flex-1">
+                            <Button
+                              variant="outline"
+                              className="w-full bg-transparent"
+                            >
+                              View Details
+                            </Button>
+                          </Link>
                           <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
                             <Button className="w-full bg-amber-500 hover:bg-amber-600">Book Now</Button>
                           </Link>

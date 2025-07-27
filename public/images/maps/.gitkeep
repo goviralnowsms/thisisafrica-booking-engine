@@ -1,0 +1,5 @@
+# Maps directory for tour route maps
+# Maps should be saved as:
+# - {productCode}.png (e.g., NBOGTARP001CKSE.png)
+# - {destination}.png (e.g., kenya.png, tanzania.png)
+# - {region}.png (e.g., masai-mara.png, serengeti.png)
