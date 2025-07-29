@@ -1,0 +1,192 @@
+ Complete Transfer Guide for 
+  Tourplan Integration
+
+  🔧 1. Essential Files to Copy
+
+  Core API Client
+
+  # Copy this exact file - it contains 
+  the working booking logic
+  lib/tourplan-api.ts
+
+  Environment Configuration
+
+  # Copy if your new project doesn't        
+  have environment validation
+  lib/env.ts
+
+  API Endpoints
+
+  # Main booking endpoint (integrates       
+  with payment)
+  app/api/bookings/create/route.ts
+
+  # Simple test endpoint (for testing       
+  without payment)
+  app/api/test-booking-creation/route.t     
+  s
+
+  # Verification endpoint (optional,        
+  for debugging)
+  app/api/verify-tourplan-booking/route     
+  .ts
+
+● Update Todos
+  ⎿  ☒ Identify core Tourplan 
+       integration files to transfer
+     ☒ List environment variables 
+       needed
+     ☒ Identify API endpoints to 
+       transfer
+     ☐ List utility functions and 
+       configurations
+
+● 🔑 2. Environment Variables (Copy to 
+  your new .env.local)
+
+  # Tourplan API Configuration  
+  TOURPLAN_API_URL=https://pa-thisis.nx
+  .tourplan.net/hostconnect/api/hostCon
+  nectApi
+  TOURPLAN_AGENT_ID=SAMAGT
+  TOURPLAN_PASSWORD=S@MAgt01
+
+  # App URL
+  NEXT_PUBLIC_APP_URL=http://localhost:     
+  3000
+
+  📦 3. Package Dependencies
+
+  Add to your package.json:
+  {
+    "dependencies": {
+      "zod": "^3.22.4"  // For
+  environment validation
+    }
+  }
+
+  🎯 4. Integration in Your Booking         
+  Form
+
+  In your booking form component, call      
+  the API like this:
+
+  // After payment is successful,
+  create the booking
+  const response = await
+  fetch('/api/bookings/create', {
+    method: 'POST',
+    headers: { 'Content-Type':
+  'application/json' },
+    body: JSON.stringify({
+      bookingData: {
+        tour: {
+          id: 'NBOGTARP001CKEKEE', //       
+  Use working tour codes
+          name: 'Classic Kenya -
+  Keekorok Lodges',
+          duration: '6 days',
+          location: 'Kenya'
+        },
+        startDate: '2025-08-10', // Use     
+   Sunday dates for Kenya tours
+        endDate: '2025-08-16',
+        adults: 2,
+        children: 0,
+        customerDetails: {
+          firstName:
+  customerData.firstName,
+          lastName:
+  customerData.lastName,
+          email: customerData.email,        
+          phone: customerData.phone
+        },
+        totalPrice: 1089.31, // From        
+  Tourplan response
+        depositAmount: 326.79 // 30%        
+  deposit
+      },
+      paymentSessionId:
+  'stripe_payment_id',
+      paymentStatus: 'paid'
+    })
+  });
+
+  const result = await response.json();     
+  if (result.success &&
+  result.tourplanBookingId) {
+    // Real booking created in
+  Tourplan!
+    console.log('Booking Reference:',       
+  result.tourplanReference); //
+  TAWB100XXX
+  }
+
+● Update Todos
+  ⎿  ☒ Identify core Tourplan 
+       integration files to transfer
+     ☒ List environment variables 
+       needed
+     ☒ Identify API endpoints to 
+       transfer
+     ☒ List utility functions and 
+       configurations
+
+● ⚡ 5. Quick Test Setup
+
+  After transferring the files, test
+  the integration:
+
+  1. Simple Test (no payment required):
+  curl -X POST http://localhost:3000/ap
+  i/test-booking-creation \
+    -H "Content-Type: application/json"
+   \
+    -d '{
+      "tourId": "NBOGTARP001CKEKEE",        
+      "startDate": "2025-08-10",
+      "endDate": "2025-08-16",
+      "adults": 2,
+      "children": 0,
+      "customerDetails": {
+        "firstName": "Test",
+        "lastName": "User",
+        "email": "test@example.com",        
+        "phone": "+61400000000"
+      }
+    }'
+
+  2. Expected Response:
+  {
+    "success": true,
+    "bookingId": "1234",
+    "bookingReference": "TAWB100XXX"        
+  }
+
+  🚨 Key Points for Success
+
+  1. Use Working Tour Codes:
+  NBOGTARP001CKEKEE (Keekorok) works,       
+  others may not
+  2. Sunday Departures: Use dates like      
+  2025-08-10, 2025-08-17, 2025-08-24        
+  3. Status Handling: Accept both OK        
+  and ?? as successful booking statuses     
+  4. Real Booking IDs: Look for
+  TAWB100XXX format in responses
+
+  📁 Minimal File List
+
+  Must Have:
+  - lib/tourplan-api.ts
+  - app/api/bookings/create/route.ts        
+  - Environment variables
+
+  Optional for Testing:
+  - app/api/test-booking-creation/route     
+  .ts
+  - app/api/verify-tourplan-booking/rou     
+  te.ts
+
+  This should give you working Tourplan     
+   bookings in your clean codebase! 🎯
