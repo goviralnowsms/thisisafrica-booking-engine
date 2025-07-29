@@ -167,20 +167,28 @@ export async function searchProducts(criteria: {
 }
 
 /**
- * Get detailed product information
+ * Get detailed product information with enhanced date range
  * Replaces WordPress TourplanOptionRequest functionality
  */
 export async function getProductDetails(productCode: string) {
   try {
-    // Build request specifically for this product
+    // Build request for this product with a broader date range to get more pricing data
+    const currentDate = new Date();
+    const nextYear = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
+    const dateFrom = currentDate.toISOString().split('T')[0];
+    const dateTo = nextYear.toISOString().split('T')[0];
+    
     const xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <OptionInfoRequest>
-    <AgentID>${process.env.TOURPLAN_AGENTID}</AgentID>
-    <Password>${process.env.TOURPLAN_AGENTPASSWORD}</Password>
+    <AgentID>${process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID}</AgentID>
+    <Password>${process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD}</Password>
     <Opt>${productCode}</Opt>
     <Info>GMFTD</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    <DateTo>${dateTo}</DateTo>
+    <RateConvert>Y</RateConvert>
   </OptionInfoRequest>
 </Request>`;
     
@@ -248,23 +256,69 @@ export async function getProductDetails(productCode: string) {
     // Get local assets (images and PDFs)
     const localAssets = getLocalAssets(productCode);
     
-    // Transform rates to match WordPress format
-    const formattedRates = productRates.map(rate => ({
-      dateRange: rate.dateFrom && rate.dateTo 
-        ? `${rate.dateFrom} - ${rate.dateTo}`
-        : 'Available dates',
-      singleRate: rate.singleRate || 0,
-      doubleRate: rate.doubleRate || rate.twinRate || 0,
-      twinRate: rate.twinRate || rate.doubleRate || 0,
-      twinRateFormatted: (rate.twinRate || rate.doubleRate) 
-        ? `${rate.currency || 'AUD'} $${Math.round((rate.twinRate || rate.doubleRate) / 2).toLocaleString()}`
-        : 'Price on application',
-      twinRateTotal: rate.twinRate || rate.doubleRate || 0,
-      currency: rate.currency || 'AUD',
-      rateName: rate.rateName || 'Standard',
-      dateFrom: rate.dateFrom,
-      dateTo: rate.dateTo
-    }));
+    // Group rates by date ranges and consolidate pricing
+    const rateGroups = new Map();
+    
+    productRates.forEach(rate => {
+      const key = `${rate.dateFrom}-${rate.dateTo}-${rate.rateName || 'Standard'}`;
+      if (!rateGroups.has(key)) {
+        rateGroups.set(key, {
+          dateFrom: rate.dateFrom,
+          dateTo: rate.dateTo,
+          rateName: rate.rateName || 'Standard',
+          currency: rate.currency || 'AUD',
+          singleRate: 0,
+          doubleRate: 0,
+          twinRate: 0
+        });
+      }
+      
+      const group = rateGroups.get(key);
+      if (rate.singleRate) group.singleRate = rate.singleRate;
+      if (rate.doubleRate) group.doubleRate = rate.doubleRate;
+      if (rate.twinRate) group.twinRate = rate.twinRate;
+    });
+    
+    // Transform consolidated rates to match WordPress format
+    const formattedRates = Array.from(rateGroups.values()).map(rate => {
+      const twinRateValue = rate.twinRate || rate.doubleRate || 0;
+      const singleRateValue = rate.singleRate || 0;
+      
+      // Create proper date range display
+      let dateRangeDisplay = 'Available dates';
+      if (rate.dateFrom && rate.dateTo) {
+        const fromDate = new Date(rate.dateFrom);
+        const toDate = new Date(rate.dateTo);
+        
+        // If same date, show single date, otherwise show range
+        if (rate.dateFrom === rate.dateTo) {
+          dateRangeDisplay = fromDate.toLocaleDateString('en-AU', { 
+            day: '2-digit', month: 'short', year: 'numeric' 
+          });
+        } else {
+          dateRangeDisplay = `${fromDate.toLocaleDateString('en-AU', { 
+            day: '2-digit', month: 'short' 
+          })} - ${toDate.toLocaleDateString('en-AU', { 
+            day: '2-digit', month: 'short', year: 'numeric' 
+          })}`;
+        }
+      }
+      
+      return {
+        dateRange: dateRangeDisplay,
+        singleRate: singleRateValue,
+        doubleRate: rate.doubleRate || rate.twinRate || 0,
+        twinRate: twinRateValue,
+        twinRateFormatted: twinRateValue > 0
+          ? `${rate.currency} $${Math.round(twinRateValue / 2).toLocaleString()}`
+          : 'POA',
+        twinRateTotal: twinRateValue,
+        currency: rate.currency,
+        rateName: rate.rateName,
+        dateFrom: rate.dateFrom,
+        dateTo: rate.dateTo
+      };
+    });
     
     return {
       id: option.Opt,
@@ -276,8 +330,11 @@ export async function getProductDetails(productCode: string) {
       duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} days` : '',
       periods: parseInt(option.OptGeneral?.Periods || '0'),
       
-      // Rates in WordPress format
-      rates: formattedRates,
+      // Rates in WordPress format (sorted by date)
+      rates: formattedRates.sort((a, b) => {
+        if (!a.dateFrom || !b.dateFrom) return 0;
+        return new Date(a.dateFrom).getTime() - new Date(b.dateFrom).getTime();
+      }),
       
       // Raw notes array for compatibility
       notes,
@@ -299,7 +356,201 @@ export async function getProductDetails(productCode: string) {
 }
 
 /**
- * Create a new booking
+ * Get pricing for specific date ranges - used for calendar view
+ * Returns pricing data for a date range with multiple departure dates
+ */
+export async function getPricingForDateRange(productCode: string, dateFrom: string, dateTo: string, adults: number = 2, children: number = 0, roomType: string = 'DB') {
+  try {
+    const xml = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID}</AgentID>
+    <Password>${process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD}</Password>
+    <Opt>${productCode}</Opt>
+    <Info>GS</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    <DateTo>${dateTo}</DateTo>
+    <RateConvert>Y</RateConvert>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        <Type>${roomType}</Type>
+        <Quantity>1</Quantity>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>`;
+    
+    console.log('Getting pricing for date range:', productCode, dateFrom, 'to', dateTo);
+    const response = await wpXmlRequest(xml);
+    const optionInfo = extractResponseData(response, 'OptionInfoReply');
+    
+    if (!optionInfo?.Option) {
+      return { dateRanges: [], error: 'No pricing data found' };
+    }
+    
+    // Extract date ranges with pricing
+    const option = optionInfo.Option;
+    const dateRanges: any[] = [];
+    
+    if (option.OptDateRanges?.OptDateRange) {
+      const ranges = extractArray(option.OptDateRanges.OptDateRange);
+      ranges.forEach((range: any) => {
+        if (range.RateSets?.RateSet) {
+          const rateSets = extractArray(range.RateSets.RateSet);
+          rateSets.forEach((rateSet: any) => {
+            if (rateSet.OptRate?.RoomRates) {
+              const roomRates = rateSet.OptRate.RoomRates;
+              dateRanges.push({
+                dateFrom: range.DateFrom,
+                dateTo: range.DateTo,
+                currency: range.Currency || 'AUD',
+                singleRate: roomRates.SingleRate ? Math.round(parseFloat(roomRates.SingleRate) / 100) : 0,
+                doubleRate: roomRates.DoubleRate ? Math.round(parseFloat(roomRates.DoubleRate) / 100) : 0,
+                twinRate: roomRates.TwinRate ? Math.round(parseFloat(roomRates.TwinRate) / 100) : 0,
+                rateName: rateSet.RateName || 'Standard',
+                appliesDaysOfWeek: rateSet.AppliesDaysOfWeek,
+                available: !rateSet.IsClosed
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    return { dateRanges, rawResponse: optionInfo };
+  } catch (error) {
+    console.error('Error getting pricing for date range:', error);
+    return { dateRanges: [], error: error instanceof Error ? error.message : 'Pricing request failed' };
+  }
+}
+
+/**
+ * Get rate details with inventory information
+ * Required to get valid RateId for booking
+ * 
+ * IMPORTANT: Group tours use RateName from RateSet, not separate RateId elements
+ * Using Info>D to get RateSet information with RateName
+ */
+export async function getRateDetails(productCode: string, dateFrom: string, dateTo?: string, adults: number = 2, children: number = 0, roomType: string = 'DB') {
+  try {
+    // Use Info=D to get rate details with RateSet information
+    const xml = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID}</AgentID>
+    <Password>${process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD}</Password>
+    <Opt>${productCode}</Opt>
+    <Info>D</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    ${dateTo ? `<DateTo>${dateTo}</DateTo>` : ''}
+    <RateConvert>Y</RateConvert>
+  </OptionInfoRequest>
+</Request>`;
+    
+    console.log('🔍 Getting rate details for booking (using GMFTD):', {
+      productCode,
+      dateFrom,
+      dateTo,
+      adults,
+      children,
+      roomType
+    });
+    
+    const response = await wpXmlRequest(xml);
+    const optionInfo = extractResponseData(response, 'OptionInfoReply');
+    
+    if (!optionInfo?.Option) {
+      console.error('❌ No option found in rate response');
+      throw new Error(`No rate information found for product ${productCode}`);
+    }
+    
+    // Extract RateName from OptDateRanges RateSet (this is what TourPlan uses as RateId for group tours)
+    const option = optionInfo.Option;
+    let validRateId = null;
+    let availableRates: any[] = [];
+    
+    // Look for rates in OptDateRanges (primary source for group tours)
+    if (option.OptDateRanges?.OptDateRange) {
+      const dateRanges = extractArray(option.OptDateRanges.OptDateRange);
+      
+      for (const dateRange of dateRanges) {
+        // Check if this date range overlaps with our requested dates
+        const rangeFrom = new Date(dateRange.DateFrom);
+        const rangeTo = new Date(dateRange.DateTo || dateRange.DateFrom);
+        const requestFrom = new Date(dateFrom);
+        const requestTo = dateTo ? new Date(dateTo) : requestFrom;
+        
+        // Check for date overlap
+        const hasOverlap = requestFrom <= rangeTo && requestTo >= rangeFrom;
+        
+        if (dateRange.RateSets?.RateSet) {
+          const rateSets = extractArray(dateRange.RateSets.RateSet);
+          
+          for (const rateSet of rateSets) {
+            // Use RateName as the RateId (this is key insight from debug results)
+            const rateName = rateSet.RateName || 'Standard';
+            availableRates.push({
+              rateName,
+              dateFrom: dateRange.DateFrom,
+              dateTo: dateRange.DateTo,
+              hasOverlap,
+              currency: dateRange.Currency || 'AUD'
+            });
+            
+            // Prefer rates that overlap with our requested dates
+            if (hasOverlap && !validRateId) {
+              validRateId = rateName;
+              console.log('Found matching RateName for dates:', rateName);
+            }
+          }
+        }
+      }
+    }
+    
+    // If no overlapping rate found, use the first available rate
+    if (!validRateId && availableRates.length > 0) {
+      validRateId = availableRates[0].rateName;
+      console.log('No overlapping rate found, using first available RateName:', validRateId);
+    }
+    
+    // If still no rate found, use the helper to search thoroughly
+    if (!validRateId && option) {
+      console.log('🔍 Using helper to search for RateId...');
+      validRateId = extractRateIdFromOption(option);
+    }
+    
+    // Final fallback - return null to omit RateId entirely
+    if (!validRateId) {
+      console.log('No RateId found in response - will omit from booking request');
+      validRateId = null; // This will cause the element to be omitted
+    }
+    
+    console.log('✅ Found rate details:', {
+      productCode,
+      validRateId,
+      availableRatesCount: availableRates.length,
+      dateFrom,
+      dateTo
+    });
+    
+    return {
+      rateId: validRateId,
+      availableRates,
+      option: option,
+      rawResponse: optionInfo
+    };
+  } catch (error) {
+    console.error('Error getting rate details:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new booking using the working TourplanAPI
  * Replaces WordPress booking creation functionality
  */
 export async function createBooking(bookingData: {
@@ -316,26 +567,62 @@ export async function createBooking(bookingData: {
   infants?: number;
 }) {
   try {
-    const xml = new AddServiceRequest()
-      .setNewBooking(bookingData.customerName, bookingData.isQuote ? 'Q' : 'B')
-      .setProduct(bookingData.productCode, bookingData.rateId)
-      .setDates(bookingData.dateFrom, bookingData.dateTo)
-      .setTravelers(bookingData.adults, bookingData.children, bookingData.infants)
-      .setCustomerDetails(bookingData.email, bookingData.mobile)
-      .build();
+    const { getTourplanAPI } = await import('./core');
+    const tourplanAPI = getTourplanAPI();
     
-    const response = await wpXmlRequest(xml);
-    const bookingReply = extractResponseData(response, 'AddServiceReply');
+    console.log('🔄 Creating TourPlan booking with data:', {
+      productCode: bookingData.productCode,
+      customerName: bookingData.customerName,
+      dateFrom: bookingData.dateFrom,
+      adults: bookingData.adults,
+      children: bookingData.children
+    });
     
-    return {
-      bookingId: bookingReply.BookingId,
-      reference: bookingReply.BookingRef || bookingReply.Reference,
-      status: bookingReply.Status || (bookingData.isQuote ? 'Quote' : 'Booked'),
-      totalCost: parseFloat(bookingReply.TotalCost || '0'),
-      currency: bookingReply.Currency || 'USD',
-    };
+    // Parse customer name
+    const nameParts = bookingData.customerName.split(' ');
+    const firstName = nameParts[0] || 'Guest';
+    const lastName = nameParts.slice(1).join(' ') || 'User';
+    
+    // Call the working TourplanAPI createBooking method
+    const response = await tourplanAPI.createBooking({
+      tourId: bookingData.productCode,
+      startDate: bookingData.dateFrom,
+      endDate: bookingData.dateTo || bookingData.dateFrom,
+      adults: bookingData.adults || 2,
+      children: bookingData.children || 0,
+      customerDetails: {
+        firstName,
+        lastName,
+        email: bookingData.email || '',
+        phone: bookingData.mobile || '',
+      }
+    });
+    
+    console.log('📋 TourPlan API response:', {
+      success: response.success,
+      bookingId: response.bookingId,
+      bookingReference: response.bookingReference,
+      error: response.error
+    });
+    
+    if (response.success) {
+      // Return format expected by the API route
+      return {
+        bookingId: response.bookingId,
+        reference: response.bookingReference,
+        bookingRef: response.bookingReference, // Alternative field name
+        status: 'OK', // TourPlan returned success
+        totalCost: 0,
+        currency: 'AUD',
+        rateId: bookingData.rateId,
+        rawResponse: response.rawResponse,
+      };
+    } else {
+      console.error('❌ TourPlan booking failed:', response.error);
+      throw new Error(response.error || 'Booking creation failed');
+    }
   } catch (error) {
-    console.error('Error creating booking:', error);
+    console.error('❌ Error creating booking:', error);
     throw error;
   }
 }
@@ -365,6 +652,56 @@ export async function getBookingDetails(bookingId: string) {
     console.error('Error getting booking details:', error);
     throw error;
   }
+}
+
+/**
+ * Helper to extract RateId from option response
+ * For group tours, this usually means extracting RateName from RateSet
+ */
+function extractRateIdFromOption(option: any): string | null {
+  // Check various possible locations for RateId based on TourPlan response structure
+  
+  // 1. Direct RateId on option
+  if (option.RateId) {
+    console.log('Found RateId directly on option:', option.RateId);
+    return option.RateId;
+  }
+  
+  // 2. In rate information
+  if (option.Rate?.RateId) {
+    console.log('Found RateId in Rate:', option.Rate.RateId);
+    return option.Rate.RateId;
+  }
+  
+  // 3. In OptStayResults
+  if (option.OptStayResults?.RateId) {
+    console.log('Found RateId in OptStayResults:', option.OptStayResults.RateId);
+    return option.OptStayResults.RateId;
+  }
+  
+  // 4. In first RateSet - check both RateId and RateName
+  if (option.OptDateRanges?.OptDateRange) {
+    const dateRanges = extractArray(option.OptDateRanges.OptDateRange);
+    for (const range of dateRanges) {
+      if (range.RateSets?.RateSet) {
+        const rateSets = extractArray(range.RateSets.RateSet);
+        for (const rateSet of rateSets) {
+          if (rateSet.RateId) {
+            console.log('Found RateId in RateSet:', rateSet.RateId);
+            return rateSet.RateId;
+          }
+          // For group tours, use RateName as RateId
+          if (rateSet.RateName) {
+            console.log('Found RateName in RateSet (using as RateId):', rateSet.RateName);
+            return rateSet.RateName;
+          }
+        }
+      }
+    }
+  }
+  
+  console.log('No RateId or RateName found in option structure');
+  return null;
 }
 
 /**

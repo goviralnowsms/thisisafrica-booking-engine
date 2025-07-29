@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { BookingSearch } from "@/components/booking-search"
@@ -11,10 +11,30 @@ import { searchTours } from "@/lib/tourplan-api"
 
 export default function BookingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSearching, setIsSearching] = useState(false)
   const [searchPerformed, setSearchPerformed] = useState(false)
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedTour, setSelectedTour] = useState<any | null>(null)
+
+  // Auto-search if URL has search parameters
+  useEffect(() => {
+    const productType = searchParams.get('productType')
+    const country = searchParams.get('country')
+    const destination = searchParams.get('destination')
+    const classLevel = searchParams.get('class')
+
+    if (productType) {
+      // Auto-perform search based on URL parameters
+      handleSearch({
+        type: productType,
+        productType: productType,
+        destination: destination || '',
+        country: country || '',
+        class: classLevel || ''
+      })
+    }
+  }, [searchParams])
 
   // Real search functionality using TourPlan API
   const handleSearch = async (searchParams: any) => {

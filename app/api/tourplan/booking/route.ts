@@ -22,7 +22,7 @@ const createBookingSchema = z.object({
   
   // Product info
   productCode: z.string().min(1),
-  rateId: z.string().min(1),
+  rateId: z.string().optional().default(''),
   dateFrom: dateSchema,
   dateTo: dateSchema.optional(),
   
@@ -55,12 +55,40 @@ const addServiceSchema = z.object({
 // POST - Create new booking
 export async function POST(request: NextRequest) {
   try {
-    const validationResult = await validateRequestBody(request, createBookingSchema);
-    if (validationResult.error) return validationResult.error;
+    console.log('📝 Booking API called');
+    
+    // Log raw request body first
+    const rawBody = await request.text();
+    console.log('📝 Raw request body:', rawBody);
+    
+    // Parse it manually to check
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+      console.log('📝 Parsed body:', parsedBody);
+    } catch (parseError) {
+      console.error('❌ Failed to parse request body:', parseError);
+      return errorResponse('Invalid JSON in request body', 400);
+    }
+    
+    // Create new request with parsed body for validation
+    const testRequest = new Request(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: rawBody,
+    });
+    
+    const validationResult = await validateRequestBody(testRequest, createBookingSchema);
+    if (validationResult.error) {
+      console.log('❌ Validation failed:', validationResult.error);
+      return validationResult.error;
+    }
     
     const data = validationResult.data;
+    console.log('✅ Validated data:', data);
     
     // Use simplified service function
+    console.log('🔄 Calling createBooking service...');
     const result = await createBooking({
       customerName: data.customerName,
       productCode: data.productCode,
@@ -75,8 +103,64 @@ export async function POST(request: NextRequest) {
       infants: data.infants,
     });
     
+    console.log('🎉 Booking result:', result);
+    
+    // Handle different TourPlan responses
+    if (result.status === 'NO' || result.status === 'RQ' || result.status === 'WQ') {
+      // NO = Declined, RQ = On Request, WQ = Website Quote (what we want!)
+      console.log(`⚠️ TourPlan returned status: ${result.status} - handling as quote requiring manual confirmation`);
+      
+      // For quotes, we might still get a reference from TourPlan
+      const tourplanRef = result.reference || result.bookingRef || null;
+      const tourplanBookingId = result.bookingId || null;
+      
+      // Generate our own reference if TourPlan didn't provide one
+      const bookingRef = tourplanRef || `TIA-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      // Create a booking record with manual confirmation requirement
+      const quotedBooking = {
+        bookingId: tourplanBookingId, // May have TourPlan ID even for quotes
+        reference: bookingRef,
+        tourplanReference: tourplanRef, // Keep TourPlan's reference if provided
+        status: result.status === 'WQ' ? 'WEBSITE_QUOTE' : 'PENDING_CONFIRMATION',
+        tourplanStatus: result.status, // Keep original TourPlan status
+        totalCost: result.totalCost || 0,
+        currency: result.currency || 'AUD',
+        rateId: result.rateId,
+        customerDetails: {
+          name: data.customerName,
+          email: data.email,
+          mobile: data.mobile
+        },
+        productDetails: {
+          code: data.productCode,
+          dateFrom: data.dateFrom,
+          dateTo: data.dateTo,
+          adults: data.adults,
+          children: data.children,
+          infants: data.infants
+        },
+        requiresManualConfirmation: true,
+        createdAt: new Date().toISOString(),
+        message: result.status === 'WQ' 
+          ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
+          : 'Booking requires manual confirmation. You will be contacted within 48 hours to confirm availability.',
+        rawResponse: result.rawResponse
+      };
+      
+      console.log('📝 Created quote/booking for manual confirmation:', {
+        status: result.status,
+        tourplanRef: tourplanRef,
+        ourRef: bookingRef
+      });
+      
+      return successResponse(quotedBooking, 201);
+    }
+    
     return successResponse(result, 201);
   } catch (error) {
+    console.error('❌ Booking API error:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return handleTourPlanError(error);
   }
 }

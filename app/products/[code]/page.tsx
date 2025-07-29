@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PricingCalendar from "@/components/booking/PricingCalendar"
 
 // CSS for tour content styling
 const tourContentStyles = `
@@ -83,6 +84,75 @@ export default function ProductDetailsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [mapImage, setMapImage] = useState<string | null>(null)
+  const [isClient, setIsClient] = useState(false)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  // Client-side hydration effect
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Calculate product images using useMemo to ensure proper reactivity
+  const realImages = useMemo(() => {
+    return product?.localAssets?.images && product.localAssets.images.length > 0
+      ? product.localAssets.images.map(img => img.url).filter(url => url && url.trim() !== '')
+      : []
+  }, [product])
+  
+  // Use real images if available, otherwise fallback images
+  const productImages = useMemo(() => {
+    return realImages.length > 0 
+      ? realImages
+      : ["/images/safari-lion.png", "/images/luxury-accommodation.png", "/images/rail-journey.png"]
+  }, [realImages])
+  
+  // Show carousel controls only if we have multiple real images (not fallback images)
+  const showCarouselControls = useMemo(() => realImages.length > 1, [realImages])
+
+
+  // Keyboard navigation for carousel
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!showCarouselControls) return
+      
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        setSelectedImageIndex((prev) => (prev + 1) % productImages.length)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCarouselControls, productImages.length])
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd || !showCarouselControls) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      setSelectedImageIndex((prev) => (prev + 1) % productImages.length)
+    }
+    if (isRightSwipe) {
+      setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)
+    }
+  }
 
   // Check for local map image
   useEffect(() => {
@@ -196,36 +266,72 @@ export default function ProductDetailsPage() {
   }, [productCode, product]);
 
   useEffect(() => {
+    // Only fetch on client side to avoid hydration mismatch
+    if (!isClient) return
+
     const fetchProductDetails = async () => {
+      if (!productCode) {
+        setError("No product code provided")
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
-        const response = await fetch(`/api/tourplan/product/${productCode}`)
-        const result = await response.json()
+        setError(null)
         
-        console.log('API Response:', result) // Debug log
+        console.log('Fetching product details for:', productCode)
+        console.log('API URL:', `/api/tourplan/product/${productCode}`)
+        const response = await fetch(`/api/tourplan/product/${productCode}`)
+        
+        console.log('Response status:', response.status)
+        console.log('Response ok:', response.ok)
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        
+        const result = await response.json()
+        console.log('Full API Response:', result)
         
         if (result.success && result.data) {
-          // Handle double-nested response structure
-          const productData = result.data.data || result.data
-          console.log('Product Data:', productData) // Debug log
-          setProduct(productData)
+          // Handle the double-nested response structure: {success: true, data: {success: true, data: {...}}}
+          let productData = result.data
+          if (productData.success && productData.data) {
+            productData = productData.data
+          }
+          console.log('Extracted Product Data:', productData)
+          
+          if (productData && productData.id) {
+            console.log('Setting product data:', productData)
+            setProduct(productData)
+            // Reset image carousel to first image when product changes
+            setSelectedImageIndex(0)
+            console.log('Product set successfully')
+            // Force a small delay to ensure state updates
+            await new Promise(resolve => setTimeout(resolve, 100))
+          } else {
+            console.error('Invalid product data structure:', productData)
+            setError("Invalid product data received")
+          }
         } else {
+          console.error('API Error - No success or data:', result)
           setError(result.error || result.message || "Failed to load product details")
         }
       } catch (err) {
-        setError("Failed to load product details")
-        console.error(err)
+        console.error('Fetch error:', err)
+        setError(`Failed to load product details: ${err instanceof Error ? err.message : 'Unknown error'}`)
       } finally {
         setLoading(false)
+        console.log('Loading finished')
       }
     }
 
-    if (productCode) {
-      fetchProductDetails()
-    }
-  }, [productCode])
+    fetchProductDetails()
+  }, [productCode, isClient])
 
-  if (loading) {
+  if (loading || !isClient) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4">
@@ -262,10 +368,6 @@ export default function ProductDetailsPage() {
     )
   }
 
-  // Calculate product images after product is loaded
-  const productImages = product?.localAssets?.images && product.localAssets.images.length > 0
-    ? product.localAssets.images.map(img => img.url)
-    : ["/images/safari-lion.png", "/images/luxury-accommodation.png", "/images/rail-journey.png"]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -273,7 +375,7 @@ export default function ProductDetailsPage() {
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center space-x-2 text-sm">
+          <nav className="flex items-center space-x-2 text-sm ml-48">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
             <span className="text-gray-400">/</span>
             <Link href="/booking" className="text-gray-500 hover:text-gray-700">Tours</Link>
@@ -308,39 +410,55 @@ export default function ProductDetailsPage() {
           </div>
           
           {/* Image Gallery - Right Side */}
-          <div className="relative flex-1 h-full">
+          <div 
+            className="relative flex-1 h-full"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <Image
-              src={productImages[selectedImageIndex]}
+              key={selectedImageIndex}
+              src={productImages[selectedImageIndex] || productImages[0]}
               alt={product.name}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 1024px) 100vw, 67vw"
             />
             
-            {/* Navigation buttons - only show if more than 1 image */}
-            {productImages.length > 1 && (
+            {/* Navigation buttons - only show if more than 1 real image */}
+            {showCarouselControls && (
             <>
               <button
-                onClick={() => setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+                onClick={() => setSelectedImageIndex((selectedImageIndex - 1 + productImages.length) % productImages.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
+                aria-label="Previous image"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
-                onClick={() => setSelectedImageIndex((prev) => (prev + 1) % productImages.length)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full"
+                onClick={() => setSelectedImageIndex((selectedImageIndex + 1) % productImages.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
+                aria-label="Next image"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
               
+              {/* Image counter */}
+              <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {selectedImageIndex + 1} / {productImages.length}
+              </div>
+              
+              {/* Dot indicators */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3">
                 {productImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`w-3 h-3 rounded-full ${
-                      index === selectedImageIndex ? "bg-white" : "bg-white/50"
+                    className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                      index === selectedImageIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/75"
                     }`}
+                    aria-label={`View image ${index + 1}`}
                   />
                 ))}
               </div>
@@ -369,7 +487,7 @@ export default function ProductDetailsPage() {
                 )}
               </div>
               
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">{product.name}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
               
               <div className="flex flex-wrap gap-6 mb-6">
                 <span className="flex items-center gap-2 text-lg">
@@ -409,9 +527,16 @@ export default function ProductDetailsPage() {
                     Request Quote
                   </Link>
                 )}
-                <button className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-3 rounded-lg text-lg">
+                <a 
+                  href="#overview"
+                  className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-3 rounded-lg text-lg inline-block"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    document.getElementById('overview')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                >
                   Learn More
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -424,7 +549,7 @@ export default function ProductDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main content with tabs */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow">
+              <div id="overview" className="bg-white rounded-lg shadow">
                 <Tabs defaultValue="overview" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 rounded-t-lg h-12">
                     <TabsTrigger value="overview" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Overview</TabsTrigger>
@@ -497,52 +622,15 @@ export default function ProductDetailsPage() {
                     </TabsContent>
                     
                     <TabsContent value="pricing" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Pricing & Dates</h2>
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Pricing & Availability</h2>
                       <div className="space-y-4">
-                        {product.rates && product.rates.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                              <thead>
-                                <tr className="border-b-2 border-gray-200">
-                                  <th className="text-left py-3 px-2 text-amber-600 font-semibold">Date Range</th>
-                                  <th className="text-right py-3 px-2 text-amber-600 font-semibold">Single<br/><span className="text-xs font-normal text-gray-500">per person</span></th>
-                                  <th className="text-right py-3 px-2 text-amber-600 font-semibold">Twin Share<br/><span className="text-xs font-normal text-gray-500">per person</span></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {product.rates.filter(rate => {
-                                  const twinValue = rate.twinRateTotal || rate.twinRate || 0
-                                  const twinRate = typeof twinValue === 'string' ? parseFloat(twinValue) : twinValue
-                                  return twinRate > 0 || (rate.singleRate || 0) > 0
-                                }).map((rate, index) => (
-                                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                                    <td className="py-3 px-2 text-gray-700">
-                                      {rate.dateRange || (rate.dateFrom && rate.dateTo ? 
-                                        `${new Date(rate.dateFrom).toLocaleDateString()} - ${new Date(rate.dateTo).toLocaleDateString()}` 
-                                        : "Available dates")}
-                                    </td>
-                                    <td className="text-right py-3 px-2 font-semibold text-gray-800">
-                                      {rate.singleRate > 0 ? `${rate.currency || 'AUD'} $${rate.singleRate.toLocaleString()}` : 'POA'}
-                                    </td>
-                                    <td className="text-right py-3 px-2 font-semibold text-green-600">
-                                      {(rate.twinRateTotal || rate.twinRate) > 0 ? rate.twinRateFormatted : 'POA'}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <p className="text-gray-600 mb-4">Pricing available on request</p>
-                            <Link 
-                              href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}`}
-                              className="inline-block bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-lg"
-                            >
-                              Request Quote
-                            </Link>
-                          </div>
-                        )}
+                        <PricingCalendar 
+                          productCode={product.code}
+                          onDateSelect={(date, pricing) => {
+                            console.log('Selected date:', date, 'with pricing:', pricing)
+                            // Could navigate to booking page with selected date
+                          }}
+                        />
                         
                         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                           <h4 className="font-semibold text-blue-800 mb-2">Payment Information</h4>
@@ -551,6 +639,7 @@ export default function ProductDetailsPage() {
                             <div>• Final payment (70%) due 60 days before departure</div>
                             <div>• All prices are per person and subject to availability</div>
                             <div>• Children's pricing available (varies by age)</div>
+                            <div>• Departures are typically on {product.description || 'scheduled days'}</div>
                           </div>
                         </div>
                       </div>

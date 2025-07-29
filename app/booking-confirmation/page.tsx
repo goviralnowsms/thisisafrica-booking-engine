@@ -11,10 +11,24 @@ function BookingConfirmationContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const bookingReference = searchParams.get("reference")
+  const tourplanStatus = searchParams.get("status") // 'partial', 'manual', etc.
+  const manualFlag = searchParams.get("manual") // 'true' if manual confirmation needed
 
   const [loading, setLoading] = useState(true)
+  const [bookingDetails, setBookingDetails] = useState<any>(null)
 
   useEffect(() => {
+    // Load booking details from sessionStorage if available
+    const storedBooking = sessionStorage.getItem('manualConfirmationBooking')
+    if (storedBooking) {
+      try {
+        const parsed = JSON.parse(storedBooking)
+        setBookingDetails(parsed)
+      } catch (error) {
+        console.error('Error parsing stored booking:', error)
+      }
+    }
+
     // Simulate loading confirmation details
     const timer = setTimeout(() => {
       setLoading(false)
@@ -64,6 +78,31 @@ function BookingConfirmationContent() {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Booking Reference</h2>
             <div className="text-3xl font-bold text-green-600 mb-2">{bookingReference}</div>
             <p className="text-sm text-gray-600">Please save this reference number for your records</p>
+            
+            {/* TourPlan Integration Status */}
+            {(manualFlag === 'true' || tourplanStatus === 'manual') && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center justify-center text-amber-800 text-sm">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  <span className="font-medium">Booking sent to TourPlan for confirmation</span>
+                </div>
+                <p className="text-xs text-amber-700 mt-1">
+                  {bookingDetails?.message || 'Your booking has been submitted to our booking system. Staff will confirm availability within 48 hours.'}
+                </p>
+              </div>
+            )}
+            
+            {tourplanStatus === 'partial' && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-center text-blue-800 text-sm">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  <span className="font-medium">Booking submitted successfully</span>
+                </div>
+                <p className="text-xs text-blue-700 mt-1">
+                  Your booking has been received and is being processed. You will receive confirmation shortly.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -135,10 +174,17 @@ function BookingConfirmationContent() {
                   2
                 </div>
                 <div>
-                  <h4 className="font-medium">Travel Consultant Contact</h4>
+                  <h4 className="font-medium">
+                    {(manualFlag === 'true' || tourplanStatus === 'manual') 
+                      ? 'TourPlan Processing' 
+                      : 'Travel Consultant Contact'
+                    }
+                  </h4>
                   <p className="text-gray-600 text-sm">
-                    Our travel consultant will contact you within 24 hours to discuss your preferences and finalize
-                    details.
+                    {(manualFlag === 'true' || tourplanStatus === 'manual')
+                      ? 'Your booking has been submitted to our TourPlan system. Our staff will review and confirm availability within 48 hours.'
+                      : 'Our travel consultant will contact you within 24 hours to discuss your preferences and finalize details.'
+                    }
                   </p>
                 </div>
               </div>

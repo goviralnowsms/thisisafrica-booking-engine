@@ -1,9 +1,32 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from "lucide-react"
 
 export default function Home() {
+  const router = useRouter()
+  const [searchCriteria, setSearchCriteria] = useState({
+    productType: "",
+    country: "",
+    destination: "",
+    class: ""
+  })
+
+  const handleSearch = () => {
+    // Build search URL with parameters
+    const params = new URLSearchParams()
+    if (searchCriteria.productType) params.set('productType', searchCriteria.productType)
+    if (searchCriteria.country) params.set('country', searchCriteria.country)
+    if (searchCriteria.destination) params.set('destination', searchCriteria.destination)
+    if (searchCriteria.class) params.set('class', searchCriteria.class)
+    
+    // Navigate to booking page with search parameters
+    router.push(`/booking?${params.toString()}`)
+  }
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section with Lion Image - Made Taller */}
@@ -34,47 +57,69 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Simplified Search Form */}
+      {/* Enhanced Search Form */}
       <section className="bg-white py-8">
         <div className="container mx-auto px-4">
           <div className="bg-gray-100 rounded-lg p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Select>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <Select value={searchCriteria.productType} onValueChange={(value) => setSearchCriteria(prev => ({...prev, productType: value}))}>
                 <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Starting country" />
+                  <SelectValue placeholder="Tour Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Group Tours">Group Tours</SelectItem>
+                  <SelectItem value="Day Tours">Day Tours</SelectItem>
+                  <SelectItem value="Accommodation">Accommodation</SelectItem>
+                  <SelectItem value="Cruises">Cruises</SelectItem>
+                  <SelectItem value="Rail">Rail Tours</SelectItem>
+                  <SelectItem value="Packages">Packages</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
+                <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                  <SelectValue placeholder="Country" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="botswana">Botswana</SelectItem>
                   <SelectItem value="kenya">Kenya</SelectItem>
                   <SelectItem value="south-africa">South Africa</SelectItem>
                   <SelectItem value="tanzania">Tanzania</SelectItem>
+                  <SelectItem value="namibia">Namibia</SelectItem>
+                  <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
+                  <SelectItem value="zambia">Zambia</SelectItem>
+                  <SelectItem value="uganda">Uganda</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select>
+              <Select value={searchCriteria.destination} onValueChange={(value) => setSearchCriteria(prev => ({...prev, destination: value}))}>
                 <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Starting destination" />
+                  <SelectValue placeholder="Destination" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cape-town">Cape Town</SelectItem>
                   <SelectItem value="nairobi">Nairobi</SelectItem>
                   <SelectItem value="victoria-falls">Victoria Falls</SelectItem>
                   <SelectItem value="serengeti">Serengeti</SelectItem>
+                  <SelectItem value="okavango">Okavango Delta</SelectItem>
+                  <SelectItem value="kruger">Kruger National Park</SelectItem>
+                  <SelectItem value="masai-mara">Masai Mara</SelectItem>
+                  <SelectItem value="zanzibar">Zanzibar</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select>
+              <Select value={searchCriteria.class} onValueChange={(value) => setSearchCriteria(prev => ({...prev, class: value}))}>
                 <SelectTrigger className="bg-amber-500 text-white border-amber-500">
                   <SelectValue placeholder="Class" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="economy">Economy</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="basic">Basic</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
                   <SelectItem value="luxury">Luxury</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Button className="bg-amber-500 hover:bg-amber-600 text-white">
+              <Button onClick={handleSearch} className="bg-amber-500 hover:bg-amber-600 text-white">
                 <Search className="mr-2 h-4 w-4" />
                 Search
               </Button>
@@ -105,9 +150,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
-                <a href="/booking?type=tours&productType=Group%20Tours" className="w-full">
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
-                </a>
+                <Button 
+                  onClick={() => router.push('/booking?productType=Group%20Tours')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book Now
+                </Button>
               </div>
             </div>
 
@@ -129,7 +177,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Great group tours. Choose from a variety of hotels. Ideal for solo travellers.
                 </p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <Button 
+                  onClick={() => router.push('/booking?productType=Accommodation')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book Now
+                </Button>
               </div>
             </div>
 
@@ -151,7 +204,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Discover our rail tours. The Blue Train, Shongololo Express and more.
                 </p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <Button 
+                  onClick={() => router.push('/booking?productType=Rail')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book Now
+                </Button>
               </div>
             </div>
 
@@ -173,7 +231,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <Button 
+                  onClick={() => router.push('/booking?productType=Packages')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book Now
+                </Button>
               </div>
             </div>
 
@@ -193,7 +256,12 @@ export default function Home() {
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 text-gray-900">CRUISES</h3>
                 <p className="text-gray-600 mb-4">Discover our cruise options. Zambezi River cruises and more.</p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <Button 
+                  onClick={() => router.push('/booking?productType=Cruises')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book Now
+                </Button>
               </div>
             </div>
 
@@ -215,7 +283,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">
                   Custom-designed adventures. Personalised itineraries for your perfect African journey.
                 </p>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Book Now</Button>
+                <Button 
+                  onClick={() => router.push('/contact')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Contact Us
+                </Button>
               </div>
             </div>
           </div>
@@ -298,6 +371,99 @@ export default function Home() {
                   </div>
                 </div>
                 <Button className="w-full bg-amber-500 hover:bg-amber-600">View Deal</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Tours - Direct Booking */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Featured Safari Adventures</h2>
+            <div className="w-20 h-1 bg-amber-500 mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Ready to book? These are our most popular tours, available for immediate booking with TourPlan integration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Classic Kenya - Keekorok */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image src="/images/safari-lion.png" alt="Classic Kenya Safari" fill className="object-cover" />
+                <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded text-sm font-medium">
+                  🔥 Most Popular
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2">Classic Kenya - Keekorok</h3>
+                <p className="text-gray-600 mb-3 text-sm">6 days • Masai Mara • Lake Nakuru • Amboseli</p>
+                <p className="text-gray-600 mb-4">
+                  Experience the ultimate Kenyan safari with big five game viewing, Maasai village visit, and stunning landscapes.
+                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-lg font-bold text-green-600">From AUD $5,447</span>
+                    <p className="text-sm text-gray-500">per person twin share</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKEKEE')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                >
+                  🚀 Book Now - Direct to TourPlan
+                </Button>
+              </div>
+            </div>
+
+            {/* Classic Kenya - Serena */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image src="/images/safari-elephants.png" alt="Classic Kenya Serena" fill className="object-cover" />
+                <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium">
+                  ⭐ Premium
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2">Classic Kenya - Serena</h3>
+                <p className="text-gray-600 mb-3 text-sm">6 days • Masai Mara • Lake Nakuru • Amboseli</p>
+                <p className="text-gray-600 mb-4">
+                  Luxury safari experience at premium Serena lodges with exceptional service and prime locations.
+                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-lg font-bold text-green-600">From AUD $5,800</span>
+                    <p className="text-sm text-gray-500">per person twin share</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKSE')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                >
+                  🚀 Book Now - Direct to TourPlan
+                </Button>
+              </div>
+            </div>
+
+            {/* View All Tours */}
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow text-white">
+              <div className="p-8 text-center h-full flex flex-col justify-center">
+                <div className="mb-6">
+                  <Search className="h-16 w-16 mx-auto mb-4 opacity-80" />
+                  <h3 className="text-2xl font-bold mb-4">Explore All Tours</h3>
+                  <p className="mb-6 opacity-90">
+                    Discover our complete collection of African adventures across Kenya, Tanzania, Botswana, and more.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => router.push('/booking')}
+                  variant="outline"
+                  className="bg-white text-amber-600 border-white hover:bg-amber-50 font-bold"
+                >
+                  🔍 Browse All Tours
+                </Button>
               </div>
             </div>
           </div>
