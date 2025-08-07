@@ -8,7 +8,7 @@ export function TailorMade() {
     <section className="py-12 md:py-20">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tailor Made Safaris</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tailor-made Itineraries</h2>
           <div className="w-20 h-1 bg-amber-500 mb-6"></div>
           <p className="text-lg text-gray-600 max-w-2xl text-center">
             Custom-designed African experiences created exclusively for you and your travel companions
@@ -29,7 +29,7 @@ export function TailorMade() {
           <div className="space-y-6">
             <h3 className="text-2xl md:text-3xl font-bold">Your Dream African Journey, Your Way</h3>
             <p className="text-lg text-gray-600">
-              Our tailor-made safaris are designed around your specific interests, preferred travel dates, and
+              Our tailor-made itineraries are designed around your specific interests, preferred travel dates, and
               accommodation style. Whether you're planning a family adventure, a romantic honeymoon, or a special
               celebration with friends, we'll craft the perfect itinerary just for you.
             </p>
@@ -74,7 +74,7 @@ export function TailorMade() {
 
             <div className="pt-4">
               <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">
-                Start Planning Your Safari
+                Start Planning Your Itinerary
               </Button>
             </div>
           </div>
@@ -84,7 +84,7 @@ export function TailorMade() {
           <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-4">
               <Users className="h-10 w-10 text-amber-500 mr-4" />
-              <h3 className="text-xl font-bold">Family Safaris</h3>
+              <h3 className="text-xl font-bold">Family Itineraries</h3>
             </div>
             <p className="text-gray-600 mb-4">
               Age-appropriate activities, family-friendly accommodations, and experiences that will create lasting

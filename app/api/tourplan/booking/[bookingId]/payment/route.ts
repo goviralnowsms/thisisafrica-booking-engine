@@ -1,7 +1,6 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { 
-  getTourPlanClient, 
   validateRequestBody,
   successResponse, 
   errorResponse, 
@@ -35,34 +34,9 @@ export async function POST(
     if (validationResult.error) return validationResult.error;
     
     const data = validationResult.data;
-    const client = getTourPlanClient();
     
-    const paymentData = {
-      Amount: data.amount,
-      Currency: data.currency,
-      PaymentDate: data.paymentDate,
-      PaymentMethod: data.paymentMethod,
-      Reference: data.reference,
-      Notes: data.notes,
-    };
-    
-    const result = await client.recordPayment(bookingId, paymentData);
-    
-    if (result.Error) {
-      return errorResponse(
-        'Failed to record payment',
-        400,
-        result.Error
-      );
-    }
-    
-    return successResponse({
-      bookingId: result.BookingId,
-      bookingRef: result.BookingRef,
-      message: 'Payment recorded successfully',
-      totalCost: result.TotalCost,
-      currency: result.Currency,
-    }, 201);
+    // TODO: Implement payment recording with TourPlan
+    return errorResponse('Payment recording not implemented yet', 501);
   } catch (error) {
     return handleTourPlanError(error);
   }

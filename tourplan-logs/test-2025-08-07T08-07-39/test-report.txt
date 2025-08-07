@@ -1,0 +1,33 @@
+TourPlan API Test Report
+Generated: 2025-08-07T08:07:52.399Z
+================================
+
+ACCOMMODATION SEARCH TESTS
+--------------------------
+Accommodation - Cape Town: ❌ 0 results
+Accommodation - Nairobi: ❌ 0 results
+Accommodation - All: ❌ 0 results
+Hotels - Cape Town: ❌ 0 results
+Hotel - Cape Town: ❌ 0 results
+Lodge - Cape Town: ❌ 0 results
+Lodges - Cape Town: ❌ 0 results
+Resort - Cape Town: ❌ 0 results
+Resorts - Cape Town: ❌ 0 results
+
+OTHER PRODUCT TYPES
+-------------------
+Cruises - All: ✅ 6 results
+Rail - All: ✅ 8 results
+Group Tours - Kenya: ✅ 21 results
+Day Tours - Cape Town: ❌ 0 results
+Packages - Botswana: ✅ 10 results
+
+SUMMARY
+-------
+✅ Working ButtonNames: Cruises, Rail, Group Tours, Packages
+❌ Not Working: Accommodation, Hotels, Hotel, Lodge, Lodges, Resort, Resorts, Day Tours
+
+CONCLUSION
+----------
+NO accommodation ButtonName variations are returning results.
+TourPlan either uses a different ButtonName or doesn't support accommodation via API.

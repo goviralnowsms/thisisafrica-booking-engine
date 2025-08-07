@@ -1,0 +1,207 @@
+// Tourplan API Room Configuration Formats
+// Based on official documentation - there are TWO formats supported
+
+/**
+ * OLD FORMAT (Legacy - up to 2003)
+ * Use this if you're getting "RoomType not supplied" errors with the new format
+ * This format uses direct elements instead of RoomConfigs wrapper
+ */
+export function buildOldFormatRoomConfig(
+  adults: number,
+  children: number = 0,
+  infants: number = 0,
+  roomType: string = 'DB'
+): string {
+  return `
+    <Adults>${adults}</Adults>
+    ${children > 0 ? `<Children>${children}</Children>` : ''}
+    ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+    <RoomType>${roomType}</RoomType>`;
+}
+
+/**
+ * NEW FORMAT (Preferred - post 2003)
+ * This is the format shown in most documentation examples
+ * Supports multiple rooms and passenger details
+ */
+export function buildNewFormatRoomConfig(
+  adults: number,
+  children: number = 0,
+  infants: number = 0,
+  roomType: string = 'DB',
+  paxDetails: PaxDetail[] = []
+): string {
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${roomType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Complete AddServiceRequest XML for Day Tours
+ * Try OLD FORMAT first if getting RoomType errors
+ */
+export function buildDayTourBookingXML(params: {
+  agentId: string;
+  password: string;
+  bookingName: string;
+  optionCode: string;
+  dateFrom: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  useOldFormat?: boolean; // Set to true if getting RoomType errors
+  isQuote?: boolean;
+}): string {
+  
+  const {
+    agentId,
+    password,
+    bookingName,
+    optionCode,
+    dateFrom,
+    adults,
+    children = 0,
+    infants = 0,
+    useOldFormat = false,
+    isQuote = false
+  } = params;
+
+  const totalPax = adults + children + infants;
+  const roomType = getRoomTypeForDayTour(adults, children, infants);
+  
+  // Choose format based on parameter
+  const roomConfigXML = useOldFormat 
+    ? buildOldFormatRoomConfig(adults, children, infants, roomType)
+    : buildNewFormatRoomConfig(adults, children, infants, roomType);
+
+  return `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <NewBookingInfo>
+      <n>${bookingName}</n>
+      <QB>${isQuote ? 'Q' : 'B'}</QB>
+    </NewBookingInfo>
+    <Opt>${optionCode}</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>${dateFrom}</DateFrom>
+    ${roomConfigXML}
+    <SCUqty>${totalPax}</SCUqty>
+  </AddServiceRequest>
+</Request>`;
+}
+
+/**
+ * Complete OptionInfoRequest XML for Day Tours
+ * Also supports both formats
+ */
+export function buildDayTourSearchXML(params: {
+  agentId: string;
+  password: string;
+  destination: string;
+  dateFrom: string;
+  dateTo?: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  useOldFormat?: boolean;
+}): string {
+  
+  const {
+    agentId,
+    password,
+    destination,
+    dateFrom,
+    dateTo,
+    adults,
+    children = 0,
+    infants = 0,
+    useOldFormat = false
+  } = params;
+
+  const roomType = getRoomTypeForDayTour(adults, children, infants);
+  
+  // Choose format based on parameter
+  const roomConfigXML = useOldFormat 
+    ? buildOldFormatRoomConfig(adults, children, infants, roomType)
+    : buildNewFormatRoomConfig(adults, children, infants, roomType);
+
+  return `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <ButtonName>Day Tours</ButtonName>
+    <DestinationName>${destination}</DestinationName>
+    <Info>GS</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    ${dateTo ? `<DateTo>${dateTo}</DateTo>` : ''}
+    <RateConvert>Y</RateConvert>
+    ${roomConfigXML}
+  </OptionInfoRequest>
+</Request>`;
+}
+
+function getRoomTypeForDayTour(adults: number, children: number, infants: number): string {
+  const totalPax = adults + children + infants;
+  
+  if (adults === 1 && children === 0 && infants === 0) {
+    return 'SG'; // Single (using 2-char code for old format)
+  } else if (adults === 2 && children === 0 && infants === 0) {
+    return 'DB'; // Double
+  } else if (totalPax === 3) {
+    return 'TR'; // Triple (using 2-char code)
+  } else if (totalPax === 4) {
+    return 'QD'; // Quad (using 2-char code)
+  } else {
+    return 'DB'; // Default
+  }
+}
+
+export interface PaxDetail {
+  title: string;
+  forename: string;
+  surname: string;
+  paxType: 'A' | 'C' | 'I';
+}
+
+/**
+ * Test both formats to see which one works
+ */
+export function createTestRequests(params: {
+  agentId: string;
+  password: string;
+  destination: string;
+  dateFrom: string;
+  adults: number;
+  children?: number;
+}) {
+  
+  console.log('🧪 OLD FORMAT (try this first if getting RoomType errors):');
+  console.log(buildDayTourSearchXML({ ...params, useOldFormat: true }));
+  
+  console.log('\n🆕 NEW FORMAT (standard documentation format):');
+  console.log(buildDayTourSearchXML({ ...params, useOldFormat: false }));
+}

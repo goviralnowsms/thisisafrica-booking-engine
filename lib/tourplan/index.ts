@@ -1,7 +1,7 @@
 // TourPlan API - WordPress-style Implementation
 
 // Core functions (equivalent to WordPress tourplan_query and WPXMLREQUEST)
-export { tourplanQuery, wpXmlRequest, getTourPlanConfig } from './core';
+export { tourplanQuery, wpXmlRequest, getPublicTourPlanConfig as getTourPlanConfig } from './core';
 
 // Request builders (equivalent to WordPress TourPlan classes)
 export { 

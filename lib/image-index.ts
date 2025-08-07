@@ -14,13 +14,18 @@ interface ImageIndexEntry {
 
 interface PDFIndexEntry {
   originalName: string;
+  localFilename: string;
   localPath: string;
-  name: string;
+  id: number;
   status: 'exists' | 'missing';
 }
 
 interface ImageIndex {
   [productCode: string]: ImageIndexEntry[];
+}
+
+interface PDFIndex {
+  [productCode: string]: PDFIndexEntry[];
 }
 
 interface ProductAssets {
@@ -40,6 +45,7 @@ interface ProductAssets {
 }
 
 let imageIndexCache: ImageIndex | null = null;
+let pdfIndexCache: PDFIndex | null = null;
 
 /**
  * Load the image index from the JSON file
@@ -84,7 +90,7 @@ export function getLocalAssets(productCode: string): ProductAssets {
       status: img.status
     }));
 
-  // For PDFs, we'll check common patterns
+  // For PDFs, we'll check common patterns  
   const pdfs = getPDFsForProduct(productCode);
 
   return {
@@ -94,40 +100,31 @@ export function getLocalAssets(productCode: string): ProductAssets {
 }
 
 /**
- * Get PDF files for a product (check common patterns)
+ * Load the PDF index from the JSON file
  */
-function getPDFsForProduct(productCode: string): Array<{
-  url: string;
-  name: string;
-  originalName: string;
-  status: string;
-}> {
-  const pdfDir = path.join(process.cwd(), 'public', 'pdfs');
-  const pdfs = [];
-
-  // Common PDF patterns for TourPlan products
-  const pdfPatterns = [
-    `${productCode}.pdf`,
-    `${productCode}_itinerary.pdf`,
-    `${productCode}_brochure.pdf`,
-    `itinerary_${productCode}.pdf`
-  ];
-
-  for (const pattern of pdfPatterns) {
-    const pdfPath = path.join(pdfDir, pattern);
-    
-    if (fs.existsSync(pdfPath)) {
-      pdfs.push({
-        url: `/pdfs/${pattern}`,
-        name: pattern.includes('itinerary') ? 'Itinerary' : 'Product Brochure',
-        originalName: pattern,
-        status: 'exists'
-      });
-    }
+function loadPDFIndex(): PDFIndex {
+  if (pdfIndexCache) {
+    return pdfIndexCache;
   }
 
-  return pdfs;
+  try {
+    const indexPath = path.join(process.cwd(), 'public', 'pdfs', 'product-pdf-index.json');
+    
+    if (!fs.existsSync(indexPath)) {
+      console.warn('PDF index not found, creating empty index');
+      return {};
+    }
+
+    const indexData = fs.readFileSync(indexPath, 'utf8');
+    pdfIndexCache = JSON.parse(indexData);
+    return pdfIndexCache || {};
+  } catch (error) {
+    console.error('Error loading PDF index:', error);
+    return {};
+  }
 }
+
+// Removed private getPDFsForProduct function - now exported at bottom of file
 
 /**
  * Check if a product has images available
@@ -150,4 +147,42 @@ export function getPrimaryImage(productCode: string): string | null {
  */
 export function clearImageIndexCache(): void {
   imageIndexCache = null;
+  pdfIndexCache = null;
+}
+
+/**
+ * Get PDFs for a product code - exported for direct use
+ */
+export function getPDFsForProduct(productCode: string): Array<{
+  url: string;
+  name: string;
+  originalName: string;
+  status: string;
+}> {
+  // Clear cache to get fresh data
+  pdfIndexCache = null;
+  
+  const pdfIndex = loadPDFIndex();
+  
+  // Try exact match first
+  let productPDFs = pdfIndex[productCode];
+  
+  // Try with trailing spaces (as seen in the index)
+  if (!productPDFs && pdfIndex[`${productCode}  `]) {
+    productPDFs = pdfIndex[`${productCode}  `];
+  }
+  
+  if (!productPDFs || productPDFs.length === 0) {
+    return [];
+  }
+
+  // Transform to match the expected format
+  return productPDFs
+    .filter(pdf => pdf.status === 'exists' && pdf.localPath)
+    .map(pdf => ({
+      url: pdf.localPath,
+      name: pdf.originalName.includes('itinerary') ? 'Tour Itinerary' : 'Tour Brochure',
+      originalName: pdf.originalName,
+      status: pdf.status
+    }));
 }

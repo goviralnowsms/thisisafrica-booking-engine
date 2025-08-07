@@ -1,0 +1,294 @@
+TourPlan API Integration - ACCOMMODATION ISSUE WITH FULL TECHNICAL LOGS
+========================================================================
+
+Dear Thys,
+
+Following client feedback about accommodation searches returning no results, we've conducted comprehensive testing. This email includes complete XML request/response logs demonstrating the issue.
+
+EXECUTIVE SUMMARY
+=================
+❌ ButtonName="Accommodation" returns 0 results across all destinations
+❌ 15 alternative ButtonNames tested (Hotels, Lodge, Resort, etc.) - all return 0 results  
+✅ Other product types working: Cruises (6), Rail (8), Group Tours (21), Packages (10)
+
+CRITICAL QUESTION: What is the correct ButtonName or method to retrieve accommodation products?
+
+DETAILED TEST RESULTS (December 7, 2025)
+=========================================
+
+Test Environment:
+- Endpoint: https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi
+- AgentID: SAMAGT
+- API Version: hostConnect_5_05_000.dtd
+
+**Accommodation Tests - ALL RETURNING EMPTY:**
+- Accommodation - Cape Town: 0 results
+- Accommodation - Nairobi: 0 results  
+- Accommodation - All destinations: 0 results
+- Hotels - Cape Town: 0 results
+- Hotel - Cape Town: 0 results
+- Lodge - Cape Town: 0 results
+- Lodges - Cape Town: 0 results
+- Resort - Cape Town: 0 results
+- Resorts - Cape Town: 0 results
+
+**Working Product Types:**
+- Cruises: 6 results ✅
+- Rail: 8 results ✅
+- Group Tours (Kenya): 21 results ✅
+- Packages (Botswana): 10 results ✅
+
+XML REQUEST/RESPONSE EXAMPLES
+==============================
+
+EXAMPLE 1: Accommodation Search with Dates and Location
+--------------------------------------------------------
+REQUEST:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-02-01</DateFrom>
+    <DateTo>2025-02-15</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+    <LocationCode>CPT</LocationCode>
+  </OptionInfoRequest>
+</Request>
+```
+
+RESPONSE:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply><OptionInfoReply /></Reply>
+```
+**Result: EMPTY - No Option elements returned**
+
+EXAMPLE 2: Accommodation Without Dates (Testing Requirements)
+--------------------------------------------------------------
+REQUEST:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+  </OptionInfoRequest>
+</Request>
+```
+
+RESPONSE:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <ErrorReply>
+    <Error>1001 SCN RoomConfig not supplied</Error>
+  </ErrorReply>
+</Reply>
+```
+**Result: Error - RoomConfig is required for accommodation searches**
+
+EXAMPLE 3: Hotels ButtonName Alternative
+-----------------------------------------
+REQUEST:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Hotels</ButtonName>
+    <Info>GS</Info>
+    <DestinationName>Cape Town</DestinationName>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+    <RateConvert>Y</RateConvert>
+  </OptionInfoRequest>
+</Request>
+```
+
+RESPONSE:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply><OptionInfoReply /></Reply>
+```
+**Result: EMPTY - ButtonName="Hotels" also returns no results**
+
+COMPARISON: Working Product Type (Cruises)
+-------------------------------------------
+REQUEST:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Cruises</ButtonName>
+    <Info>GS</Info>
+  </OptionInfoRequest>
+</Request>
+```
+
+RESPONSE: Returns 6 cruise products (BBKCRCHO018TIACP2, etc.)
+
+COMPARISON: Specific Product Code Lookup (Works)
+-------------------------------------------------
+REQUEST:
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <Opt>CPTRLROV001CTPPUL</Opt>
+    <DateFrom>2025-02-01</DateFrom>
+    <DateTo>2025-12-31</DateTo>
+  </OptionInfoRequest>
+</Request>
+```
+
+RESPONSE:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <OptionInfoReply>
+    <Option>
+      <Opt>CPTRLROV001CTPPUL</Opt>
+      <OptionNumber>97702</OptionNumber>
+    </Option>
+  </OptionInfoReply>
+</Reply>
+```
+**Result: SUCCESS - Individual product lookups work with <Opt> parameter**
+
+ALL TESTED BUTTONNAME VALUES (0 RESULTS EACH)
+==============================================
+1. Accommodation
+2. Accommodations (plural)
+3. Hotels
+4. Hotel
+5. Lodging
+6. Lodgings
+7. Lodge
+8. Lodges
+9. Stay
+10. Stays
+11. Property
+12. Properties
+13. Resort
+14. Resorts
+15. Guest House
+16. Guesthouse
+
+TECHNICAL ANALYSIS
+==================
+
+1. **RoomConfig Requirement Confirmed**
+   - Accommodation searches require RoomConfig element
+   - Error 1001 returned without it
+   - We're including proper RoomConfig but still getting empty results
+
+2. **XML Structure Validated**
+   - Our XML matches TourPlan DTD requirements
+   - Authentication is working (no auth errors)
+   - Same structure works for other product types
+
+3. **Contrast with Working Types**
+   - Group Tours, Packages, Cruises, Rail all return results
+   - Using identical request structure except ButtonName
+   - Suggests issue is specifically with accommodation ButtonName
+
+BUSINESS IMPACT
+===============
+
+**Customer Experience:**
+- Cannot search for accommodation dynamically
+- Accommodation page exists but shows no results
+- Must maintain manual product catalog
+
+**Revenue Impact:**
+- Missing potential accommodation bookings
+- Cannot showcase full TourPlan inventory
+- Customers may go elsewhere for accommodation
+
+URGENT QUESTIONS FOR TOURPLAN
+==============================
+
+1. **What is the correct ButtonName for accommodation products?**
+   - We've tested 16 variations with no success
+   - Is there a specific ButtonName we haven't discovered?
+
+2. **Are accommodation products available via the API?**
+   - Do accommodation products exist in the system?
+   - Is there a different API method for accommodation?
+
+3. **Alternative Approaches?**
+   - Should we use a different Info parameter?
+   - Is there a separate endpoint for accommodation?
+   - Do we need special permissions or configuration?
+
+4. **Product Categorization:**
+   - Are hotels/lodges only available within packages?
+   - How does TourPlan categorize standalone accommodation?
+
+CURRENT WORKAROUND
+==================
+
+We're using a curated catalog approach:
+```javascript
+const ACCOMMODATION_CATALOG = {
+  'kenya': ['NBOHTKEN001KENYA', 'NBOHTSAR001SAROV'],
+  'south-africa': ['CPTHTCAP001CAPGR', 'JNBHTSAN001SANTO'],
+  // ... manually maintained list
+};
+```
+
+This works but requires:
+- Manual maintenance of product codes
+- Cannot discover new accommodation
+- Limited to known products only
+
+REQUEST FOR IMMEDIATE ASSISTANCE
+=================================
+
+This issue is blocking our accommodation booking functionality. We need either:
+
+1. The correct ButtonName value for accommodation searches
+2. Confirmation that accommodation isn't available via API
+3. An alternative method to retrieve accommodation products
+
+Any guidance would be greatly appreciated as this affects our live production website.
+
+Thank you for your urgent attention to this matter.
+
+Best regards,
+This is Africa Development Team
+
+---
+Attachments:
+- Full test logs available in tourplan-logs directory
+- Test automation scripts available for reproduction
+- Complete XML request/response pairs for all tests

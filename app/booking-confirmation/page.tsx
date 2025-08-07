@@ -11,6 +11,7 @@ function BookingConfirmationContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const bookingReference = searchParams.get("reference")
+  const bookingId = searchParams.get("bookingId") // TourPlan booking ID from URL
   const tourplanStatus = searchParams.get("status") // 'partial', 'manual', etc.
   const manualFlag = searchParams.get("manual") // 'true' if manual confirmation needed
 
@@ -20,13 +21,23 @@ function BookingConfirmationContent() {
   useEffect(() => {
     // Load booking details from sessionStorage if available
     const storedBooking = sessionStorage.getItem('manualConfirmationBooking')
+    let initialBookingDetails = null
+    
     if (storedBooking) {
       try {
-        const parsed = JSON.parse(storedBooking)
-        setBookingDetails(parsed)
+        initialBookingDetails = JSON.parse(storedBooking)
+        setBookingDetails(initialBookingDetails)
       } catch (error) {
         console.error('Error parsing stored booking:', error)
       }
+    }
+
+    // If we have bookingId from URL but not in stored data, add it
+    if (bookingId && (!initialBookingDetails || !initialBookingDetails.bookingId)) {
+      setBookingDetails(prev => ({
+        ...prev,
+        bookingId: bookingId
+      }))
     }
 
     // Simulate loading confirmation details
@@ -35,7 +46,7 @@ function BookingConfirmationContent() {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [bookingId]) // Removed bookingDetails from dependency array to prevent loop
 
   if (loading) {
     return (
@@ -48,7 +59,10 @@ function BookingConfirmationContent() {
     )
   }
 
-  if (!bookingReference) {
+  // If no booking reference from URL, try to get it from stored booking data
+  const effectiveBookingReference = bookingReference || bookingDetails?.bookingReference || bookingDetails?.bookingRef || bookingDetails?.id
+
+  if (!effectiveBookingReference && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -75,16 +89,27 @@ function BookingConfirmationContent() {
         {/* Booking Reference */}
         <Card className="mb-8 border-green-200 bg-green-50">
           <CardContent className="p-6 text-center">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Booking Reference</h2>
-            <div className="text-3xl font-bold text-green-600 mb-2">{bookingReference}</div>
-            <p className="text-sm text-gray-600">Please save this reference number for your records</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Your Booking Details</h2>
+            <div className="text-3xl font-bold text-green-600 mb-2">{effectiveBookingReference}</div>
+            {(bookingId || bookingDetails?.bookingId) && (
+              <div className="mt-3 p-3 bg-white rounded-lg border border-green-300">
+                <div className="text-sm text-gray-600 mb-1">Booking ID for "My Bookings" access:</div>
+                <div className="text-2xl font-bold text-gray-900">{bookingId || bookingDetails?.bookingId}</div>
+              </div>
+            )}
+            <p className="text-sm text-gray-600 mt-3">
+              {(bookingId || bookingDetails?.bookingId) 
+                ? 'Save your Booking ID to access "My Bookings" later'
+                : 'Save your reference number for your records'
+              }
+            </p>
             
-            {/* TourPlan Integration Status */}
+            {/* Booking Status */}
             {(manualFlag === 'true' || tourplanStatus === 'manual') && (
               <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-center justify-center text-amber-800 text-sm">
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  <span className="font-medium">Booking sent to TourPlan for confirmation</span>
+                  <span className="font-medium">Booking submitted for confirmation</span>
                 </div>
                 <p className="text-xs text-amber-700 mt-1">
                   {bookingDetails?.message || 'Your booking has been submitted to our booking system. Staff will confirm availability within 48 hours.'}
@@ -116,10 +141,20 @@ function BookingConfirmationContent() {
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-amber-500 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold">Ultimate Safari Adventure</h3>
-                  <p className="text-gray-600">Kenya & Tanzania</p>
+                  <h3 className="font-semibold">
+                    {bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP2' ? 'Chobe Princess 2 Night Cruise' :
+                     bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP3' ? 'Chobe Princess 3 Night Cruise' :
+                     bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana River Cruise' :
+                     bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Rovos Rail Journey' :
+                     'African Adventure'}
+                  </h3>
+                  <p className="text-gray-600">
+                    {bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana' :
+                     bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Southern Africa' :
+                     'Africa'}
+                  </p>
                   <Badge variant="secondary" className="mt-1">
-                    SAF001
+                    {bookingDetails?.productDetails?.code || effectiveBookingReference}
                   </Badge>
                 </div>
               </div>
@@ -128,7 +163,16 @@ function BookingConfirmationContent() {
                 <Calendar className="h-5 w-5 text-amber-500" />
                 <div>
                   <h4 className="font-medium">Departure Date</h4>
-                  <p className="text-gray-600">March 15, 2025</p>
+                  <p className="text-gray-600">
+                    {bookingDetails?.productDetails?.dateFrom ? 
+                      new Date(bookingDetails.productDetails.dateFrom).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : 
+                      'TBD'
+                    }
+                  </p>
                 </div>
               </div>
 
@@ -136,7 +180,10 @@ function BookingConfirmationContent() {
                 <Users className="h-5 w-5 text-amber-500" />
                 <div>
                   <h4 className="font-medium">Travelers</h4>
-                  <p className="text-gray-600">2 Adults</p>
+                  <p className="text-gray-600">
+                    {bookingDetails?.productDetails?.adults || 2} Adults
+                    {bookingDetails?.productDetails?.children > 0 && `, ${bookingDetails.productDetails.children} Children`}
+                  </p>
                 </div>
               </div>
 
@@ -216,7 +263,7 @@ function BookingConfirmationContent() {
                 <Phone className="h-5 w-5 text-amber-500" />
                 <div>
                   <h4 className="font-medium">Call Us</h4>
-                  <p className="text-gray-600">+1 (555) 123-4567</p>
+                  <p className="text-gray-600">+61 2 9664 9187</p>
                 </div>
               </div>
 
@@ -224,7 +271,7 @@ function BookingConfirmationContent() {
                 <Mail className="h-5 w-5 text-amber-500" />
                 <div>
                   <h4 className="font-medium">Email Us</h4>
-                  <p className="text-gray-600">bookings@thisisafrica.com</p>
+                  <p className="text-gray-600">sales@thisisafrica.com.au</p>
                 </div>
               </div>
 
@@ -241,7 +288,20 @@ function BookingConfirmationContent() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
-          <Button onClick={() => router.push("/my-bookings")} variant="outline" size="lg">
+          <Button 
+            onClick={() => {
+              // Pre-populate My Bookings form with the booking details
+              if (bookingDetails?.bookingId || bookingId) {
+                sessionStorage.setItem('prebookingData', JSON.stringify({
+                  bookingId: bookingDetails?.bookingId || bookingId || '',
+                  reference: effectiveBookingReference
+                }))
+              }
+              router.push("/my-bookings")
+            }} 
+            variant="outline" 
+            size="lg"
+          >
             View My Bookings
           </Button>
           <Button onClick={() => router.push("/")} className="bg-amber-500 hover:bg-amber-600" size="lg">

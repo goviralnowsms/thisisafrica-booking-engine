@@ -1,0 +1,322 @@
+TourPlan API Integration - CRITICAL ISSUES WITH ACTUAL BOOKING LOGS
+====================================================================
+
+Dear Thys,
+
+We need urgent assistance with three critical API issues affecting our live website. This email includes actual XML logs from real booking attempts demonstrating each issue.
+
+EXECUTIVE SUMMARY - THREE CRITICAL ISSUES
+==========================================
+
+**ISSUE 1 - Accommodation: NO RESULTS** ❌
+- ButtonName="Accommodation" returns 0 results everywhere
+- Tested 16 alternative ButtonNames (Hotels, Lodge, Resort, etc.) - all return 0
+- Cannot display or book ANY accommodation products
+
+**ISSUE 2 - Cruise Bookings: ALWAYS DECLINED** ❌
+- Product search/display works perfectly (6 products)
+- Booking attempts via AddServiceRequest return Status="NO"
+- Actual booking attempt captured today showing decline
+
+**ISSUE 3 - Rail Bookings: PROBLEMATIC STATUS** ⚠️
+- Product search/display works perfectly (8 products)
+- Booking attempts return Status="??" with CancelDeleteStatus="D"
+- Creates booking but marks it for deletion/unusable
+
+=============================================================================
+ISSUE 1: ACCOMMODATION SEARCHES RETURN ZERO RESULTS
+=============================================================================
+
+**Test Results (December 7, 2025):**
+All ButtonName variations tested return 0 results:
+- ❌ Accommodation - Cape Town: 0 results
+- ❌ Accommodation - Nairobi: 0 results
+- ❌ Hotels, Hotel, Lodge, Lodges: 0 results
+- ❌ Resort, Resorts, Property, Properties: 0 results
+- ❌ Stay, Stays, Guest House, Guesthouse: 0 results
+
+**XML Request (01_accommodation_request.xml):**
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-02-01</DateFrom>
+    <DateTo>2025-02-15</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+    <LocationCode>CPT</LocationCode>
+  </OptionInfoRequest>
+</Request>
+```
+
+**Response (01_accommodation_response.xml):**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply><OptionInfoReply /></Reply>
+```
+**Result: EMPTY - No accommodation products returned**
+
+**QUESTION 1:** What is the correct ButtonName or method to retrieve accommodation products?
+
+=============================================================================
+ISSUE 2: CRUISE BOOKINGS ALWAYS DECLINED (Status="NO")
+=============================================================================
+
+**Actual Booking Attempt - December 7, 2025, 08:26:32 UTC**
+
+**Product:** BBKCRCHO018TIACP2 (Chobe Princess 2 Night River Cruise)
+**Customer:** Tess Robinson
+**Date:** 2025-10-31
+
+**Request Sent (cruise-booking-request-2025-08-07T08-26-32.xml):**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <Name>Tess Robinson</Name>
+      <QB>B</QB>
+    </NewBookingInfo>
+    <Opt>BBKCRCHO018TIACP2</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-31</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <Email>tess@goviralnow.net</Email>
+    <puRemark>413131202</puRemark>
+  </AddServiceRequest>
+</Request>
+```
+
+**TourPlan Response (cruise-booking-response-2025-08-07T08-26-33.xml):**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <AddServiceReply>
+    <Status>NO</Status>
+  </AddServiceReply>
+</Reply>
+```
+**Result: Booking DECLINED - Status="NO"**
+
+**All Cruise Products Affected:**
+- BBKCRCHO018TIACP2 (Chobe Princess 2 Night)
+- BBKCRCHO018TIACP3 (Chobe Princess 3 Night)
+- BBKCRTVT001ZAM2NM (Zambezi Queen 2 Night)
+- BBKCRTVT001ZAM2NS (Zambezi Queen 2 Night variant)
+- BBKCRTVT001ZAM3NM (Zambezi Queen 3 Night)
+- BBKCRTVT001ZAM3NS (Zambezi Queen 3 Night variant)
+
+**Current Workaround:**
+System creates manual reference (TIA-CRUISE-xxx) and processes payment, team handles manually.
+
+**QUESTION 2:** Why do cruise bookings always return Status="NO"? Is manual processing required?
+
+=============================================================================
+ISSUE 3: RAIL BOOKINGS RETURN PROBLEMATIC STATUS="??"
+=============================================================================
+
+**Actual Booking Attempt - December 7, 2025, 08:49:55 UTC**
+
+**Product:** VFARLROV001VFPYPM (Rovos Rail Victoria Falls to Pretoria - Pullman)
+**Customer:** Tess Robinson
+**Date:** 2025-10-10
+
+**Request Sent (rail-booking-request-2025-08-07T08-49-55.xml):**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <Name>Tess Robinson</Name>
+      <QB>B</QB>
+    </NewBookingInfo>
+    <Opt>VFARLROV001VFPYPM</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-10</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <Email>tess@goviralnow.net</Email>
+    <puRemark>413131202</puRemark>
+  </AddServiceRequest>
+</Request>
+```
+
+**TourPlan Response (rail-booking-response-2025-08-07T08-49-55.xml):**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <AddServiceReply>
+    <BookingId>1477</BookingId>
+    <Ref>TAWB100472</Ref>
+    <ServiceLineId>6365</ServiceLineId>
+    <SequenceNumber>10</SequenceNumber>
+    <Status>??</Status>
+    <Services>
+      <Service>
+        <ServiceLineId>6365</ServiceLineId>
+        <Opt>VFARLROV001VFPYPM</Opt>
+        <Date>2025-10-10</Date>
+        <LinePrice>1019469</LinePrice>
+        <SupplierName>Rovos Rail</SupplierName>
+        <Description>Rovos Rail Victoria Falls to Pretoria</Description>
+        <Comment>Pullman Suite</Comment>
+        <CancelDeleteStatus>D</CancelDeleteStatus>
+        <CanUpdate>N</CanUpdate>
+        <CanAccept>N</CanAccept>
+        <LocationCode>VFA</LocationCode>
+      </Service>
+    </Services>
+  </AddServiceReply>
+</Reply>
+```
+
+**Critical Issues with Rail Response:**
+- ⚠️ Status: "??" (Question marks - unclear status)
+- ⚠️ CancelDeleteStatus: "D" (Marked for deletion)
+- ⚠️ CanUpdate: "N" (Cannot be modified)
+- ⚠️ CanAccept: "N" (Cannot be accepted)
+- ✅ BookingId: 1477 (Created but unusable)
+- ✅ Ref: TAWB100472 (Reference generated)
+
+**Result: Creates problematic booking that cannot be used**
+
+**Additional Rail Test - Error with Different RateId:**
+
+When testing CPTRLROV001CTPPUL with RateId="Manual", we received:
+```xml
+<Reply>
+  <ErrorReply>
+    <Error>1002 SCN Problem 10 with RateId Manual</Error>
+  </ErrorReply>
+</Reply>
+```
+
+**Summary of Rail Booking Issues:**
+- With RateId="Default": Creates booking but Status="??" and CancelDeleteStatus="D"
+- With RateId="Manual": Error 1002 - invalid RateId
+- Valid RateIds unclear for rail products
+
+**All Rail Products Affected:**
+- CPTRLROV001CTPPUL (Cape Town to Pretoria - Pullman)
+- CPTRLROV001CTPRRO (Cape Town to Pretoria - Royal)
+- VFARLROV001VFPRDX (Victoria Falls to Pretoria - Deluxe)
+- VFARLROV001VFPYPM (Victoria Falls to Pretoria - Pullman)
+- Plus 4 other Rovos Rail routes
+
+**Current Workaround:**
+System creates manual reference (TIA-RAIL-xxx) and processes payment, team handles manually.
+
+**QUESTION 3:** 
+- What does Status="??" mean?
+- Why is CancelDeleteStatus="D" set immediately on successful bookings?
+- What are the valid RateIds for rail products?
+- How should rail bookings be processed correctly?
+
+=============================================================================
+COMPARISON: WORKING PRODUCT TYPES
+=============================================================================
+
+**Group Tours & Packages - FULLY WORKING:**
+✅ ButtonName searches return results (21 and 10 respectively)
+✅ Product details display correctly
+✅ Booking API accepts bookings (Status="OK")
+✅ No manual intervention required
+
+This proves our integration works correctly for supported product types.
+
+=============================================================================
+CRITICAL QUESTIONS REQUIRING URGENT ANSWERS
+=============================================================================
+
+1. **ACCOMMODATION:**
+   - What is the correct ButtonName for accommodation searches?
+   - Are accommodation products available via the API at all?
+   - Is there an alternative method we should use?
+
+2. **CRUISE BOOKINGS:**
+   - Why do all cruise bookings return Status="NO"?
+   - Is this expected behavior requiring manual processing?
+   - Are there specific parameters needed for cruise bookings to succeed?
+
+3. **RAIL BOOKINGS:**
+   - What does Status="??" mean in booking responses?
+   - Why is CancelDeleteStatus="D" set on creation?
+   - How should rail bookings be processed correctly?
+
+4. **GENERAL:**
+   - Are we missing any configuration or permissions?
+   - Should certain product types be processed differently?
+   - Is there documentation for these status codes?
+
+=============================================================================
+BUSINESS IMPACT
+=============================================================================
+
+**Customer Experience:**
+- Accommodation: Cannot display ANY options
+- Cruises: Bookings appear to fail to customers
+- Rail: Confusing status creates uncertainty
+- Manual processing delays confirmations
+
+**Operational Impact:**
+- Staff must manually process cruise/rail bookings
+- Risk of overbooking or missed bookings
+- Cannot leverage full TourPlan inventory for accommodation
+
+=============================================================================
+TECHNICAL ENVIRONMENT
+=============================================================================
+
+- Endpoint: https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi
+- AgentID: SAMAGT
+- API Version: hostConnect_5_05_000.dtd
+- Testing Date: December 7, 2025
+- Integration: Next.js website with real-time TourPlan API calls
+
+=============================================================================
+REQUEST FOR IMMEDIATE ASSISTANCE
+=============================================================================
+
+We have provided actual XML logs from real booking attempts showing:
+1. Accommodation searches returning empty results
+2. Cruise bookings being declined (Status="NO")
+3. Rail bookings creating unusable entries (Status="??", CancelDeleteStatus="D")
+
+Please provide urgent guidance on how to resolve these issues or confirm if manual processing is the expected workflow for cruise/rail products.
+
+Thank you for your immediate attention to these matters.
+
+Best regards,
+This is Africa Development Team
+
+---
+ATTACHMENTS INCLUDED:
+- 01_accommodation_request.xml & 01_accommodation_response.xml
+- cruise-booking-request-2025-08-07T08-26-32.xml
+- cruise-booking-response-2025-08-07T08-26-33.xml
+- rail-booking-request-2025-08-07T08-49-55.xml
+- rail-booking-response-2025-08-07T08-49-55.xml
+- test-2025-08-07T08-07-39/test-report.txt (comprehensive ButtonName tests)

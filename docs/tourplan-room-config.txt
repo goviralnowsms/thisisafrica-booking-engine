@@ -1,0 +1,358 @@
+// Room Configuration Guide for Tourplan API
+// Based on official documentation and examples
+
+export type ProductType = 
+  | 'day-tours'        // SType: N, MPFCU: 1
+  | 'group-tours'      // SType: N, MPFCU: 1
+  | 'accommodation'    // SType: Y
+  | 'packages'         // SType: P
+  | 'cruises'          // SType: N or room-based
+  | 'rail'             // SType: N or room-based
+  | 'apartments'       // SType: A
+
+export interface RoomConfigParams {
+  adults: number;
+  children?: number;
+  infants?: number;
+  roomType?: string;
+  paxDetails?: PaxDetail[];
+}
+
+export interface PaxDetail {
+  title: string;
+  forename: string;
+  surname: string;
+  paxType: 'A' | 'C' | 'I'; // Adult, Child, Infant
+}
+
+/**
+ * Build correct RoomConfigs XML based on product type
+ */
+export function buildRoomConfigsXML(
+  productType: ProductType,
+  config: RoomConfigParams
+): string {
+  const { adults, children = 0, infants = 0, roomType, paxDetails = [] } = config;
+
+  switch (productType) {
+    case 'day-tours':
+    case 'group-tours':
+      return buildGroupTourRoomConfig(adults, children, infants, paxDetails);
+    
+    case 'accommodation':
+    case 'packages':
+      return buildAccommodationRoomConfig(adults, children, infants, roomType || 'DB', paxDetails);
+    
+    case 'cruises':
+      return buildCruiseRoomConfig(adults, children, infants, roomType || 'CABIN', paxDetails);
+    
+    case 'rail':
+      return buildRailRoomConfig(adults, children, infants, roomType || 'STD', paxDetails);
+    
+    case 'apartments':
+      return buildApartmentRoomConfig(adults, children, infants, roomType || 'APT', paxDetails);
+    
+    default:
+      // Default to group tour format for unknown types
+      return buildGroupTourRoomConfig(adults, children, infants, paxDetails);
+  }
+}
+
+/**
+ * Day Tours / Group Tours - Non-accommodation (SType: N, MPFCU: 1)
+ * Pricing: Per Person (PersonRates: AdultRate, ChildRate)
+ * Room Config: IMPORTANT - RoomType is REQUIRED even for Day Tours!
+ * 
+ * Based on official Tourplan documentation examples, ALL Day Tours requests
+ * must include RoomType, even though it doesn't affect pricing.
+ */
+function buildGroupTourRoomConfig(
+  adults: number,
+  children: number,
+  infants: number,
+  paxDetails: PaxDetail[]
+): string {
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  // For Day Tours, use standard room types even though pricing is per-person
+  // The API requires RoomType to be present in all RoomConfig elements
+  const roomType = getRoomTypeForGroupTour(adults, children, infants);
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${roomType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Get appropriate room type for group tours based on passenger configuration
+ * Even though Day Tours don't use room-based pricing, RoomType is still required
+ */
+function getRoomTypeForGroupTour(adults: number, children: number, infants: number): string {
+  const totalPax = adults + children + infants;
+  
+  if (adults === 1 && children === 0 && infants === 0) {
+    return 'SGL'; // Single
+  } else if (adults === 2 && children === 0 && infants === 0) {
+    return 'DB';  // Double
+  } else if (adults === 2 && children > 0) {
+    return 'FAM'; // Family room
+  } else if (totalPax <= 2) {
+    return 'DB';  // Double (default)
+  } else if (totalPax === 3) {
+    return 'TRP'; // Triple
+  } else if (totalPax === 4) {
+    return 'QAD'; // Quad
+  } else {
+    return 'DB';  // Default fallback
+  }
+}
+
+/**
+ * Accommodation - Room-based (SType: Y)
+ * Pricing: Per Room (RoomRates: SingleRate, DoubleRate, TwinRate)
+ * Room Config: Separate RoomConfig for each room
+ */
+function buildAccommodationRoomConfig(
+  adults: number,
+  children: number,
+  infants: number,
+  roomType: string,
+  paxDetails: PaxDetail[]
+): string {
+  // For accommodation, you might want separate rooms
+  // This example shows a single room configuration
+  // You can modify to handle multiple rooms
+  
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${roomType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Cruises - Can be room-based or per-person
+ * Room Config: Cabin configuration
+ */
+function buildCruiseRoomConfig(
+  adults: number,
+  children: number,
+  infants: number,
+  cabinType: string,
+  paxDetails: PaxDetail[]
+): string {
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${cabinType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Rail - Usually per-person with class/seat type
+ */
+function buildRailRoomConfig(
+  adults: number,
+  children: number,
+  infants: number,
+  classType: string,
+  paxDetails: PaxDetail[]
+): string {
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${classType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Apartments - Room-based (SType: A)
+ */
+function buildApartmentRoomConfig(
+  adults: number,
+  children: number,
+  infants: number,
+  apartmentType: string,
+  paxDetails: PaxDetail[]
+): string {
+  const paxListXML = paxDetails.length > 0 ? `
+    <PaxList>
+      ${paxDetails.map(pax => `
+        <PaxDetails>
+          <Title>${pax.title}</Title>
+          <Forename>${pax.forename}</Forename>
+          <Surname>${pax.surname}</Surname>
+          <PaxType>${pax.paxType}</PaxType>
+        </PaxDetails>
+      `).join('')}
+    </PaxList>` : '';
+
+  return `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>${apartmentType}</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>`;
+}
+
+/**
+ * Room Type suggestions by product type
+ */
+export const ROOM_TYPES = {
+  'day-tours': ['DB'], // Default, but not critical for group tours
+  'group-tours': ['DB'],
+  'accommodation': ['SGL', 'DB', 'TWN', 'TRP', 'QAD', 'FAM'],
+  'packages': ['SGL', 'DB', 'TWN', 'TRP', 'QAD'],
+  'cruises': ['INT', 'EXT', 'BAL', 'STE', 'OW1', 'OW2'],
+  'rail': ['STD', 'PRM', '1ST', '2ND', 'SLP'],
+  'apartments': ['1BR', '2BR', '3BR', 'STU', 'PEN']
+} as const;
+
+/**
+ * Validate room configuration
+ */
+export function validateRoomConfig(
+  productType: ProductType,
+  config: RoomConfigParams
+): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (config.adults < 1) {
+    errors.push('At least 1 adult is required');
+  }
+
+  if (config.children && config.children < 0) {
+    errors.push('Children count cannot be negative');
+  }
+
+  if (config.infants && config.infants < 0) {
+    errors.push('Infants count cannot be negative');
+  }
+
+  // Product-specific validations
+  switch (productType) {
+    case 'accommodation':
+    case 'packages':
+      if (!config.roomType) {
+        errors.push('Room type is required for accommodation/packages');
+      }
+      break;
+    
+    case 'cruises':
+      if (!config.roomType) {
+        errors.push('Cabin type is recommended for cruises');
+      }
+      break;
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Get SCUqty (Second Charge Units) based on product type
+ */
+export function getSCUqty(
+  productType: ProductType,
+  adults: number,
+  children: number,
+  infants: number,
+  nights?: number
+): number {
+  switch (productType) {
+    case 'day-tours':
+    case 'group-tours':
+      // For pax-based options: total number of people
+      return adults + children + infants;
+    
+    case 'accommodation':
+      // For accommodation: number of nights
+      return nights || 1;
+    
+    case 'packages':
+      // Packages are fixed-length, SCU not typically used
+      return 1;
+    
+    case 'cruises':
+    case 'rail':
+      // Usually per person
+      return adults + children + infants;
+    
+    default:
+      return adults + children + infants;
+  }
+}

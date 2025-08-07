@@ -1,0 +1,300 @@
+{
+  "timestamp": "2025-08-07T08:07:52.398Z",
+  "testEnvironment": "http://localhost:3004",
+  "totalTests": 14,
+  "results": [
+    {
+      "test": "Accommodation - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Accommodation - Nairobi",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Accommodation - All",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Hotels - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Hotel - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Lodge - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Lodges - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Resort - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Resorts - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Cruises - All",
+      "success": true,
+      "count": 6,
+      "firstProduct": {
+        "id": "BBKCRCHO018TIACP2",
+        "code": "BBKCRCHO018TIACP2",
+        "name": "Chobe Princess 2 Night River Cruise",
+        "description": "Standard Cabin Fully Inclusive",
+        "supplier": "Chobe Princesses / House Boat",
+        "duration": "2 days",
+        "country": "Botswana",
+        "locality": "Chobe/Zambezi Rivers",
+        "rates": [
+          {
+            "dateRange": "07 Aug - 31 Oct 2025",
+            "singleRate": 2955,
+            "doubleRate": 4564,
+            "twinRate": 4564,
+            "twinRateFormatted": "AUD $2,282",
+            "twinRateTotal": 4564,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-08-07",
+            "dateTo": "2025-10-31"
+          },
+          {
+            "dateRange": "01 Nov - 30 Nov 2025",
+            "singleRate": 2955,
+            "doubleRate": 4564,
+            "twinRate": 4564,
+            "twinRateFormatted": "AUD $2,282",
+            "twinRateTotal": 4564,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-11-01",
+            "dateTo": "2025-11-30"
+          },
+          {
+            "dateRange": "01 Dec - 28 Feb 2026",
+            "singleRate": 2405,
+            "doubleRate": 3717,
+            "twinRate": 3717,
+            "twinRateFormatted": "AUD $1,859",
+            "twinRateTotal": 3717,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-12-01",
+            "dateTo": "2026-02-28"
+          },
+          {
+            "dateRange": "01 Mar - 06 Aug 2026",
+            "singleRate": 3189,
+            "doubleRate": 4924,
+            "twinRate": 4924,
+            "twinRateFormatted": "AUD $2,462",
+            "twinRateTotal": 4924,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2026-03-01",
+            "dateTo": "2026-08-06"
+          }
+        ],
+        "images": [],
+        "inclusions": [],
+        "exclusions": []
+      }
+    },
+    {
+      "test": "Rail - All",
+      "success": true,
+      "count": 8,
+      "firstProduct": {
+        "id": "VFARLROV001VFPRDX",
+        "code": "VFARLROV001VFPRDX",
+        "name": "Rovos Rail Victoria Falls to Pretoria",
+        "description": "Deluxe Suite",
+        "supplier": "Rovos Rail",
+        "destination": "Victoria Falls Town",
+        "duration": "3 days",
+        "rates": [
+          {
+            "dateRange": "07 Aug - 30 Sept 2025",
+            "singleRate": 9558,
+            "doubleRate": 12743,
+            "twinRate": 12743,
+            "twinRateFormatted": "AUD $6,372",
+            "twinRateTotal": 12743,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-08-07",
+            "dateTo": "2025-09-30"
+          },
+          {
+            "dateRange": "01 Oct - 31 Oct 2025",
+            "singleRate": 10991,
+            "doubleRate": 14655,
+            "twinRate": 14655,
+            "twinRateFormatted": "AUD $7,328",
+            "twinRateTotal": 14655,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-10-01",
+            "dateTo": "2025-10-31"
+          },
+          {
+            "dateRange": "01 Nov - 06 Aug 2026",
+            "singleRate": 10991,
+            "doubleRate": 14655,
+            "twinRate": 14655,
+            "twinRateFormatted": "AUD $7,328",
+            "twinRateTotal": 14655,
+            "currency": "AUD",
+            "rateName": "Standard",
+            "dateFrom": "2025-11-01",
+            "dateTo": "2026-08-06"
+          }
+        ],
+        "localAssets": {
+          "images": [
+            {
+              "url": "/images/products/694005241018813.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "694005241018813.jpg",
+              "status": "exists"
+            },
+            {
+              "url": "/images/products/8266219814782171.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "8266219814782171.jpg",
+              "status": "exists"
+            },
+            {
+              "url": "/images/products/4620825363346795.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "4620825363346795.jpg",
+              "status": "exists"
+            },
+            {
+              "url": "/images/products/3435833014465077.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "3435833014465077.jpg",
+              "status": "exists"
+            },
+            {
+              "url": "/images/products/801245050380844.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "801245050380844.jpg",
+              "status": "exists"
+            },
+            {
+              "url": "/images/products/232297630006819.jpg",
+              "type": "image",
+              "category": "product",
+              "originalName": "232297630006819.jpg",
+              "status": "exists"
+            }
+          ],
+          "pdfs": []
+        }
+      }
+    },
+    {
+      "test": "Group Tours - Kenya",
+      "success": true,
+      "count": 21,
+      "firstProduct": {
+        "id": "NBOGTARP001CKEKEE",
+        "code": "NBOGTARP001CKEKEE",
+        "name": "Classic Kenya - Keekorok lodges",
+        "description": "Classic Kenya - Keekorok lodges",
+        "supplier": "Alpha Travel (UK) Ltd",
+        "duration": "6 nights",
+        "image": null,
+        "rates": [
+          {
+            "currency": "AUD",
+            "singleRate": 6617,
+            "rateName": "Standard",
+            "dateFrom": "2025-08-07",
+            "dateTo": "2025-08-07"
+          },
+          {
+            "currency": "AUD",
+            "doubleRate": 10893,
+            "rateName": "Standard",
+            "dateFrom": "2025-08-07",
+            "dateTo": "2025-08-07"
+          },
+          {
+            "currency": "AUD",
+            "twinRate": 10893,
+            "rateName": "Standard",
+            "dateFrom": "2025-08-07",
+            "dateTo": "2025-08-07"
+          }
+        ]
+      }
+    },
+    {
+      "test": "Day Tours - Cape Town",
+      "success": true,
+      "count": 0,
+      "firstProduct": null
+    },
+    {
+      "test": "Packages - Botswana",
+      "success": true,
+      "count": 10,
+      "firstProduct": {
+        "id": "BBKPKCHO004CHOLUX",
+        "code": "BBKPKCHO004CHOLUX",
+        "name": "Chobe Safari Lodge - 2 Night Getaway Luxury",
+        "description": "Operates daily",
+        "supplier": "Chobe Safari Lodge",
+        "duration": "2 days",
+        "image": null,
+        "rates": [
+          {
+            "currency": "AUD",
+            "singleRate": 0,
+            "doubleRate": 0,
+            "twinRate": 0,
+            "rateName": "Price on Application"
+          }
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "accommodationWorking": false,
+    "alternativesWorking": false,
+    "cruisesWorking": true,
+    "railWorking": true
+  }
+}

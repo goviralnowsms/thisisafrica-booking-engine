@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { BookingSearch } from "@/components/booking-search"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Loader2, Search } from "lucide-react"
 import { searchTours } from "@/lib/tourplan-api"
 
 export default function BookingPage() {
@@ -16,6 +16,43 @@ export default function BookingPage() {
   const [searchPerformed, setSearchPerformed] = useState(false)
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedTour, setSelectedTour] = useState<any | null>(null)
+  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  const [searchCriteria, setSearchCriteria] = useState({
+    productType: "",
+    country: "",
+    destination: "",
+    class: ""
+  })
+
+  // Load the product image index once on component mount
+  useEffect(() => {
+    const loadImageIndex = async () => {
+      try {
+        const response = await fetch('/images/product-image-index.json')
+        const imageIndex = await response.json()
+        
+        // Create a mapping of product codes to their primary images
+        const imageMap: {[key: string]: string} = {}
+        
+        Object.keys(imageIndex).forEach(productCode => {
+          const images = imageIndex[productCode]
+          if (images && images.length > 0) {
+            // Use the first available image as primary
+            const primaryImage = images.find((img: any) => img.status === 'exists')
+            if (primaryImage && primaryImage.localPath) {
+              imageMap[productCode] = primaryImage.localPath
+            }
+          }
+        })
+        
+        setProductImages(imageMap)
+      } catch (error) {
+        console.warn('Failed to load image index:', error)
+      }
+    }
+    
+    loadImageIndex()
+  }, [])
 
   // Auto-search if URL has search parameters
   useEffect(() => {
@@ -25,36 +62,61 @@ export default function BookingPage() {
     const classLevel = searchParams.get('class')
 
     if (productType) {
-      // Auto-perform search based on URL parameters
-      handleSearch({
-        type: productType,
-        productType: productType,
-        destination: destination || '',
+      // Set the search criteria from URL params
+      setSearchCriteria({
+        productType: productType || '',
         country: country || '',
+        destination: destination || '',
+        class: classLevel || ''
+      })
+      
+      // Auto-perform search based on URL parameters
+      handleSimpleSearch({
+        productType: productType || '',
+        country: country || '',
+        destination: destination || '',
         class: classLevel || ''
       })
     }
   }, [searchParams])
 
-  // Real search functionality using TourPlan API
-  const handleSearch = async (searchParams: any) => {
+  // Function to get product-specific image from cached data or fallback
+  const getProductImage = (tourCode: string) => {
+    if (!tourCode) return "/images/safari-lion.png"
+    
+    // Check if we have the image cached
+    if (productImages[tourCode]) {
+      return productImages[tourCode]
+    }
+    
+    // Fallback to generic safari image
+    return "/images/safari-lion.png"
+  }
+
+  // Simple search functionality using TourPlan API (matching homepage pattern)
+  const handleSimpleSearch = async (criteria: any) => {
+    // For Group Tours, require either country or destination to be selected
+    if (criteria.productType === 'Group Tours' && !criteria.country && !criteria.destination) {
+      alert('Please select a country or destination to search for Group Tours')
+      return
+    }
+    
     setIsSearching(true)
 
     try {
-      console.log("Search params:", searchParams)
+      console.log("Search criteria:", criteria)
       // Build search URL with parameters
-      const searchUrl = new URL('/api/tourplan', window.location.origin);
-      if (searchParams.destination) searchUrl.searchParams.set('destination', searchParams.destination);
-      if (searchParams.departureDate) searchUrl.searchParams.set('startDate', searchParams.departureDate.toISOString().split('T')[0]);
-      if (searchParams.returnDate) searchUrl.searchParams.set('endDate', searchParams.returnDate.toISOString().split('T')[0]);
-      if (searchParams.travelers) searchUrl.searchParams.set('travelers', searchParams.travelers);
-      searchUrl.searchParams.set('productType', searchParams.type === 'tours' ? 'Group Tours' : 'Accommodation');
+      const params = new URLSearchParams()
+      if (criteria.productType) params.set('productType', criteria.productType)
+      if (criteria.country) params.set('destination', criteria.country)
+      if (criteria.destination) params.set('destination', criteria.destination)
+      if (criteria.class) params.set('class', criteria.class)
       
-      const response = await fetch(searchUrl);
-      const result = await response.json();
+      const response = await fetch(`/api/tourplan?${params.toString()}`)
+      const result = await response.json()
 
       if (result.success) {
-        setSearchResults(result.tours)
+        setSearchResults(result.tours || [])
       } else {
         console.error("Search failed:", result.error)
         setSearchResults([])
@@ -66,6 +128,10 @@ export default function BookingPage() {
       setIsSearching(false)
       setSearchPerformed(true)
     }
+  }
+
+  const handleSearch = () => {
+    handleSimpleSearch(searchCriteria)
   }
 
   const handleSelectTour = (tour: any) => {
@@ -81,11 +147,11 @@ export default function BookingPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-[40vh]">
-        <Image src="/images/safari-lion.png" alt="African safari experience" fill className="object-cover" />
+      <section className="relative h-[60vh]">
+        <Image src="/images/products/booking-page-hero.jpeg" alt="African safari experience" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/50">
           <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">Find Your Perfect African Adventure</h1>
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">Find your perfect African adventure</h1>
             <p className="text-xl text-white/90 max-w-2xl">
               Search our curated selection of tours, safaris, and experiences
             </p>
@@ -93,13 +159,84 @@ export default function BookingPage() {
         </div>
       </section>
 
-      {/* Search Section */}
+      {/* Simple Search Section */}
       <section className="bg-white py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">Search Tours & Safaris</h2>
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <BookingSearch onSearch={handleSearch} />
+            <h2 className="text-2xl font-bold text-center mb-6">Search tours & safaris</h2>
+            <div className="bg-gray-100 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <Select value={searchCriteria.productType} onValueChange={(value) => setSearchCriteria(prev => ({...prev, productType: value}))}>
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                    <SelectValue placeholder="Tour Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Group Tours">Group Tours</SelectItem>
+                    <SelectItem value="Accommodation">Accommodation</SelectItem>
+                    <SelectItem value="Cruises">Cruises</SelectItem>
+                    <SelectItem value="Rail">Rail Tours</SelectItem>
+                    <SelectItem value="Packages">Packages</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="botswana">Botswana</SelectItem>
+                    <SelectItem value="kenya">Kenya</SelectItem>
+                    <SelectItem value="south-africa">South Africa</SelectItem>
+                    <SelectItem value="tanzania">Tanzania</SelectItem>
+                    <SelectItem value="namibia">Namibia</SelectItem>
+                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
+                    <SelectItem value="zambia">Zambia</SelectItem>
+                    <SelectItem value="uganda">Uganda</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={searchCriteria.destination} onValueChange={(value) => setSearchCriteria(prev => ({...prev, destination: value}))}>
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                    <SelectValue placeholder="Destination" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cape-town">Cape Town</SelectItem>
+                    <SelectItem value="nairobi">Nairobi</SelectItem>
+                    <SelectItem value="victoria-falls">Victoria Falls</SelectItem>
+                    <SelectItem value="serengeti">Serengeti</SelectItem>
+                    <SelectItem value="okavango">Okavango Delta</SelectItem>
+                    <SelectItem value="kruger">Kruger National Park</SelectItem>
+                    <SelectItem value="masai-mara">Masai Mara</SelectItem>
+                    <SelectItem value="zanzibar">Zanzibar</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={searchCriteria.class} onValueChange={(value) => setSearchCriteria(prev => ({...prev, class: value}))}>
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                    <SelectValue placeholder="Class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="camping">Camping</SelectItem>
+                    <SelectItem value="basic">Basic</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="standard-plus">Standard-plus</SelectItem>
+                    <SelectItem value="luxury">Luxury</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={isSearching}
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  {isSearching ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                  )}
+                  Search
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -116,14 +253,24 @@ export default function BookingPage() {
           ) : searchPerformed ? (
             <>
               <h2 className="text-2xl font-bold mb-6">
-                Search Results {searchResults.length > 0 && `(${searchResults.length} tours found)`}
+                Search results {searchResults.length > 0 && `(${searchResults.length} tours found)`}
               </h2>
               {searchResults.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {searchResults.map((tour) => (
                     <div key={tour.id} className="bg-white rounded-xl overflow-hidden shadow-lg">
                       <div className="relative h-48">
-                        <Image src={tour.image || "/images/safari-lion.png"} alt={tour.name} fill className="object-cover" />
+                        <Image 
+                          src={getProductImage(tour.code)} 
+                          alt={tour.name} 
+                          fill 
+                          className="object-cover"
+                          onError={(e) => {
+                            // Fallback to generic safari image if product image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/images/safari-lion.png";
+                          }}
+                        />
                       </div>
                       <div className="p-5">
                         <h3 className="text-xl font-bold mb-2">{tour.name}</h3>
@@ -139,9 +286,13 @@ export default function BookingPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-gray-500">From</p>
-                            <p className="text-xl font-bold">
-                              ${tour.rates[0]?.singleRate ? tour.rates[0].singleRate.toLocaleString() : 'POA'}
-                            </p>
+                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
+                              <p className="text-lg font-bold text-blue-600">On Request</p>
+                            ) : (
+                              <p className="text-xl font-bold">
+                                ${tour.rates[0]?.singleRate ? tour.rates[0].singleRate.toLocaleString() : 'POA'}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex gap-3">
@@ -153,9 +304,15 @@ export default function BookingPage() {
                               View Details
                             </Button>
                           </Link>
-                          <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
-                            <Button className="w-full bg-amber-500 hover:bg-amber-600">Book Now</Button>
-                          </Link>
+                          {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
+                            <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
+                              <Button className="w-full bg-blue-500 hover:bg-blue-600">Get Quote</Button>
+                            </Link>
+                          ) : (
+                            <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
+                              <Button className="w-full bg-amber-500 hover:bg-amber-600">Book Now</Button>
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>

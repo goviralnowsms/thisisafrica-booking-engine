@@ -1,0 +1,150 @@
+TourPlan API Integration Status - ACCOMMODATION INVESTIGATION UPDATE
+====================================================================
+
+Dear Thys,
+
+Following client feedback about accommodation search functionality, we've conducted extensive testing to determine why accommodation searches aren't returning expected results. Here's our comprehensive findings:
+
+ACCOMMODATION SEARCH INVESTIGATION RESULTS
+==========================================
+
+**Extensive ButtonName Testing**:
+We tested 16 different ButtonName values to find accommodation products:
+
+Tested ButtonNames:
+- ❌ Accommodation (0 results across all destinations)
+- ❌ Hotels (0 results)
+- ❌ Hotel (0 results)
+- ❌ Lodging (0 results)
+- ❌ Lodgings (0 results)  
+- ❌ Lodge (0 results)
+- ❌ Lodges (0 results)
+- ❌ Stay (0 results)
+- ❌ Stays (0 results)
+- ❌ Accommodations (0 results)
+- ❌ Property (0 results)
+- ❌ Properties (0 results)
+- ❌ Resort (0 results)
+- ❌ Resorts (0 results)
+- ❌ Guest House (0 results)
+- ❌ Guesthouse (0 results)
+
+**Test Coverage**:
+- Tested with multiple destinations: Cape Town, Nairobi, Victoria Falls, Johannesburg, Kruger National Park, Botswana, Kenya, South Africa
+- Tested with and without destination filters
+- Used proper XML structure with RoomConfigs, Info="GS", and RateConvert="Y"
+
+**Key Finding**: 
+None of the common accommodation-related ButtonName values return any results from the TourPlan API.
+
+CURRENT PRODUCT TYPE STATUS
+============================
+
+**Working ButtonNames (Returning Results)**:
+- ✅ Group Tours: Working perfectly
+- ✅ Day Tours: Working perfectly  
+- ✅ Packages: Working perfectly
+- ✅ Cruises: 6 products returned (river cruises)
+- ✅ Rail: 8 products returned (Rovos Rail routes)
+
+**Not Working**:
+- ❌ Accommodation: 0 results
+- ❌ Special Offers: 0 results (may be destination-specific)
+
+ANALYSIS OF RETURNED PRODUCTS
+==============================
+
+When searching other product types for accommodation-like content:
+- **Cruises**: Returns river cruise products only (Chobe Princess, Zambezi Queen)
+- **Rail**: Returns rail journey products only (Rovos Rail routes)
+- **Packages**: May contain accommodation as part of packages (not tested in this round)
+- **Group Tours**: May include accommodation within tour packages
+
+None of the working product types return standalone accommodation/hotel/lodge products.
+
+CRITICAL QUESTIONS FOR TOURPLAN
+================================
+
+**1. Accommodation ButtonName**:
+What is the correct ButtonName value to retrieve accommodation products from the API?
+- Is there a specific ButtonName we haven't tested?
+- Are accommodation products available through the API at all?
+- Should we be using a different approach entirely for accommodation?
+
+**2. Product Categorization**:
+How does TourPlan categorize accommodation products?
+- Are hotels/lodges only available as part of packages?
+- Is there a separate API endpoint or method for accommodation?
+- Should we be using different Info parameters?
+
+**3. Previous Integration Note**:
+Our previous email mentioned accommodation was "NOW WORKING" but that appears to have been incorrect. The client has confirmed that accommodation searches return packages, not pure accommodation products. Can you clarify the intended behavior?
+
+CURRENT WORKAROUND
+==================
+
+While awaiting clarification, we're implementing a curated catalog approach:
+- Manually maintaining a list of known accommodation product codes
+- Using individual product lookups with <Opt> for details
+- This ensures customers can still book accommodation
+
+TECHNICAL DETAILS
+=================
+
+Example XML Request Tested:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DestinationName>Cape Town</DestinationName>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+    <RateConvert>Y</RateConvert>
+  </OptionInfoRequest>
+</Request>
+```
+
+Response: Empty OptionInfoReply with no Option elements
+
+IMPACT ON OPERATIONS
+====================
+
+**Customer Experience**:
+- Accommodation page exists but requires manual catalog maintenance
+- Cannot dynamically search for accommodation by destination
+- Must know specific product codes in advance
+
+**Operational Impact**:
+- Team must manually maintain accommodation product catalog
+- Cannot leverage TourPlan's full accommodation inventory
+- Missing potential bookings due to limited visibility
+
+URGENT REQUEST
+==============
+
+Please provide guidance on:
+1. The correct ButtonName for accommodation searches
+2. Whether accommodation is available through the API
+3. Any alternative methods to retrieve accommodation products
+
+This is currently affecting our live website's accommodation booking functionality. Any immediate guidance would be greatly appreciated.
+
+Environment Details:
+- Endpoint: https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi
+- AgentID: SAMAGT
+- API Version: hostConnect_5_05_000.dtd
+- Testing Date: December 2024
+
+Thank you for your urgent attention to this matter.
+
+Best regards,
+This is Africa Development Team

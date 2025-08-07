@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
   const startDate = searchParams.get("startDate") || undefined
   const endDate = searchParams.get("endDate") || undefined
   const travelers = searchParams.get("travelers") ? Number.parseInt(searchParams.get("travelers")!) : undefined
+  const adults = searchParams.get("adults") ? Number.parseInt(searchParams.get("adults")!) : undefined
+  const children = searchParams.get("children") ? Number.parseInt(searchParams.get("children")!) : undefined
 
   try {
     const result = await searchProducts({
@@ -17,7 +19,8 @@ export async function GET(request: NextRequest) {
       destination,
       dateFrom: startDate,
       dateTo: endDate,
-      adults: travelers,
+      adults: adults || travelers,
+      children: children,
     })
 
     return NextResponse.json({

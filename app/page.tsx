@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from "lucide-react"
+import FeaturedSpecials from "@/components/homepage/FeaturedSpecials"
 
 export default function Home() {
   const router = useRouter()
@@ -17,6 +18,12 @@ export default function Home() {
   })
 
   const handleSearch = () => {
+    // For Group Tours, require either country or destination to be selected
+    if (searchCriteria.productType === 'Group Tours' && !searchCriteria.country && !searchCriteria.destination) {
+      alert('Please select a country or destination to search for Group Tours')
+      return
+    }
+    
     // Build search URL with parameters
     const params = new URLSearchParams()
     if (searchCriteria.productType) params.set('productType', searchCriteria.productType)
@@ -37,12 +44,19 @@ export default function Home() {
             <h1 className="text-4xl md:text-7xl font-bold text-white mb-4">
               TRAVEL WITH <span className="text-amber-500">EXPERIENCE</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mb-8">
-              This is Africa is a rapidly growing wholesale and retail travel company which specialises in selling
-              tailor-made and package tours to Africa.
+            <p className="text-lg md:text-xl text-white/90 max-w-3xl mb-8">
+              This is Africa is an Australian-owned company which specialise in selling group tours, pre-designed packages and tailor-made itineraries in southern and eastern Africa and the Middle East. For 25 years we have provided travellers with enriching and memorable Africa adventures and experiences.
             </p>
             <div className="flex gap-4">
-              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white px-8">
+              <Button 
+                size="lg" 
+                className="bg-amber-500 hover:bg-amber-600 text-white px-8"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                }}
+              >
                 Explore Tours
               </Button>
               <Button
@@ -58,7 +72,7 @@ export default function Home() {
       </section>
 
       {/* Enhanced Search Form */}
-      <section className="bg-white py-8">
+      <section id="search-section" className="bg-white py-8">
         <div className="container mx-auto px-4">
           <div className="bg-gray-100 rounded-lg p-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -67,12 +81,12 @@ export default function Home() {
                   <SelectValue placeholder="Tour Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Group Tours">Group Tours</SelectItem>
+                  <SelectItem value="Group Tours">Guided group tours</SelectItem>
                   <SelectItem value="Day Tours">Day Tours</SelectItem>
                   <SelectItem value="Accommodation">Accommodation</SelectItem>
                   <SelectItem value="Cruises">Cruises</SelectItem>
-                  <SelectItem value="Rail">Rail Tours</SelectItem>
-                  <SelectItem value="Packages">Packages</SelectItem>
+                  <SelectItem value="Rail">Rail journeys</SelectItem>
+                  <SelectItem value="Packages">Pre-designed packages</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -132,7 +146,7 @@ export default function Home() {
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Group Tours */}
+            {/* 1. Guided Group Tours */}
             <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative h-48">
                 <Image
@@ -146,20 +160,126 @@ export default function Home() {
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">GROUP TOURS</h3>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">GUIDED GROUP TOURS</h3>
                 <p className="text-gray-600 mb-4">
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => router.push('/booking?productType=Group%20Tours')}
+                  onClick={() => router.push('/group-tours')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
-                  Book Now
+                  Book now
                 </Button>
               </div>
             </div>
 
-            {/* Accommodation */}
+            {/* 2. Pre-designed Packages */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image
+                  src="/images/luxury-resort-pool.png"
+                  alt="Packages - Beach resort with pool"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
+                  <Search className="h-5 w-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">PRE-DESIGNED PACKAGES</h3>
+                <p className="text-gray-600 mb-4">
+                  Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
+                </p>
+                <Button 
+                  onClick={() => router.push('/packages')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book now
+                </Button>
+              </div>
+            </div>
+
+            {/* 3. Tailor-made Itineraries */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image
+                  src="/images/tailor-made-safari.png"
+                  alt="Tailor Made - Custom safari group"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
+                  <Search className="h-5 w-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">TAILOR-MADE ITINERARIES</h3>
+                <p className="text-gray-600 mb-4">
+                  Custom-designed adventures. Personalised itineraries for your perfect African journey.
+                </p>
+                <Button 
+                  onClick={() => router.push('/tailor-made')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Learn more
+                </Button>
+              </div>
+            </div>
+
+            {/* 4. Rail Journeys */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image
+                  src="/images/rail-journey.png"
+                  alt="Rail Tours - Luxury train journey"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
+                  <Search className="h-5 w-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">RAIL JOURNEYS</h3>
+                <p className="text-gray-600 mb-4">
+                  Discover our rail journeys. The Blue Train, Shongololo Express and more.
+                </p>
+                <Button 
+                  onClick={() => router.push('/rail')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book now
+                </Button>
+              </div>
+            </div>
+
+            {/* 5. Cruises */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative h-48">
+                <Image
+                  src="/images/zambezi-queen.png"
+                  alt="Cruises - River cruise boat"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
+                  <Search className="h-5 w-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">CRUISES</h3>
+                <p className="text-gray-600 mb-4">Discover our cruise options. Zambezi River cruises and more.</p>
+                <Button 
+                  onClick={() => router.push('/cruise')}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Book now
+                </Button>
+              </div>
+            </div>
+
+            {/* 6. Accommodation */}
             <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative h-48">
                 <Image
@@ -178,116 +298,10 @@ export default function Home() {
                   Great group tours. Choose from a variety of hotels. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => router.push('/booking?productType=Accommodation')}
+                  onClick={() => router.push('/accommodation')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
-                  Book Now
-                </Button>
-              </div>
-            </div>
-
-            {/* Rail Tours */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative h-48">
-                <Image
-                  src="/images/rail-journey.png"
-                  alt="Rail Tours - Luxury train journey"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
-                  <Search className="h-5 w-5 text-gray-600" />
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">RAIL TOURS</h3>
-                <p className="text-gray-600 mb-4">
-                  Discover our rail tours. The Blue Train, Shongololo Express and more.
-                </p>
-                <Button 
-                  onClick={() => router.push('/booking?productType=Rail')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                >
-                  Book Now
-                </Button>
-              </div>
-            </div>
-
-            {/* Packages */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative h-48">
-                <Image
-                  src="/images/luxury-resort-pool.png"
-                  alt="Packages - Beach resort with pool"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
-                  <Search className="h-5 w-5 text-gray-600" />
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">PACKAGES</h3>
-                <p className="text-gray-600 mb-4">
-                  Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
-                </p>
-                <Button 
-                  onClick={() => router.push('/booking?productType=Packages')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                >
-                  Book Now
-                </Button>
-              </div>
-            </div>
-
-            {/* Cruises */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative h-48">
-                <Image
-                  src="/images/zambezi-queen.png"
-                  alt="Cruises - River cruise boat"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
-                  <Search className="h-5 w-5 text-gray-600" />
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">CRUISES</h3>
-                <p className="text-gray-600 mb-4">Discover our cruise options. Zambezi River cruises and more.</p>
-                <Button 
-                  onClick={() => router.push('/booking?productType=Cruises')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                >
-                  Book Now
-                </Button>
-              </div>
-            </div>
-
-            {/* Tailor Made */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative h-48">
-                <Image
-                  src="/images/tailor-made-safari.png"
-                  alt="Tailor Made - Custom safari group"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-2">
-                  <Search className="h-5 w-5 text-gray-600" />
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">TAILOR MADE</h3>
-                <p className="text-gray-600 mb-4">
-                  Custom-designed adventures. Personalised itineraries for your perfect African journey.
-                </p>
-                <Button 
-                  onClick={() => router.push('/contact')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                >
-                  Contact Us
+                  Book now
                 </Button>
               </div>
             </div>
@@ -296,95 +310,16 @@ export default function Home() {
       </section>
 
       {/* Featured Specials Section */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Specials</h2>
-            <p className="text-lg text-gray-600">
-              Limited-time offers on our most popular destinations and experiences
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Victoria Falls Explorer */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-              <div className="relative h-48">
-                <Image src="/images/victoria-falls.png" alt="Victoria Falls Explorer" fill className="object-cover" />
-                <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded text-sm font-medium">
-                  20% Off
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Victoria Falls Explorer</h3>
-                <p className="text-gray-600 mb-4">
-                  Experience the majestic Victoria Falls, one of the Seven Natural Wonders of the World.
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-gray-500 line-through">$3,599</span>
-                    <span className="text-2xl font-bold ml-2">$2,879</span>
-                  </div>
-                </div>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600">View Deal</Button>
-              </div>
-            </div>
-
-            {/* Zanzibar Beach Escape */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-              <div className="relative h-48">
-                <Image src="/images/luxury-resort-pool.png" alt="Zanzibar Beach Escape" fill className="object-cover" />
-                <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded text-sm font-medium">
-                  Free Nights
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Zanzibar Beach Escape</h3>
-                <p className="text-gray-600 mb-4">
-                  Stay 7 nights, pay for only 5 at this stunning beachfront resort in Zanzibar.
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-gray-500 line-through">$2,450</span>
-                    <span className="text-2xl font-bold ml-2">$1,750</span>
-                  </div>
-                </div>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600">View Deal</Button>
-              </div>
-            </div>
-
-            {/* Kenya Family Safari */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-              <div className="relative h-48">
-                <Image src="/images/safari-lion.png" alt="Kenya Family Safari" fill className="object-cover" />
-                <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded text-sm font-medium">
-                  Family Offer
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Kenya Family Safari</h3>
-                <p className="text-gray-600 mb-4">
-                  Kids under 12 stay and travel free on this incredible family safari adventure.
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-2xl font-bold">From $2,999</span>
-                  </div>
-                </div>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600">View Deal</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FeaturedSpecials />
 
       {/* Featured Tours - Direct Booking */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Featured Safari Adventures</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Featured safari adventures</h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto mb-4"></div>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ready to book? These are our most popular tours, available for immediate booking with TourPlan integration.
+              Ready to book? These are our most popular tours, available for immediate online booking.
             </p>
           </div>
 
@@ -409,19 +344,28 @@ export default function Home() {
                     <p className="text-sm text-gray-500">per person twin share</p>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKEKEE')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
-                >
-                  🚀 Book Now - Direct to TourPlan
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => router.push('/products/NBOGTARP001CKEKEE')}
+                    variant="outline"
+                    className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
+                  >
+                    📋 View Details
+                  </Button>
+                  <Button 
+                    onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKEKEE')}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                  >
+                    🚀 Book Now
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Classic Kenya - Serena */}
             <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative h-48">
-                <Image src="/images/safari-elephants.png" alt="Classic Kenya Serena" fill className="object-cover" />
+                <Image src="/images/products/1001187777125043.jpg" alt="Classic Kenya Serena" fill className="object-cover" />
                 <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium">
                   ⭐ Premium
                 </div>
@@ -438,12 +382,21 @@ export default function Home() {
                     <p className="text-sm text-gray-500">per person twin share</p>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKSE')}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
-                >
-                  🚀 Book Now - Direct to TourPlan
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => router.push('/products/NBOGTARP001CKSE')}
+                    variant="outline"
+                    className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
+                  >
+                    📋 View Details
+                  </Button>
+                  <Button 
+                    onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKSE')}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                  >
+                    🚀 Book Now
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -474,7 +427,7 @@ export default function Home() {
       <section className="py-12 md:py-16 bg-gray-900 text-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Us</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why choose us</h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto"></div>
           </div>
 

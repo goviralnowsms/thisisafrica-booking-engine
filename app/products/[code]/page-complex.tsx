@@ -572,8 +572,8 @@ export default function ProductDetailsPage() {
                     
                     <div className="pt-4 text-sm text-gray-600">
                       <p className="font-semibold mb-2">Need Help?</p>
-                      <p>Call us: 1300 55 44 01</p>
-                      <p>Email: info@thisisafrica.com.au</p>
+                      <p>Call us: +61 2 9664 9187</p>
+                      <p>Email: sales@thisisafrica.com.au</p>
                     </div>
                   </div>
                 </CardContent>

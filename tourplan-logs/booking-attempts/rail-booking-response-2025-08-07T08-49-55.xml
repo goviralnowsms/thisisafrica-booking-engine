@@ -1,0 +1,67 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1477,
+      "Ref": "TAWB100472",
+      "ServiceLineId": 6365,
+      "SequenceNumber": 10,
+      "Status": "??",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6365,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "VFARLROV001VFPYPM",
+          "OptionNumber": 103261,
+          "Date": "2025-10-10",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2188,
+                    "Forename": "Adult 1",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A"
+                  },
+                  {
+                    "PersonId": 2189,
+                    "Forename": "Adult 2",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A"
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 1019469,
+          "SCU": "Trip",
+          "SCUqty": 1,
+          "puTime": 0,
+          "puRemark": 413131202,
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Rovos Rail",
+          "Description": "Rovos Rail Victoria Falls to Pretoria",
+          "Description2": "",
+          "Comment": "Pullman Suite",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "LocationCode": "VFA"
+        }
+      }
+    }
+  }
+}

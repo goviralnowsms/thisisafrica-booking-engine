@@ -1,0 +1,256 @@
+// Solutions for "1002 SCN Problem 10 with RateId Standard" error
+
+/**
+ * SOLUTION 1: Extract RateId from Search Results
+ * 
+ * Instead of using "Default", get the actual RateId from OptionInfoRequest response
+ * This is the most reliable approach
+ */
+
+export function extractRateIdFromSearchResponse(xmlResponse: string, optionCode: string): string | null {
+  try {
+    // Parse the XML to find the RateId for the specific option
+    // Look for <RateId> elements in the response
+    
+    // Example search for RateId in XML
+    const rateIdMatch = xmlResponse.match(/<RateId>(.*?)<\/RateId>/);
+    
+    if (rateIdMatch && rateIdMatch[1]) {
+      console.log('✅ Found RateId in search results:', rateIdMatch[1]);
+      return rateIdMatch[1];
+    }
+    
+    console.warn('⚠️ No RateId found in search results');
+    return null;
+    
+  } catch (error) {
+    console.error('❌ Error extracting RateId:', error);
+    return null;
+  }
+}
+
+/**
+ * SOLUTION 2: Try Different RateId Values
+ * 
+ * If "Default" doesn't work, try these common values:
+ */
+export const COMMON_RATE_IDS = [
+  'Default',
+  'Standard',
+  'Standard Rate', 
+  'Normal',
+  'Regular',
+  'BASE',
+  'STD'
+] as const;
+
+export function tryAlternativeRateIds(
+  baseXmlRequest: string, 
+  originalRateId: string = 'Default'
+): string[] {
+  
+  return COMMON_RATE_IDS.map(rateId => {
+    if (rateId === originalRateId) return baseXmlRequest; // Skip the one that failed
+    
+    // Replace the RateId in the XML
+    return baseXmlRequest.replace(
+      /<RateId>.*?<\/RateId>/, 
+      `<RateId>${rateId}</RateId>`
+    );
+  });
+}
+
+/**
+ * SOLUTION 3: Omit RateId Entirely
+ * 
+ * Some configurations may work better without RateId
+ */
+export function removeRateIdFromXML(xmlRequest: string): string {
+  return xmlRequest.replace(/<RateId>.*?<\/RateId>\s*/, '');
+}
+
+/**
+ * SOLUTION 4: Complete Search-to-Book Flow
+ * 
+ * Proper workflow to avoid RateId issues:
+ * 1. Do OptionInfoRequest first
+ * 2. Extract RateId from results
+ * 3. Use that exact RateId in AddServiceRequest
+ */
+export async function searchToBookWorkflow(params: {
+  agentId: string;
+  password: string;
+  destination: string;
+  dateFrom: string;
+  adults: number;
+  children?: number;
+  apiUrl: string;
+}) {
+  
+  const { agentId, password, destination, dateFrom, adults, children = 0, apiUrl } = params;
+  
+  // Step 1: Search for options
+  const searchXml = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <ButtonName>Day Tours</ButtonName>
+    <DestinationName>${destination}</DestinationName>
+    <Info>GS</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    <RateConvert>Y</RateConvert>
+    <Adults>${adults}</Adults>
+    ${children > 0 ? `<Children>${children}</Children>` : ''}
+    <RoomType>DB</RoomType>
+  </OptionInfoRequest>
+</Request>`;
+
+  try {
+    console.log('🔍 Step 1: Searching for options...');
+    
+    const searchResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8' },
+      body: searchXml
+    });
+    
+    const searchResults = await searchResponse.text();
+    console.log('📄 Search results received');
+    
+    // Step 2: Extract available options and their RateIds
+    const options = parseSearchResults(searchResults);
+    
+    if (options.length === 0) {
+      throw new Error('No options found in search results');
+    }
+    
+    console.log('✅ Found options:', options.map(o => `${o.code} (RateId: ${o.rateId})`));
+    
+    return options;
+    
+  } catch (error) {
+    console.error('❌ Search-to-book workflow failed:', error);
+    throw error;
+  }
+}
+
+interface TourOption {
+  code: string;
+  rateId: string;
+  rateName: string;
+  price: number;
+  currency: string;
+  availability: string;
+}
+
+function parseSearchResults(xmlResponse: string): TourOption[] {
+  // This is a simplified parser - you might want to use a proper XML parser
+  const options: TourOption[] = [];
+  
+  // Look for Option blocks in the response
+  const optionMatches = xmlResponse.match(/<Option>[\s\S]*?<\/Option>/g);
+  
+  if (!optionMatches) {
+    console.warn('⚠️ No Option blocks found in response');
+    return options;
+  }
+  
+  optionMatches.forEach(optionXml => {
+    try {
+      const codeMatch = optionXml.match(/<Opt>(.*?)<\/Opt>/);
+      const rateIdMatch = optionXml.match(/<RateId>(.*?)<\/RateId>/);
+      const rateNameMatch = optionXml.match(/<RateName>(.*?)<\/RateName>/);
+      const priceMatch = optionXml.match(/<TotalPrice>(.*?)<\/TotalPrice>/);
+      const currencyMatch = optionXml.match(/<Currency>(.*?)<\/Currency>/);
+      const availabilityMatch = optionXml.match(/<Availability>(.*?)<\/Availability>/);
+      
+      if (codeMatch && rateIdMatch) {
+        options.push({
+          code: codeMatch[1],
+          rateId: rateIdMatch[1],
+          rateName: rateNameMatch?.[1] || 'Unknown',
+          price: priceMatch ? parseInt(priceMatch[1]) : 0,
+          currency: currencyMatch?.[1] || 'USD',
+          availability: availabilityMatch?.[1] || 'Unknown'
+        });
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to parse option:', error);
+    }
+  });
+  
+  return options;
+}
+
+/**
+ * SOLUTION 5: Booking with Correct RateId
+ */
+export function buildBookingWithCorrectRateId(params: {
+  agentId: string;
+  password: string;
+  bookingName: string;
+  optionCode: string;
+  rateId: string; // Use the one from search results
+  dateFrom: string;
+  adults: number;
+  children?: number;
+  isQuote?: boolean;
+}): string {
+  
+  const { 
+    agentId, password, bookingName, optionCode, rateId, 
+    dateFrom, adults, children = 0, isQuote = false 
+  } = params;
+  
+  const totalPax = adults + children;
+  
+  return `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <NewBookingInfo>
+      <n>${bookingName}</n>
+      <QB>${isQuote ? 'Q' : 'B'}</QB>
+    </NewBookingInfo>
+    <Opt>${optionCode}</Opt>
+    <RateId>${rateId}</RateId>
+    <DateFrom>${dateFrom}</DateFrom>
+    <Adults>${adults}</Adults>
+    ${children > 0 ? `<Children>${children}</Children>` : ''}
+    <RoomType>DB</RoomType>
+    <SCUqty>${totalPax}</SCUqty>
+  </AddServiceRequest>
+</Request>`;
+}
+
+/**
+ * DEBUGGING: Log RateId Issues
+ */
+export function debugRateIdIssue(searchResponse: string, bookingRequest: string) {
+  console.log('🔍 DEBUGGING RATEID ISSUE:');
+  console.log('1. Search response contains these RateIds:');
+  
+  const rateIds = [...searchResponse.matchAll(/<RateId>(.*?)<\/RateId>/g)];
+  rateIds.forEach((match, index) => {
+    console.log(`   ${index + 1}. "${match[1]}"`);
+  });
+  
+  console.log('2. Booking request is using RateId:');
+  const bookingRateId = bookingRequest.match(/<RateId>(.*?)<\/RateId>/);
+  console.log(`   "${bookingRateId?.[1] || 'NOT FOUND'}"`);
+  
+  console.log('3. Rate Names in search results:');
+  const rateNames = [...searchResponse.matchAll(/<RateName>(.*?)<\/RateName>/g)];
+  rateNames.forEach((match, index) => {
+    console.log(`   ${index + 1}. "${match[1]}"`);
+  });
+  
+  if (rateIds.length === 0) {
+    console.warn('⚠️ WARNING: No RateIds found in search response!');
+    console.log('💡 Try using search results from stay pricing (Info=GS)');
+  }
+}

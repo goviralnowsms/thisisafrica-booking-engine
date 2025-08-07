@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

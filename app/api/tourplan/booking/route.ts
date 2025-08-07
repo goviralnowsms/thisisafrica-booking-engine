@@ -9,6 +9,7 @@ import {
   dateSchema,
   roomConfigSchema 
 } from '../utils';
+import { sendBookingConfirmation, sendAdminNotification } from '@/lib/email';
 
 // Create booking schema
 const createBookingSchema = z.object({
@@ -57,15 +58,10 @@ export async function POST(request: NextRequest) {
   try {
     console.log('📝 Booking API called');
     
-    // Log raw request body first
     const rawBody = await request.text();
-    console.log('📝 Raw request body:', rawBody);
-    
-    // Parse it manually to check
     let parsedBody;
     try {
       parsedBody = JSON.parse(rawBody);
-      console.log('📝 Parsed body:', parsedBody);
     } catch (parseError) {
       console.error('❌ Failed to parse request body:', parseError);
       return errorResponse('Invalid JSON in request body', 400);
@@ -80,15 +76,11 @@ export async function POST(request: NextRequest) {
     
     const validationResult = await validateRequestBody(testRequest, createBookingSchema);
     if (validationResult.error) {
-      console.log('❌ Validation failed:', validationResult.error);
       return validationResult.error;
     }
     
     const data = validationResult.data;
-    console.log('✅ Validated data:', data);
-    
-    // Use simplified service function
-    console.log('🔄 Calling createBooking service...');
+    console.log('🔄 Creating booking for:', data.productCode);
     const result = await createBooking({
       customerName: data.customerName,
       productCode: data.productCode,
@@ -103,8 +95,6 @@ export async function POST(request: NextRequest) {
       infants: data.infants,
     });
     
-    console.log('🎉 Booking result:', result);
-    
     // Handle different TourPlan responses
     if (result.status === 'NO' || result.status === 'RQ' || result.status === 'WQ') {
       // NO = Declined, RQ = On Request, WQ = Website Quote (what we want!)
@@ -115,7 +105,29 @@ export async function POST(request: NextRequest) {
       const tourplanBookingId = result.bookingId || null;
       
       // Generate our own reference if TourPlan didn't provide one
-      const bookingRef = tourplanRef || `TIA-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      // Use product-specific prefixes for different product types
+      const isCruise = data.productCode.includes('CRCHO') ||    // Chobe Princess codes (BBKCRCHO...)
+                       data.productCode.includes('CRTVT') ||    // Zambezi Queen codes (BBKCRTVT...)  
+                       data.productCode.includes('BBKCR') ||    // Botswana cruise codes
+                       data.productCode.toLowerCase().includes('cruise');
+                       
+      const isRail = data.productCode.includes('RLROV') ||     // Rovos Rail codes
+                     data.productCode.includes('RAIL') ||      // General rail codes
+                     data.productCode.toLowerCase().includes('rail') ||
+                     data.productCode.includes('BLUE') ||      // Blue Train codes
+                     data.productCode.includes('PREMIER') ||   // Premier Classe codes
+                     data.productCode.includes('VFARLROV') ||  // Victoria Falls rail
+                     data.productCode.includes('CPTRLROV') ||  // Cape Town rail
+                     data.productCode.includes('PRYRLROV');    // Pretoria rail
+      
+      let productPrefix = 'TIA';
+      if (isCruise) {
+        productPrefix = 'TIA-CRUISE';
+      } else if (isRail) {
+        productPrefix = 'TIA-RAIL';  
+      }
+      
+      const bookingRef = tourplanRef || `${productPrefix}-${Date.now()}`;
       
       // Create a booking record with manual confirmation requirement
       const quotedBooking = {
@@ -144,17 +156,87 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
         message: result.status === 'WQ' 
           ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
-          : 'Booking requires manual confirmation. You will be contacted within 48 hours to confirm availability.',
+          : `Your ${isCruise ? 'cruise' : isRail ? 'rail' : ''} booking has been received. Our team will contact you within 48 hours to confirm availability.`,
         rawResponse: result.rawResponse
       };
       
-      console.log('📝 Created quote/booking for manual confirmation:', {
-        status: result.status,
-        tourplanRef: tourplanRef,
-        ourRef: bookingRef
-      });
+      console.log('📝 Manual confirmation booking created:', bookingRef);
+      
+      // Send email notifications
+      try {
+        // Send customer email
+        await sendBookingConfirmation({
+          reference: bookingRef,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          customerName: data.customerName,
+          productName: `${data.productCode} - ${isCruise ? 'Cruise' : isRail ? 'Rail Journey' : 'Tour'}`,
+          dateFrom: data.dateFrom,
+          dateTo: data.dateTo,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          status: quotedBooking.status,
+          requiresManualConfirmation: true
+        });
+        
+        // Send admin notification
+        await sendAdminNotification({
+          reference: bookingRef,
+          customerName: data.customerName,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          productCode: data.productCode,
+          productName: `${data.productCode} - ${isCruise ? 'Cruise' : isRail ? 'Rail Journey' : 'Tour'}`,
+          dateFrom: data.dateFrom,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          requiresManualConfirmation: true,
+          tourplanStatus: result.status
+        });
+        
+        console.log('✅ Email notifications sent');
+      } catch (emailError) {
+        console.error('⚠️ Failed to send email notifications:', emailError);
+        // Don't fail the booking if email fails
+      }
       
       return successResponse(quotedBooking, 201);
+    }
+    
+    // For successful bookings (status OK or other success statuses)
+    if (result.bookingId || result.reference) {
+      try {
+        // Send customer confirmation
+        await sendBookingConfirmation({
+          reference: result.reference || result.bookingRef || result.bookingId,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          customerName: data.customerName,
+          productName: data.productCode,
+          dateFrom: data.dateFrom,
+          dateTo: data.dateTo,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          status: result.status || 'CONFIRMED',
+          requiresManualConfirmation: false
+        });
+        
+        // Send admin notification for successful bookings too
+        await sendAdminNotification({
+          reference: result.reference || result.bookingRef || result.bookingId,
+          customerName: data.customerName,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          productCode: data.productCode,
+          productName: data.productCode,
+          dateFrom: data.dateFrom,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          requiresManualConfirmation: false,
+          tourplanStatus: result.status || 'OK'
+        });
+        
+        console.log('✅ Email notifications sent for successful booking');
+      } catch (emailError) {
+        console.error('⚠️ Failed to send email notifications:', emailError);
+        // Don't fail the booking if email fails
+      }
     }
     
     return successResponse(result, 201);
@@ -165,42 +247,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Add service to existing booking
+// PUT - Add service to existing booking (not currently used but ready for multi-service bookings)
 export async function PUT(request: NextRequest) {
   try {
     const validationResult = await validateRequestBody(request, addServiceSchema);
     if (validationResult.error) return validationResult.error;
     
     const data = validationResult.data;
-    const client = getTourPlanClient();
+    // Note: This endpoint is prepared for future multi-service booking functionality
     
-    const result = await client.addServiceToBooking(data.bookingId, {
-      Opt: data.productCode,
-      RateId: data.rateId,
-      DateFrom: data.dateFrom,
-      DateTo: data.dateTo,
-      Adults: data.adults,
-      Children: data.children,
-      Infants: data.infants,
-      RoomConfigs: data.roomConfigs,
-      Note: data.note,
-    });
-    
-    if (result.Error) {
-      return errorResponse(
-        'Failed to add service to booking',
-        400,
-        result.Error
-      );
-    }
-    
-    return successResponse({
-      bookingId: result.BookingId,
-      bookingRef: result.BookingRef,
-      status: result.Status,
-      totalCost: result.TotalCost,
-      currency: result.Currency,
-    });
+    return errorResponse('Multi-service booking not yet implemented', 501);
   } catch (error) {
     return handleTourPlanError(error);
   }

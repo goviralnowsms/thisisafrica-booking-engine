@@ -1,10 +1,14 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+
+// Disable static generation for this dynamic page
+export const dynamic = 'force-dynamic'
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
+// Temporary fix for lucide-react module resolution issue
+// import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import PricingCalendar from "@/components/booking/PricingCalendar"
 
@@ -93,12 +97,28 @@ export default function ProductDetailsPage() {
     setIsClient(true)
   }, [])
 
-  // Calculate product images using useMemo to ensure proper reactivity
+  // Calculate product images - simplified without heavy operations
   const realImages = useMemo(() => {
-    return product?.localAssets?.images && product.localAssets.images.length > 0
-      ? product.localAssets.images.map(img => img.url).filter(url => url && url.trim() !== '')
-      : []
-  }, [product])
+    if (!product) return []
+    
+    // Check for Classic Kruger Package specific images
+    if (productCode === 'HDSSPMAKUTSMSSCLS') {
+      return [
+        '/images/products/kruger-package.jpeg',
+        '/images/products/kruger-zebra.jpeg'
+      ]
+    }
+    
+    // Return product images if available
+    if (product.localAssets?.images && product.localAssets.images.length > 0) {
+      return product.localAssets.images
+        .map(img => img.url)
+        .filter(url => url && url.trim() !== '')
+        .slice(0, 5) // Limit to 5 images to avoid performance issues
+    }
+    
+    return []
+  }, [product, productCode])
   
   // Use real images if available, otherwise fallback images
   const productImages = useMemo(() => {
@@ -107,8 +127,65 @@ export default function ProductDetailsPage() {
       : ["/images/safari-lion.png", "/images/luxury-accommodation.png", "/images/rail-journey.png"]
   }, [realImages])
   
-  // Show carousel controls only if we have multiple real images (not fallback images)
-  const showCarouselControls = useMemo(() => realImages.length > 1, [realImages])
+  // Determine left side image and remaining carousel images
+  const leftSideImage = useMemo(() => {
+    // Check for Classic Kruger Package specific left side image
+    if (productCode === 'HDSSPMAKUTSMSSCLS') {
+      return '/images/products/cheetah.jpeg'
+    }
+    
+    // If we have a map from TourPlan data or found through map checking logic
+    if (mapImage && !mapImage.includes('/images/products/')) {
+      return mapImage
+    }
+    // If no map and we have multiple real images, use the second image for variety
+    if (realImages.length > 1) {
+      return realImages[1]
+    }
+    // If only one real image or no real images, use first image
+    return productImages[0]
+  }, [mapImage, realImages, productImages, productCode])
+  
+  // Remaining images for carousel (excluding the one used on left side)
+  const carouselImages = useMemo(() => {
+    let images = productImages
+    
+    if (realImages.length <= 1) {
+      // If we only have 1 or no real images, show all productImages in carousel
+      images = productImages
+    } else if (leftSideImage === realImages[1]) {
+      // If we're using the second image on the left, show first + third onwards in carousel
+      images = [realImages[0], ...realImages.slice(2)]
+    } else {
+      // Otherwise show all images in carousel
+      images = productImages
+    }
+    
+    // Add specific images for Savanna Lodge product
+    if (productCode && productCode.includes('GKPSPSAV002SAVLHM')) {
+      const savannahSuiteImage = '/images/products/savannah-suite.jpg'
+      const savannahHoneymoonImage = '/images/products/savannah-lodge-honeymoon.png'
+      
+      // Only show the 2 Savanna Lodge specific images
+      return [savannahHoneymoonImage, savannahSuiteImage]
+    }
+    
+    // Add specific images for Sabi Sabi Bush Lodge
+    if (productCode && (productCode.includes('GKPSPSABBLDSABBLS') || productCode.includes('SABI'))) {
+      const sabiImages = [
+        '/images/products/sabi-sabi1.png',
+        '/images/products/sabi-sabi2.jpg',
+        '/images/products/sabi-sabi3.jpg',
+        '/images/products/sabi-sabi4.jpg'
+      ]
+      return sabiImages
+    }
+    
+    return images
+  }, [leftSideImage, realImages, productImages, productCode])
+  
+  // Show carousel controls only if we have multiple carousel images
+  const showCarouselControls = useMemo(() => carouselImages.length > 1, [carouselImages])
 
 
   // Keyboard navigation for carousel
@@ -118,16 +195,16 @@ export default function ProductDetailsPage() {
       
       if (event.key === 'ArrowLeft') {
         event.preventDefault()
-        setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)
+        setSelectedImageIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length)
       } else if (event.key === 'ArrowRight') {
         event.preventDefault()
-        setSelectedImageIndex((prev) => (prev + 1) % productImages.length)
+        setSelectedImageIndex((prev) => (prev + 1) % carouselImages.length)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showCarouselControls, productImages.length])
+  }, [showCarouselControls, carouselImages.length])
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -147,123 +224,48 @@ export default function ProductDetailsPage() {
     const isRightSwipe = distance < -50
 
     if (isLeftSwipe) {
-      setSelectedImageIndex((prev) => (prev + 1) % productImages.length)
+      setSelectedImageIndex((prev) => (prev + 1) % carouselImages.length)
     }
     if (isRightSwipe) {
-      setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length)
+      setSelectedImageIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length)
     }
   }
 
-  // Check for local map image
+  // Simple map image selection based on product code
   useEffect(() => {
-    const checkForMap = async () => {
-      if (!productCode || !product) return;
-      
-      // Extract country from product code/URL - including airport codes
-      const codeCountryMap: { [key: string]: string } = {
-        'nbo': '/images/maps/kenya-tanzania-uganda.png', // Nairobi (Kenya)
-        'kenya': '/images/maps/kenya-tanzania-uganda.png',
-        'dar': '/images/maps/kenya-tanzania-uganda.png', // Dar es Salaam (Tanzania)
-        'jro': '/images/maps/kenya-tanzania-uganda.png', // Kilimanjaro (Tanzania)
-        'tnz': '/images/maps/kenya-tanzania-uganda.png', // Tanzania
-        'tanzania': '/images/maps/kenya-tanzania-uganda.png',
-        'uganda': '/images/maps/kenya-tanzania-uganda.png',
-        'ebb': '/images/maps/kenya-tanzania-uganda.png', // Entebbe (Uganda)
-        'gbe': '/images/maps/botswana-zimbabwe.png', // Gaborone (Botswana)
-        'mub': '/images/maps/botswana-zimbabwe.png', // Maun (Botswana)
-        'botswana': '/images/maps/botswana-zimbabwe.png',
-        'wdh': '/images/maps/namibia.png', // Windhoek (Namibia)
-        'namibia': '/images/maps/namibia.png',
-        'cpt': '/images/maps/south-africa-namibia-botswana-zimbabwe.png', // Cape Town
-        'jnb': '/images/maps/south-africa-namibia-botswana-zimbabwe.png', // Johannesburg
-        'south-africa': '/images/maps/south-africa-namibia-botswana-zimbabwe.png',
-        'hre': '/images/maps/botswana-zimbabwe.png', // Harare (Zimbabwe)
-        'vfa': '/images/maps/botswana-vic-falls.png', // Victoria Falls
-        'zimbabwe': '/images/maps/botswana-zimbabwe.png',
-        'lun': '/images/maps/botswana-namibia-zambia-zimbabwe.png', // Lusaka (Zambia)
-        'zambia': '/images/maps/botswana-namibia-zambia-zimbabwe.png',
-      };
-      
-      // First, try to find country/airport code in the product code URL
-      let mapFromCode = null;
-      const productCodeLower = productCode.toLowerCase();
-      for (const [code, mapPath] of Object.entries(codeCountryMap)) {
-        if (productCodeLower.includes(code)) {
-          mapFromCode = mapPath;
-          break;
-        }
-      }
-      
-      // Get destination from product data
-      const destination = product.destination?.toLowerCase() || '';
-      const country = product.country?.toLowerCase() || '';
-      
-      // Try different map file formats
-      const mapFormats = [
-        // First priority: maps that include the product code in filename (both cases)
-        `/images/maps/kenya-tanzania-uganda-${productCode}.png`,
-        `/images/maps/kenya-tanzania-uganda-${productCode.toUpperCase()}.png`,
-        `/images/maps/botswana-zimbabwe-${productCode}.png`,
-        `/images/maps/botswana-zimbabwe-${productCode.toUpperCase()}.png`,
-        `/images/maps/namibia-${productCode}.png`,
-        `/images/maps/namibia-${productCode.toUpperCase()}.png`,
-        `/images/maps/south-africa-${productCode}.png`,
-        `/images/maps/south-africa-${productCode.toUpperCase()}.png`,
-        
-        // Second priority: country extracted from product code
-        mapFromCode,
-        
-        // Try exact product code match
-        `/images/maps/${productCode}.png`,
-        `/images/maps/${productCode}.jpg`,
-        `/images/maps/${productCode.toLowerCase()}.png`,
-        
-        // Try destination-based matches
-        destination.includes('kenya') && '/images/maps/kenya-tanzania-uganda.png',
-        destination.includes('tanzania') && '/images/maps/kenya-tanzania-uganda.png',
-        destination.includes('uganda') && '/images/maps/kenya-tanzania-uganda.png',
-        destination.includes('botswana') && '/images/maps/botswana-zimbabwe.png',
-        destination.includes('namibia') && '/images/maps/namibia.png',
-        destination.includes('south africa') && '/images/maps/south-africa-namibia-botswana-zimbabwe.png',
-        destination.includes('zimbabwe') && '/images/maps/botswana-zimbabwe.png',
-        destination.includes('victoria falls') && '/images/maps/botswana-vic-falls.png',
-        destination.includes('cape town') && '/images/maps/cape-town-to-vic-falls.png',
-        
-        // Try country-based matches
-        country === 'kenya' && '/images/maps/kenya-tanzania-uganda.png',
-        country === 'tanzania' && '/images/maps/kenya-tanzania-uganda.png',
-        country === 'uganda' && '/images/maps/kenya-tanzania-uganda.png',
-        country === 'botswana' && '/images/maps/botswana-zimbabwe.png',
-        country === 'namibia' && '/images/maps/namibia.png',
-        country === 'south africa' && '/images/maps/south-africa-namibia-botswana-zimbabwe.png',
-        country === 'zimbabwe' && '/images/maps/botswana-zimbabwe.png',
-      ].filter(Boolean);
-      
-      // Check each possible map
-      for (const mapPath of mapFormats) {
-        try {
-          const response = await fetch(mapPath, { method: 'HEAD' });
-          if (response.ok) {
-            setMapImage(mapPath);
-            return; // Found a map, stop searching
-          }
-        } catch {
-          // Continue to next format
-        }
-      }
-      
-      // No map found - use first product image as fallback
-      const images = product?.localAssets?.images && product.localAssets.images.length > 0
-        ? product.localAssets.images.map(img => img.url)
-        : [];
-      
-      if (images.length > 0) {
-        setMapImage(images[0]);
-      }
-    };
+    if (!productCode) return;
     
-    checkForMap();
-  }, [productCode, product]);
+    const productCodeUpper = productCode.toUpperCase();
+    let mapPath = null;
+    
+    // First check for specific product code maps
+    if (productCodeUpper === 'NBOGTARP001CKSE') {
+      mapPath = '/images/maps/kenya-tanzania-uganda-NBOGTARP001CKSE.png';
+    } else if (productCodeUpper === 'NBOGTARP001CKEKEE') {
+      // Use the comprehensive Kenya/Tanzania/Uganda map for Keekorok tour
+      mapPath = '/images/maps/Serengeti-np-lakevictoria-masai-mara-nakuru-naivasha-amboseli-arusha-zanzibar-dar-es-salaam.png';
+    } else if (productCodeUpper.includes('NBO') || productCodeUpper.includes('KENYA')) {
+      // Kenya tours - use the detailed Kenya/Tanzania map
+      mapPath = '/images/maps/Serengeti-np-lakevictoria-masai-mara-nakuru-naivasha-amboseli-arusha-zanzibar-dar-es-salaam.png';
+    } else if (productCodeUpper.includes('GBE') || productCodeUpper.includes('MUB') || productCodeUpper.includes('BOTSWANA')) {
+      mapPath = '/images/maps/botswana-zimbabwe.png';
+    } else if (productCodeUpper.includes('WDH') || productCodeUpper.includes('NAMIBIA')) {
+      mapPath = '/images/maps/namibia.png';
+    } else if (productCodeUpper.includes('CPT') || productCodeUpper.includes('JNB') || productCodeUpper.includes('SOUTH-AFRICA')) {
+      mapPath = '/images/maps/south-africa-namibia-botswana-zimbabwe.png';
+    } else if (productCodeUpper.includes('VFA') || productCodeUpper.includes('VICTORIA')) {
+      mapPath = '/images/maps/botswana-vic-falls.png';
+    } else if (productCodeUpper.includes('HRE') || productCodeUpper.includes('ZIMBABWE')) {
+      mapPath = '/images/maps/botswana-zimbabwe.png';
+    } else if (productCodeUpper.includes('LUN') || productCodeUpper.includes('ZAMBIA')) {
+      mapPath = '/images/maps/botswana-namibia-zambia-zimbabwe.png';
+    } else {
+      // Default to comprehensive Kenya/Tanzania map for other African tours
+      mapPath = '/images/maps/Serengeti-np-lakevictoria-masai-mara-nakuru-naivasha-amboseli-arusha-zanzibar-dar-es-salaam.png';
+    }
+    
+    setMapImage(mapPath);
+  }, [productCode]);
 
   useEffect(() => {
     // Only fetch on client side to avoid hydration mismatch
@@ -373,7 +375,7 @@ export default function ProductDetailsPage() {
     <div className="min-h-screen bg-gray-50">
       <style dangerouslySetInnerHTML={{ __html: tourContentStyles }} />
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b mt-16 md:mt-20">
         <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center space-x-2 text-sm ml-48">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
@@ -385,23 +387,47 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
-      {/* Hero Section with Gallery and Map */}
-      <section className="relative h-[60vh] bg-gray-900">
-        <div className="relative h-full flex">
-          {/* Map Section - Left Side */}
-          <div className="hidden lg:block w-1/3 h-full bg-gray-200 relative">
-            {mapImage ? (
+      {/* Hero Section with Title Above Gallery */}
+      <section className="bg-white">
+        {/* Title and Info Section */}
+        <div className="container mx-auto px-4 py-6">
+          <div className="lg:ml-[33.333%] px-8">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-medium">⭐ Premium Experience</span>
+              <span className="bg-gray-200 px-3 py-1 rounded-full text-sm">{product.location || 'African Adventure'}</span>
+              {product.rates && product.rates.length > 0 && product.rates.find(rate => {
+                const rateValue = rate.twinRateTotal || rate.twinRate || 0
+                return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
+              }) && (
+                <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  From {product.rates.find(rate => {
+                    const rateValue = rate.twinRateTotal || rate.twinRate || 0
+                    return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
+                  })?.twinRateFormatted}
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+          </div>
+        </div>
+
+        {/* Gallery and Map Section */}
+        <div className="relative h-[60vh] flex">
+          {/* Left Side - Map or Alternative Image */}
+          <div className="hidden lg:block w-1/3 h-full bg-white relative border-r">
+            {leftSideImage ? (
               <Image
-                src={mapImage}
-                alt="Tour Route Map"
+                src={leftSideImage}
+                alt={leftSideImage.includes('/maps/') ? "Tour Route Map" : "Tour Image"}
                 fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 0vw, 33vw"
+                className="object-contain pl-4 pr-4 py-4"
+                quality={95}
+                sizes="(max-width: 1024px) 0vw, 500px"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                 <div className="text-center">
-                  <MapPin className="h-12 w-12 mx-auto mb-2" />
+                  <div className="h-12 w-12 mx-auto mb-2 flex items-center justify-center text-2xl">📍</div>
                   <p className="font-semibold">Tour Route Map</p>
                   <p className="text-sm">Map will be available soon</p>
                 </div>
@@ -411,47 +437,48 @@ export default function ProductDetailsPage() {
           
           {/* Image Gallery - Right Side */}
           <div 
-            className="relative flex-1 h-full"
+            className="relative flex-1 h-full bg-white"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
             <Image
               key={selectedImageIndex}
-              src={productImages[selectedImageIndex] || productImages[0]}
+              src={carouselImages[selectedImageIndex] || carouselImages[0]}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-contain p-4"
               priority
-              sizes="(max-width: 1024px) 100vw, 67vw"
+              quality={95}
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"
             />
             
             {/* Navigation buttons - only show if more than 1 real image */}
             {showCarouselControls && (
             <>
               <button
-                onClick={() => setSelectedImageIndex((selectedImageIndex - 1 + productImages.length) % productImages.length)}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
+                onClick={() => setSelectedImageIndex((selectedImageIndex - 1 + carouselImages.length) % carouselImages.length)}
+                className="absolute left-12 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
                 aria-label="Previous image"
               >
-                <ChevronLeft className="h-6 w-6" />
+                <span className="text-xl">‹</span>
               </button>
               <button
-                onClick={() => setSelectedImageIndex((selectedImageIndex + 1) % productImages.length)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
+                onClick={() => setSelectedImageIndex((selectedImageIndex + 1) % carouselImages.length)}
+                className="absolute right-12 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10"
                 aria-label="Next image"
               >
-                <ChevronRight className="h-6 w-6" />
+                <span className="text-xl">›</span>
               </button>
               
               {/* Image counter */}
-              <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                {selectedImageIndex + 1} / {productImages.length}
+              <div className="absolute top-8 right-8 bg-black/50 text-white px-3 py-1 rounded-full text-sm z-10">
+                {selectedImageIndex + 1} / {carouselImages.length}
               </div>
               
               {/* Dot indicators */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3">
-                {productImages.map((_, index) => (
+                {carouselImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
@@ -467,8 +494,8 @@ export default function ProductDetailsPage() {
           </div>
         </div>
         
-        {/* Title overlay - only on the right side over the image carousel */}
-        <div className="absolute bottom-0 left-0 lg:left-1/3 right-0 bg-gradient-to-t from-black/80 to-transparent">
+        {/* Title overlay - removed as title is now above the gallery */}
+        {/* <div className="absolute bottom-0 left-0 lg:left-1/3 right-0 bg-gradient-to-t from-black/80 to-transparent">
           <div className="px-8 pb-12">
             <div className="max-w-3xl text-white">
               <div className="flex flex-wrap gap-2 mb-4">
@@ -491,15 +518,15 @@ export default function ProductDetailsPage() {
               
               <div className="flex flex-wrap gap-6 mb-6">
                 <span className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5" />
+                  <span className="text-lg">🕒</span>
                   {product.periods ? `${product.periods + 1} days` : '7 days'}
                 </span>
                 <span className="flex items-center gap-2 text-lg">
-                  <Users className="h-5 w-5" />
+                  <span className="text-lg">👥</span>
                   Small Group Tour
                 </span>
                 <span className="flex items-center gap-2 text-lg">
-                  <MapPin className="h-5 w-5" />
+                  <span className="text-lg">📍</span>
                   {product.supplierName || 'Expert Guides'}
                 </span>
               </div>
@@ -540,7 +567,7 @@ export default function ProductDetailsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* Content */}
@@ -563,17 +590,9 @@ export default function ProductDetailsPage() {
                       <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Overview</h2>
                       <div className="prose max-w-none">
                         {product.content?.introduction ? (
-                          <div 
-                            className="whitespace-pre-line text-gray-700 leading-relaxed tour-content"
-                            dangerouslySetInnerHTML={{
-                              __html: product.content.introduction
-                                .replace(/Day \d+:([^\n]*)/g, '<h3 class="text-lg font-bold text-amber-600 mt-6 mb-3">$&</h3>')
-                                .replace(/^(Flights|Accommodation|Meals|Transport|Transfers|Activities|Park fees|Tour essentials|Important Information)$/gm, '<h4 class="text-md font-semibold text-amber-600 mt-5 mb-2">$1</h4>')
-                                .replace(/\n\n/g, '</p><p class="mb-3">')
-                                .replace(/^(?!<h)/, '<p class="mb-3">')
-                                .replace(/(?<!>)$/, '</p>')
-                            }}
-                          />
+                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                            {product.content.introduction}
+                          </div>
                         ) : (
                           <p className="text-gray-700">{product.description}</p>
                         )}
@@ -584,17 +603,9 @@ export default function ProductDetailsPage() {
                       <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Itinerary</h2>
                       <div className="prose max-w-none">
                         {product.content?.details ? (
-                          <div 
-                            className="whitespace-pre-line text-gray-700 leading-relaxed tour-content"
-                            dangerouslySetInnerHTML={{
-                              __html: product.content.details
-                                .replace(/Day \d+:([^\n]*)/g, '<h3 class="text-lg font-bold text-amber-600 mt-6 mb-3">$&</h3>')
-                                .replace(/^(Safari information|Accommodation|Transport|Meals|Guide|Activities):/gm, '<h4 class="text-md font-semibold text-amber-600 mt-5 mb-2">$1:</h4>')
-                                .replace(/\n\n/g, '</p><p class="mb-3">')
-                                .replace(/^(?!<h)/, '<p class="mb-3">')
-                                .replace(/(?<!>)$/, '</p>')
-                            }}
-                          />
+                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                            {product.content.details}
+                          </div>
                         ) : (
                           <p className="text-gray-700">Detailed itinerary available upon request.</p>
                         )}
@@ -605,16 +616,9 @@ export default function ProductDetailsPage() {
                       <h2 className="text-2xl font-bold mb-4 text-amber-600">What's Included</h2>
                       <div className="prose max-w-none">
                         {product.content?.inclusions ? (
-                          <div 
-                            className="whitespace-pre-line text-gray-700 leading-relaxed tour-content"
-                            dangerouslySetInnerHTML={{
-                              __html: product.content.inclusions
-                                .replace(/^​?(Flights|Accommodation|Meals|Transport|Transfers|Activities|Park fees|Tour essentials|Important Information)$/gm, '<h4 class="text-md font-semibold text-amber-600 mt-5 mb-2">$1</h4>')
-                                .replace(/\n\n/g, '</p><p class="mb-3">')
-                                .replace(/^(?!<h)/, '<p class="mb-3">')
-                                .replace(/(?<!>)$/, '</p>')
-                            }}
-                          />
+                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                            {product.content.inclusions}
+                          </div>
                         ) : (
                           <p className="text-gray-700">Please contact us for detailed inclusions.</p>
                         )}
@@ -725,13 +729,13 @@ export default function ProductDetailsPage() {
                           rel="noopener noreferrer"
                           className="border border-amber-200 hover:bg-amber-50 px-3 py-2 rounded text-center text-sm"
                         >
-                          <Download className="h-4 w-4 inline mr-1" />
+                          <span className="text-sm inline mr-1">📥</span>
                           PDF
                         </a>
                       ))
                     ) : (
                       <button className="border border-amber-200 hover:bg-amber-50 px-3 py-2 rounded text-sm">
-                        <Download className="h-4 w-4 inline mr-1" />
+                        <span className="text-sm inline mr-1">📥</span>
                         PDF Guide
                       </button>
                     )}
@@ -745,8 +749,8 @@ export default function ProductDetailsPage() {
                 {/* Contact */}
                 <div className="pt-4 text-sm text-gray-600 text-center">
                   <p className="font-semibold mb-2 text-amber-600">Need Help?</p>
-                  <p>Call: 1300 55 44 01</p>
-                  <p>Email: info@thisisafrica.com.au</p>
+                  <p>Call: +61 2 9664 9187</p>
+                  <p>Email: sales@thisisafrica.com.au</p>
                 </div>
               </div>
             </div>

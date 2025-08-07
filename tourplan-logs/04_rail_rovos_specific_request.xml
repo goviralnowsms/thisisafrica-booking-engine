@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    
+    <Opt>CPTRLROV001CTPPUL</Opt>
+    <DateFrom>2025-02-01</DateFrom>
+    <DateTo>2025-12-31</DateTo>
+  </OptionInfoRequest>
+</Request>

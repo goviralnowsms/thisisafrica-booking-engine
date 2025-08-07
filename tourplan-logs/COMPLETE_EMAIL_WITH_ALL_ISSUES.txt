@@ -1,0 +1,301 @@
+TourPlan API Integration - CRITICAL ISSUES WITH ACCOMMODATION, CRUISE & RAIL
+=============================================================================
+
+Dear Thys,
+
+We need urgent assistance with three critical API issues affecting our live website. This email includes complete technical logs demonstrating each issue.
+
+EXECUTIVE SUMMARY - THREE CRITICAL ISSUES
+==========================================
+
+**ISSUE 1 - Accommodation: NO RESULTS** ❌
+- ButtonName="Accommodation" returns 0 results everywhere
+- Tested 16 alternative ButtonNames (Hotels, Lodge, Resort, etc.) - all return 0
+- Cannot display or book ANY accommodation products
+
+**ISSUE 2 - Cruise Bookings: ALWAYS DECLINED** ⚠️
+- Product search/display works perfectly (6 products)
+- Booking attempts via AddServiceRequest always return Status="NO"
+- Using hybrid approach: Display products → Collect payment → Manual processing
+
+**ISSUE 3 - Rail Bookings: ALWAYS DECLINED** ⚠️
+- Product search/display works perfectly (8 products)  
+- Booking attempts via AddServiceRequest always return Status="NO"
+- Using hybrid approach: Display products → Collect payment → Manual processing
+
+=============================================================================
+ISSUE 1: ACCOMMODATION SEARCHES RETURN ZERO RESULTS
+=============================================================================
+
+**Test Results (December 7, 2025):**
+All ButtonName variations tested return 0 results:
+- ❌ Accommodation - Cape Town: 0 results
+- ❌ Accommodation - Nairobi: 0 results
+- ❌ Hotels - All destinations: 0 results
+- ❌ Hotel, Lodge, Lodges, Resort, Resorts: 0 results
+- ❌ Stay, Stays, Property, Properties: 0 results
+- ❌ Guest House, Guesthouse: 0 results
+
+**XML Request Example:**
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-02-01</DateFrom>
+    <DateTo>2025-02-15</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+    <LocationCode>CPT</LocationCode>
+  </OptionInfoRequest>
+</Request>
+```
+
+**Response:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply><OptionInfoReply /></Reply>
+```
+**Result: EMPTY - No accommodation products returned**
+
+**QUESTION 1:** What is the correct ButtonName or method to retrieve accommodation products?
+
+=============================================================================
+ISSUE 2: CRUISE BOOKINGS ALWAYS DECLINED (Status="NO")
+=============================================================================
+
+**Current Behavior:**
+✅ Product Search: Works perfectly - returns 6 cruise products
+✅ Product Display: All details and pricing display correctly
+❌ Booking API: ALWAYS returns Status="NO" when attempting to book
+
+**Products Affected:**
+- BBKCRCHO018TIACP2 (Chobe Princess 2 Night)
+- BBKCRCHO018TIACP3 (Chobe Princess 3 Night)
+- BBKCRTVT001ZAM2NM (Zambezi Queen 2 Night)
+- BBKCRTVT001ZAM2NS (Zambezi Queen 2 Night variant)
+- BBKCRTVT001ZAM3NM (Zambezi Queen 3 Night)
+- BBKCRTVT001ZAM3NS (Zambezi Queen 3 Night variant)
+
+**Booking Request Example (BBKCRCHO018TIACP2):**
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo><Name>John Smith</Name><QB>B</QB></NewBookingInfo>
+    <Opt>BBKCRCHO018TIACP2</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-15</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Type>DB</Type>
+        <Quantity>1</Quantity>
+      </RoomConfig>
+    </RoomConfigs>
+    <Email>john@example.com</Email>
+    <puRemark>+61400000000</puRemark>
+  </AddServiceRequest>
+</Request>
+```
+
+**Response:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <AddServiceReply>
+    <Status>NO</Status>
+    <BookingId></BookingId>
+  </AddServiceReply>
+</Reply>
+```
+**Result: Booking DECLINED - Status="NO"**
+
+**Current Workaround:**
+1. Customer selects cruise and enters details
+2. System attempts TourPlan booking → Receives "NO"
+3. System creates manual reference (TIA-CRUISE-xxx)
+4. Customer pays via Stripe (30% deposit)
+5. Team manually processes booking with TourPlan
+
+**QUESTION 2:** Why do cruise bookings always return Status="NO"? Is manual processing required for cruise products?
+
+=============================================================================
+ISSUE 3: RAIL BOOKINGS ALWAYS DECLINED (Status="NO")
+=============================================================================
+
+**Current Behavior:**
+✅ Product Search: Works perfectly - returns 8 rail products
+✅ Product Display: All Rovos Rail routes display with pricing
+❌ Booking API: ALWAYS returns Status="NO" when attempting to book
+
+**Products Affected:**
+- CPTRLROV001CTPPUL (Cape Town to Pretoria - Pullman)
+- CPTRLROV001CTPRRO (Cape Town to Pretoria - Royal)
+- CPTRLROV001RRCTPR (Cape Town Return)
+- VFARLROV001VFPRDX (Victoria Falls to Pretoria - Deluxe)
+- VFARLROV001VFPRRY (Victoria Falls to Pretoria - Royal)
+- PRYRLROV001PRCPPM (Pretoria to Cape Town - Premier)
+- PRYRLROV001PRCPRY (Pretoria to Cape Town - Royal)
+- PRYRLROV001ROV004 (Pretoria Special Route)
+
+**Booking Request Example (CPTRLROV001CTPPUL):**
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo><Name>Jane Doe</Name><QB>B</QB></NewBookingInfo>
+    <Opt>CPTRLROV001CTPPUL</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-10</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <Email>jane@example.com</Email>
+  </AddServiceRequest>
+</Request>
+```
+
+**Response:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd">
+<Reply>
+  <AddServiceReply>
+    <Status>NO</Status>
+    <BookingId></BookingId>
+  </AddServiceReply>
+</Reply>
+```
+**Result: Booking DECLINED - Status="NO"**
+
+**Current Workaround:**
+1. Customer selects rail journey and enters details
+2. System attempts TourPlan booking → Receives "NO"
+3. System creates manual reference (TIA-RAIL-xxx)
+4. Customer pays via Stripe (30% deposit)
+5. Team manually processes booking with TourPlan
+
+**QUESTION 3:** Why do rail bookings always return Status="NO"? Is manual processing required for rail products?
+
+=============================================================================
+COMPARISON: WORKING PRODUCT TYPES
+=============================================================================
+
+**Group Tours & Packages - FULLY WORKING:**
+✅ ButtonName searches return results
+✅ Product details display correctly
+✅ Booking API accepts bookings (Status="OK")
+✅ No manual intervention required
+
+Example Success:
+- Group Tours (Kenya): 21 products found, bookings work
+- Packages (Botswana): 10 products found, bookings work
+
+=============================================================================
+BUSINESS IMPACT
+=============================================================================
+
+**Accommodation Issue Impact:**
+- Cannot display ANY accommodation options
+- Customers cannot book hotels/lodges
+- Missing significant revenue opportunity
+- Poor customer experience
+
+**Cruise/Rail Booking Impact:**
+- Additional manual processing required
+- Delayed booking confirmations
+- Risk of overbooking or errors
+- Staff overhead for manual entry
+
+=============================================================================
+TECHNICAL ENVIRONMENT
+=============================================================================
+
+- Endpoint: https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi
+- AgentID: SAMAGT
+- API Version: hostConnect_5_05_000.dtd
+- Testing Date: December 7, 2025
+- Integration: Next.js website with real-time TourPlan API calls
+
+=============================================================================
+CRITICAL QUESTIONS REQUIRING URGENT ANSWERS
+=============================================================================
+
+1. **ACCOMMODATION:**
+   - What is the correct ButtonName for accommodation searches?
+   - Are accommodation products available via the API at all?
+   - Is there an alternative method we should use?
+
+2. **CRUISE BOOKINGS:**
+   - Why do all cruise bookings return Status="NO"?
+   - Is this expected behavior requiring manual processing?
+   - Are there specific parameters needed for cruise bookings to succeed?
+
+3. **RAIL BOOKINGS:**
+   - Why do all rail bookings return Status="NO"?
+   - Is this expected behavior requiring manual processing?
+   - Are there specific parameters needed for rail bookings to succeed?
+
+4. **GENERAL:**
+   - Are we missing any configuration or permissions?
+   - Should certain product types be processed differently?
+
+=============================================================================
+CURRENT IMPLEMENTATION STATUS
+=============================================================================
+
+**Working Perfectly:**
+✅ Group Tours - Search and booking
+✅ Packages - Search and booking
+✅ Day Tours - Individual product display
+
+**Partially Working (Display only, manual booking):**
+⚠️ Cruises - Products display but bookings declined
+⚠️ Rail - Products display but bookings declined
+
+**Not Working:**
+❌ Accommodation - No products returned at all
+
+=============================================================================
+REQUEST FOR IMMEDIATE ASSISTANCE
+=============================================================================
+
+We need urgent clarification on these three issues as they affect our live production website. Our current hybrid approach maintains functionality but requires manual intervention that could be avoided with proper API integration.
+
+Please advise on:
+1. Correct method for accommodation searches
+2. Expected behavior for cruise/rail bookings
+3. Any configuration changes needed
+
+Thank you for your urgent attention to these matters.
+
+Best regards,
+This is Africa Development Team
+
+---
+Attachments:
+- Complete XML request/response logs for all scenarios
+- Test automation scripts for reproduction
+- Full technical documentation available on request

@@ -1,0 +1,74 @@
+LOG FILES TO SEND TO TOURPLAN
+==============================
+
+Please attach the following files from the tourplan-logs directory:
+
+1. MAIN EMAIL DOCUMENT:
+   - COMPLETE_EMAIL_WITH_ALL_ISSUES.txt (the main email body)
+
+2. ACCOMMODATION ISSUE LOGS:
+   - 01_accommodation_request.xml (shows proper request with dates/location)
+   - 01_accommodation_response.xml (shows empty response)
+   - 05_accommodation_no_dates_request.xml (shows minimal request)
+   - 05_accommodation_no_dates_response.xml (shows RoomConfig error)
+
+3. CRUISE ISSUE LOGS:
+   - 02_cruise_request.xml (ButtonName search request)
+   - 02_cruise_response.xml (shows empty ButtonName response)
+   - 06_cruise_no_dates_request.xml (cruise search without dates)
+   - 06_cruise_no_dates_response.xml (cruise response)
+
+4. RAIL ISSUE LOGS:
+   - 03_rail_request.xml (ButtonName search request)
+   - 03_rail_response.xml (shows empty ButtonName response)
+   - 04_rail_rovos_specific_request.xml (specific product lookup that works)
+   - 04_rail_rovos_specific_response.xml (successful product response)
+   - 07_rail_no_dates_request.xml (rail search without dates)
+   - 07_rail_no_dates_response.xml (rail response)
+
+5. WORKING EXAMPLES FOR COMPARISON:
+   - 08_group_tours_no_dates_request.xml (group tours request)
+   - 08_group_tours_no_dates_response.xml (group tours response)
+   - 09_group_tours_with_dates_request.xml (group tours with dates)
+   - 09_group_tours_with_dates_response.xml (group tours response)
+
+6. TEST SUMMARY REPORTS:
+   - test-2025-08-07T08-07-39/test-report.txt (today's comprehensive test results)
+   - test-2025-08-07T08-07-39/test-summary.json (detailed JSON results)
+
+OPTIONAL - If TourPlan requests more details:
+- UPDATED_TOURPLAN_EMAIL_WITH_ACCOMMODATION_FINDINGS.txt (accommodation-focused analysis)
+- FINAL_TOURPLAN_EMAIL_SUMMARY.txt (previous status report)
+
+HOW TO SEND:
+============
+
+Option 1: ZIP Archive
+- Create a ZIP file with all the XML files and reports
+- Attach to email along with the main text
+
+Option 2: Inline Key Examples
+- Paste the main email text (COMPLETE_EMAIL_WITH_ALL_ISSUES.txt)
+- Attach the most critical XML files:
+  * 01_accommodation_request.xml & 01_accommodation_response.xml
+  * A cruise booking XML pair (if you have one from actual booking attempts)
+  * A rail booking XML pair (if you have one from actual booking attempts)
+  * 04_rail_rovos_specific_request.xml & response (shows individual product lookup works)
+
+Option 3: Cloud Link
+- Upload all files to a shared folder (Google Drive, Dropbox, etc.)
+- Include link in email for TourPlan to access all logs
+
+IMPORTANT NOTES:
+================
+
+1. The critical files are:
+   - Accommodation request/response showing empty results
+   - Rail/Cruise showing ButtonName searches return empty
+   - Specific product lookup showing individual products work
+
+2. If you have actual booking attempt logs for cruise/rail showing Status="NO", include those as they're the most important evidence of the booking issue.
+
+3. The test reports from today (test-2025-08-07T08-07-39) provide strong evidence that we've tested thoroughly.
+
+4. Make sure to emphasize in the email that these are LIVE PRODUCTION ISSUES affecting real customers.

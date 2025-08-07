@@ -1,0 +1,175 @@
+// utils/tourplan-helpers.ts
+
+export interface TourplanBookingParams {
+  optionCode: string;
+  buttonName: string;
+  dateFrom: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  // ... other params
+}
+
+/**
+ * Get the appropriate RateId for different product types
+ * Based on Tourplan API documentation and examples
+ */
+export function getRateId(buttonName: string, optionCode?: string): string {
+  // For most product types, especially Day Tours/Group Tours, use "Default"
+  // This is the safest approach as documented in the API guide
+  
+  switch (buttonName.toLowerCase()) {
+    case 'day tours':
+    case 'group tours':
+    case 'packages':
+    case 'cruises':
+    case 'rail':
+    case 'accommodation':
+    case 'special offers':
+      return 'Default';
+    
+    default:
+      // Fallback to Default for any unknown button types
+      return 'Default';
+  }
+}
+
+/**
+ * Build AddServiceRequest XML for group tours
+ */
+export function buildAddServiceXML(params: {
+  agentId: string;
+  password: string;
+  bookingName: string;
+  optionCode: string;
+  buttonName: string;
+  dateFrom: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  passengerDetails?: Array<{
+    title: string;
+    forename: string;
+    surname: string;
+    paxType: 'A' | 'C' | 'I';
+  }>;
+  isQuote?: boolean;
+}): string {
+  
+  const {
+    agentId,
+    password,
+    bookingName,
+    optionCode,
+    buttonName,
+    dateFrom,
+    adults,
+    children = 0,
+    infants = 0,
+    passengerDetails = [],
+    isQuote = false
+  } = params;
+
+  // Get the appropriate RateId
+  const rateId = getRateId(buttonName, optionCode);
+  
+  // Calculate total passengers
+  const totalPax = adults + children + infants;
+  
+  // Build passenger list if provided
+  let paxListXML = '';
+  if (passengerDetails.length > 0) {
+    paxListXML = `
+      <PaxList>
+        ${passengerDetails.map(pax => `
+          <PaxDetails>
+            <Title>${pax.title}</Title>
+            <Forename>${pax.forename}</Forename>
+            <Surname>${pax.surname}</Surname>
+            <PaxType>${pax.paxType}</PaxType>
+          </PaxDetails>
+        `).join('')}
+      </PaxList>`;
+  }
+
+  return `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <NewBookingInfo>
+      <Name>${bookingName}</Name>
+      <QB>${isQuote ? 'Q' : 'B'}</QB>
+    </NewBookingInfo>
+    <Opt>${optionCode}</Opt>
+    <RateId>${rateId}</RateId>
+    <DateFrom>${dateFrom}</DateFrom>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        ${infants > 0 ? `<Infants>${infants}</Infants>` : ''}
+        <RoomType>DB</RoomType>
+        ${paxListXML}
+      </RoomConfig>
+    </RoomConfigs>
+    <SCUqty>${totalPax}</SCUqty>
+  </AddServiceRequest>
+</Request>`;
+}
+
+/**
+ * Alternative approach: Get RateId from search results
+ * Use this if you want to be more precise and have done an OptionInfoRequest first
+ */
+export function extractRateIdFromSearchResults(xmlResponse: string, optionCode: string): string {
+  try {
+    // Parse the XML response to extract the RateId for the specific option
+    // This is more accurate but requires parsing the OptionInfoRequest response
+    
+    // For now, return Default as it works for all cases
+    // TODO: Implement XML parsing to extract actual RateId from search results
+    return 'Default';
+    
+  } catch (error) {
+    console.warn('Could not extract RateId from search results, using Default');
+    return 'Default';
+  }
+}
+
+/**
+ * Validate booking parameters before sending to Tourplan
+ */
+export function validateBookingParams(params: TourplanBookingParams): {
+  isValid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  if (!params.optionCode) {
+    errors.push('Option code is required');
+  }
+  
+  if (!params.buttonName) {
+    errors.push('Button name is required');
+  }
+  
+  if (!params.dateFrom) {
+    errors.push('Date from is required');
+  }
+  
+  if (params.adults < 1) {
+    errors.push('At least 1 adult is required');
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  if (params.dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(params.dateFrom)) {
+    errors.push('Date must be in YYYY-MM-DD format');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}

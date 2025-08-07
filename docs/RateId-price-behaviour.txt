@@ -1,0 +1,185 @@
+// How RateId affects pricing in Tourplan API
+
+/**
+ * PRICING BEHAVIOR WHEN RateId IS OMITTED:
+ * 
+ * According to Tourplan documentation:
+ * 1. If RateId is omitted, Tourplan will use the "normal rate" for the service
+ * 2. The "normal rate" is typically the standard/default rate available for those dates
+ * 3. Pricing will be calculated based on your booking parameters (dates, pax, etc.)
+ */
+
+export interface PricingScenarios {
+  scenario: string;
+  rateIdUsed: string | null;
+  expectedBehavior: string;
+  priceSource: string;
+}
+
+export const TOURPLAN_PRICING_SCENARIOS: PricingScenarios[] = [
+  {
+    scenario: "Search first, then book with exact RateId",
+    rateIdUsed: "From search results (e.g., 'PROMO2025')", 
+    expectedBehavior: "✅ Exact same price as shown in search",
+    priceSource: "Specific rate from search results"
+  },
+  {
+    scenario: "Book with RateId: 'Default'",
+    rateIdUsed: "Default",
+    expectedBehavior: "✅ Standard rate for those dates/criteria", 
+    priceSource: "Default rate configuration in Tourplan"
+  },
+  {
+    scenario: "Book WITHOUT RateId (omitted entirely)",
+    rateIdUsed: null,
+    expectedBehavior: "✅ Normal/standard rate automatically selected",
+    priceSource: "Tourplan's default rate logic"
+  },
+  {
+    scenario: "Book with wrong/invalid RateId",
+    rateIdUsed: "InvalidRate123",
+    expectedBehavior: "❌ Error: '1002 SCN Problem 10 with RateId'",
+    priceSource: "N/A - Request fails"
+  }
+];
+
+/**
+ * RECOMMENDED APPROACH FOR RELIABLE PRICING:
+ */
+export function getRecommendedBookingApproach(): string {
+  return `
+BEST PRACTICE WORKFLOW:
+
+1. 🔍 SEARCH FIRST (OptionInfoRequest with Info=GS):
+   - Get available options with current rates
+   - Extract RateId from search results
+   - This guarantees pricing accuracy
+
+2. 📋 BOOK WITH EXTRACTED RateId (AddServiceRequest):
+   - Use the exact RateId from search
+   - Price will match search results exactly
+
+FALLBACK OPTIONS (if search not possible):
+
+Option A: Omit RateId entirely
+   ✅ Pros: Will work, gets standard rate
+   ⚠️  Cons: Price might differ from expectations
+
+Option B: Use RateId="Default"  
+   ✅ Pros: Explicit about wanting default rate
+   ❌ Cons: Might cause validation errors (as you experienced)
+
+CONCLUSION: Try omitting RateId completely first!
+`;
+}
+
+/**
+ * XML Examples showing RateId handling:
+ */
+
+// Example 1: WITHOUT RateId (RECOMMENDED FIX)
+export const bookingWithoutRateId = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <n>Test Booking</n>
+      <QB>B</QB>
+    </NewBookingInfo>
+    <Opt>TOUR123</Opt>
+    <!-- RateId OMITTED - Tourplan will use normal rate -->
+    <DateFrom>2025-07-15</DateFrom>
+    <Adults>2</Adults>
+    <Children>1</Children>
+    <RoomType>DB</RoomType>
+    <SCUqty>3</SCUqty>
+  </AddServiceRequest>
+</Request>`;
+
+// Example 2: WITH RateId from search results (BEST PRACTICE)
+export const bookingWithSearchRateId = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <n>Test Booking</n>
+      <QB>B</QB>
+    </NewBookingInfo>
+    <Opt>TOUR123</Opt>
+    <RateId>EXTRACTED_FROM_SEARCH</RateId>  <!-- Use actual RateId from search -->
+    <DateFrom>2025-07-15</DateFrom>
+    <Adults>2</Adults>
+    <Children>1</Children>
+    <RoomType>DB</RoomType>
+    <SCUqty>3</SCUqty>
+  </AddServiceRequest>
+</Request>`;
+
+/**
+ * What "normal rate" means in Tourplan:
+ */
+export interface NormalRateDefinition {
+  definition: string;
+  factors: string[];
+  limitations: string[];
+}
+
+export const NORMAL_RATE_EXPLANATION: NormalRateDefinition = {
+  definition: "The standard published rate for the option on the specified date",
+  factors: [
+    "Date of travel (seasonal pricing)",
+    "Room/service configuration", 
+    "Agent's default currency",
+    "Standard commission structure",
+    "No special promotions or discounts"
+  ],
+  limitations: [
+    "May not include special deals or promotions",
+    "Might not be the lowest available rate",
+    "Could differ from rates shown in search if search included specific criteria"
+  ]
+};
+
+/**
+ * Price validation after booking:
+ */
+export function validateBookingPrice(searchPrice: number, bookingPrice: number): {
+  isValid: boolean;
+  message: string;
+} {
+  const difference = Math.abs(searchPrice - bookingPrice);
+  const percentageDiff = (difference / searchPrice) * 100;
+  
+  if (difference === 0) {
+    return {
+      isValid: true,
+      message: "✅ Perfect match: Booking price matches search price exactly"
+    };
+  } else if (percentageDiff < 5) {
+    return {
+      isValid: true, 
+      message: `✅ Close match: Price difference is ${percentageDiff.toFixed(1)}% (${difference} units)`
+    };
+  } else {
+    return {
+      isValid: false,
+      message: `⚠️ Significant difference: ${percentageDiff.toFixed(1)}% (${difference} units). Consider using exact RateId from search.`
+    };
+  }
+}
+
+/**
+ * When prices might differ:
+ */
+export const PRICE_DIFFERENCE_SCENARIOS = [
+  "Search included promotional rates that aren't the 'normal' rate",
+  "Search was done with different date/pax configuration", 
+  "Time gap between search and booking (rates changed)",
+  "Search used specific rate codes not reflected in normal rate",
+  "Currency conversion differences",
+  "Agent-specific pricing not applied to normal rate"
+];

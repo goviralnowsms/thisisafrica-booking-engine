@@ -1,5 +1,8 @@
 "use client"
 
+// Disable static generation for this dynamic page
+export const dynamic = 'force-dynamic'
+
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -21,6 +24,7 @@ import { cn } from "@/lib/utils"
 import StripePaymentForm from "@/components/booking/StripePaymentForm"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { createBookingRecord, updateBookingWithTourPlan, type BookingRecord } from "@/lib/supabase"
 
 // Product Details Interface
 interface ProductDetails {
@@ -88,6 +92,10 @@ export default function BookingCreatePage() {
   const [product, setProduct] = useState<ProductDetails | null>(null)
   const [isLoadingProduct, setIsLoadingProduct] = useState(true)
   const [productError, setProductError] = useState<string | null>(null)
+  
+  // State for available dates
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set())
+  const [isLoadingDates, setIsLoadingDates] = useState(false)
 
   // State for the booking process
   const [currentStep, setCurrentStep] = useState(0)
@@ -119,6 +127,8 @@ export default function BookingCreatePage() {
     travelersInfo: [] as Array<{
       firstName: string
       lastName: string
+      email?: string
+      phone?: string
       dob: string
       passport: string
       passportExpiry: string
@@ -149,6 +159,60 @@ export default function BookingCreatePage() {
     },
   })
 
+  // Fetch available dates for calendar highlighting
+  const fetchAvailableDates = async (adults?: number, childrenCount?: number) => {
+    if (!tourId) return
+    
+    try {
+      setIsLoadingDates(true)
+      // Use same date range logic as PricingCalendar to ensure consistency
+      const currentDate = new Date()
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) // First day of month
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 6, 0) // 6 months ahead
+      
+      const params = new URLSearchParams({
+        dateFrom: startDate.toISOString().split('T')[0],
+        dateTo: endDate.toISOString().split('T')[0],
+        adults: (adults || formData.adults).toString(),
+        children: (childrenCount !== undefined ? childrenCount : formData.children.length).toString(),
+        roomType: 'DB'
+      })
+
+      console.log('📅 Booking calendar fetching dates:', {
+        productCode: tourId,
+        dateFrom: startDate.toISOString().split('T')[0],
+        dateTo: endDate.toISOString().split('T')[0],
+        adults: (adults || formData.adults),
+        children: (childrenCount !== undefined ? childrenCount : formData.children.length)
+      })
+
+      const response = await fetch(`/api/tourplan/pricing/${tourId}?${params}`)
+      const result = await response.json()
+      
+      console.log('📅 Booking calendar API response:', result.data)
+      
+      if (result.success && result.data?.calendar) {
+        const validDates = new Set<string>()
+        result.data.calendar.forEach((day: any) => {
+          if (day.validDay && day.available) {
+            validDates.add(day.date)
+            // Create date in local timezone to avoid UTC conversion issues
+            const [year, month, dayNum] = day.date.split('-').map(Number)
+            const localDate = new Date(year, month - 1, dayNum)
+            const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long' })
+            console.log('📅 Valid date found:', day.date, dayOfWeek, 'validDay:', day.validDay, 'available:', day.available)
+          }
+        })
+        console.log('📅 Total valid dates:', validDates.size, Array.from(validDates).slice(0, 5))
+        setAvailableDates(validDates)
+      }
+    } catch (error) {
+      console.error('Error fetching available dates:', error)
+    } finally {
+      setIsLoadingDates(false)
+    }
+  }
+
   // Fetch product details
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -160,13 +224,30 @@ export default function BookingCreatePage() {
       
       try {
         setIsLoadingProduct(true)
-        const response = await fetch(`/api/tourplan/product/${tourId}`)
+        const response = await fetch(`/api/tourplan/product/${encodeURIComponent(tourId)}`)
+        
+        if (!response.ok) {
+          console.error('Product API error:', response.status, response.statusText)
+          setProductError(`Failed to load tour details (${response.status})`)
+          return
+        }
+        
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Product API returned non-JSON response:', contentType)
+          setProductError('Invalid response from server')
+          return
+        }
+        
         const result = await response.json()
         
         if (result.success && result.data) {
           const productData = result.data.data || result.data
           setProduct(productData)
           setFormData(prev => ({ ...prev, tourId }))
+          
+          // Fetch available dates after product is loaded
+          fetchAvailableDates()
         } else {
           setProductError(result.error || "Failed to load tour details")
         }
@@ -191,8 +272,8 @@ export default function BookingCreatePage() {
       const childIndex = isChild ? i - adults : -1
       
       newTravelers.push({
-        firstName: i === 0 ? formData.contactInfo.firstName : "",
-        lastName: i === 0 ? formData.contactInfo.lastName : "",
+        firstName: "",
+        lastName: "",
         dob: isChild && childIndex >= 0 ? children[childIndex].dateOfBirth : "",
         passport: "",
         passportExpiry: "",
@@ -278,12 +359,16 @@ export default function BookingCreatePage() {
   const handleAdultsChange = (adults: number) => {
     setFormData((prev) => ({ ...prev, adults }))
     initializeTravelers(adults, formData.children)
+    // Refresh available dates with new traveler count
+    fetchAvailableDates(adults, formData.children.length)
   }
 
   // Handle children change
   const handleChildrenChange = (children: Array<{age: number, dateOfBirth: string}>) => {
     setFormData((prev) => ({ ...prev, children }))
     initializeTravelers(formData.adults, children)
+    // Refresh available dates with new traveler count
+    fetchAvailableDates(formData.adults, children.length)
   }
 
   // Add a child
@@ -318,11 +403,48 @@ export default function BookingCreatePage() {
     const rate = product.rates[0]
     console.log('✅ Rate found:', rate)
     
-    // Try different rate types in order of preference
-    const baseRate = rate.twinRateTotal || rate.twinRate || rate.doubleRate || rate.singleRate || 0
-    const price = typeof baseRate === 'string' ? parseFloat(baseRate) : baseRate
-    console.log('💰 Final price:', price, 'from:', rate.twinRateTotal ? 'twinRateTotal' : rate.twinRate ? 'twinRate' : rate.doubleRate ? 'doubleRate' : rate.singleRate ? 'singleRate' : 'none')
-    return price
+    // Check if this is a rail product
+    const isRail = product.code?.includes('RLROV') ||     // Rovos Rail codes
+                   product.code?.includes('RAIL') ||      // General rail codes
+                   product.code?.toLowerCase().includes('rail') ||
+                   product.code?.includes('BLUE') ||      // Blue Train codes
+                   product.code?.includes('PREMIER')      // Premier Classe codes
+    
+    // Product type detection for pricing
+    console.log('Product type:', product.code, isRail ? 'Rail' : 'Standard');
+    
+    // Check if this product has corrected pricing (rates already in dollars)
+    const hasCorrectedPricing = product.code === 'HDSSPMAKUTSMSSCLS' || 
+                               product.code === 'NBOGTARP001CKEKEE' || 
+                               product.code === 'NBOGTARP001CKSE' || 
+                               product.code === 'NBOGPARP001CKSLP' ||
+                               product.code === 'GKPSPSABBLDSABBLS' || 
+                               product.code === 'GKPSPSAV002SAVLHM'
+    
+    // For rail products, twinRate is total for twin room, so divide by 2 for per person
+    // For other products, twinRate might already be per person
+    if (isRail && (rate.twinRateTotal || rate.twinRate)) {
+      const twinRateTotal = rate.twinRateTotal || rate.twinRate || 0
+      const price = typeof twinRateTotal === 'string' ? parseFloat(twinRateTotal) : twinRateTotal
+      const perPersonPrice = price / 2 // Divide by 2 for per person (already converted from cents in services.ts)
+      console.log('🚂 Rail pricing - twin rate total:', price, 'per person:', perPersonPrice)
+      return perPersonPrice
+    } else if (hasCorrectedPricing) {
+      // For products with corrected pricing, rates are already in dollars, divide twin rate by 2 for per person
+      const baseRate = rate.twinRateTotal || rate.twinRate || rate.doubleRate || rate.singleRate || 0
+      const price = typeof baseRate === 'string' ? parseFloat(baseRate) : baseRate
+      const perPersonPrice = (rate.twinRateTotal || rate.twinRate) ? price / 2 : price // Divide twin rates by 2 for per person
+      console.log('💰 Corrected pricing (already in dollars):', price, 'per person:', perPersonPrice, 'from:', rate.twinRateTotal ? 'twinRateTotal' : rate.twinRate ? 'twinRate' : rate.doubleRate ? 'doubleRate' : rate.singleRate ? 'singleRate' : 'none')
+      return perPersonPrice
+    } else {
+      // For standard products, use rates already converted from cents in services.ts
+      const baseRate = rate.twinRateTotal || rate.twinRate || rate.doubleRate || rate.singleRate || 0
+      const price = typeof baseRate === 'string' ? parseFloat(baseRate) : baseRate
+      // If using twinRateTotal, divide by 2 for per person; otherwise use the rate as-is
+      const perPersonPrice = rate.twinRateTotal ? price / 2 : price
+      console.log('💰 Standard pricing (already converted from cents in services.ts):', price, 'per person:', perPersonPrice)
+      return perPersonPrice
+    }
   }
 
   // Calculate total price
@@ -368,11 +490,31 @@ export default function BookingCreatePage() {
     }
 
     if (currentStep === 1) {
-      // Validate contact info
-      const { firstName, lastName, email, phone } = formData.contactInfo
-      if (!firstName || !lastName || !email || !phone) {
-        alert("Please fill in all required contact information")
+      // Validate lead traveler info
+      const leadTraveler = formData.travelersInfo[0]
+      if (!leadTraveler || !leadTraveler.firstName || !leadTraveler.lastName || !leadTraveler.email || !leadTraveler.phone) {
+        alert("Please fill in all required lead traveler information (name, email, and phone)")
         return
+      }
+      
+      
+      // Validate other travelers have at least names
+      for (let i = 1; i < formData.adults; i++) {
+        const traveler = formData.travelersInfo[i]
+        if (!traveler || !traveler.firstName || !traveler.lastName) {
+          alert(`Please provide first and last name for Adult ${i + 1}`)
+          return
+        }
+      }
+      
+      // Validate children have names and DOB
+      for (let i = 0; i < formData.children.length; i++) {
+        const childIndex = formData.adults + i
+        const traveler = formData.travelersInfo[childIndex]
+        if (!traveler || !traveler.firstName || !traveler.lastName || !traveler.dob) {
+          alert(`Please provide first name, last name, and date of birth for Child ${i + 1}`)
+          return
+        }
       }
     }
 
@@ -401,15 +543,57 @@ export default function BookingCreatePage() {
     setIsSubmitting(true)
 
     try {
-      // Get the first available rate ID from the product
-      const rateId = product?.rates?.[0]?.id || 'STANDARD'
+      // For TourPlan bookings, we need to get the actual RateId from rate details
+      // The rateName from product might not be the correct RateId for booking
+      let rateId = ''
+      
+      try {
+        // Get rate details to find the correct RateId for booking
+        if (!formData.departureDate) {
+          throw new Error('No departure date selected')
+        }
+        const dateFromStr = format(formData.departureDate, 'yyyy-MM-dd')
+        console.log('🔍 Fetching rate details for:', {
+          productCode: tourId,
+          dateFrom: dateFromStr,
+          adults: formData.adults,
+          children: formData.children.length
+        })
+        
+        const rateResponse = await fetch(`/api/tourplan/rate-details?productCode=${tourId}&dateFrom=${dateFromStr}&adults=${formData.adults}&children=${formData.children.length}`)
+        const rateResult = await rateResponse.json()
+        
+        if (rateResult.success && rateResult.data?.rateId) {
+          const foundRateId = rateResult.data.rateId
+          console.log('✅ Found RateId from rate details:', foundRateId)
+          
+          // Use the RateId from the response
+          rateId = foundRateId
+          console.log('✅ Using RateId from rate details:', rateId)
+        } else {
+          console.log('⚠️ No valid RateId found, will omit from request')
+          rateId = null // This will cause RateId element to be omitted
+        }
+      } catch (error) {
+        console.log('⚠️ Error getting rate details, will omit RateId:', error)
+        rateId = null // Fallback to omitting RateId
+      }
+      
+      console.log('Rate ID determined:', rateId || '(empty - TourPlan default)')
+      
+      // Skip Supabase pricing calculations - going directly to TourPlan
+      // If needed for display, use: const { total, basePrice, accommodationCost, activitiesCost, subtotal, taxes } = calculateTotal()
+      
+      
+      console.log('🎯 Creating TourPlan booking directly...')
+      const leadTraveler = formData.travelersInfo[0]
       
       // Create booking via TourPlan API
       const bookingData = {
-        customerName: `${formData.contactInfo.firstName} ${formData.contactInfo.lastName}`,
-        email: formData.contactInfo.email,
-        mobile: formData.contactInfo.phone,
-        bookingType: 'quote', // Start as quote, convert to booking after payment
+        customerName: `${leadTraveler?.firstName || ''} ${leadTraveler?.lastName || ''}`,
+        email: leadTraveler?.email || '',
+        mobile: leadTraveler?.phone || '',
+        bookingType: 'quote', // Always use quote mode to match WQ status
         productCode: tourId,
         rateId: rateId,
         dateFrom: formData.departureDate ? format(formData.departureDate, 'yyyy-MM-dd') : '',
@@ -420,8 +604,8 @@ export default function BookingCreatePage() {
         note: formData.specialRequests,
       }
 
-      console.log('Submitting booking:', bookingData)
-
+      console.log('Submitting booking for product:', bookingData.productCode)
+      
       const response = await fetch('/api/tourplan/booking', {
         method: 'POST',
         headers: {
@@ -430,19 +614,133 @@ export default function BookingCreatePage() {
         body: JSON.stringify(bookingData),
       })
 
-      const result = await response.json()
+      let result
+      const responseText = await response.text()
+      
+      try {
+        result = responseText ? JSON.parse(responseText) : {}
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError)
+        result = { error: 'Invalid JSON response', rawResponse: responseText }
+      }
 
-      if (result.success && result.data) {
-        setBookingReference(result.data.bookingRef || result.data.bookingReference || result.data.id)
-        setBookingId(result.data.bookingId || result.data.id)
-        setBookingComplete(true)
-        setCurrentStep(BOOKING_STEPS.length - 1)
+      // Handle both standard TourPlan responses and special cases like rail bookings
+      // Rail bookings get double-wrapped by successResponse(), so check nested structure too
+      const isRailBooking = result.data?.requiresManualConfirmation || result.data?.allowPayment;
+      const isQuoteBooking = result.data?.requiresManualConfirmation || result.data?.status === 'WEBSITE_QUOTE' || result.data?.status === 'PENDING_CONFIRMATION';
+      // Enhanced success detection - also check for quote bookings and manual confirmation bookings
+      const isSuccess = result.success && (result.data || result.requiresManualConfirmation || result.allowPayment) || 
+                       (result.data?.requiresManualConfirmation && result.data?.reference) ||
+                       (result.data?.status === 'WEBSITE_QUOTE' && result.data?.reference);
+      
+      console.log('Booking response:', result.success ? 'Success' : 'Failed', result.data?.status || 'No status');
+      
+      if (isSuccess) {
+        // For quote bookings, rail bookings, and standard bookings, use appropriate data source
+        const dataSource = isQuoteBooking || isRailBooking ? result.data : (result.data || result);
+        const bookingRef = dataSource.bookingRef || dataSource.bookingReference || dataSource.reference || dataSource.id || `TEMP-${Date.now()}`;
+        const bookingIdValue = dataSource.bookingId || dataSource.id || null;
+        const requiresManualConfirmation = dataSource.requiresManualConfirmation || result.requiresManualConfirmation || false;
+        const status = dataSource.status;
+        const tourplanStatus = dataSource.tourplanStatus;
         
-        // Redirect to confirmation page
-        router.push(`/booking-confirmation?reference=${result.data.bookingRef || result.data.bookingReference || result.data.id}`)
+        console.log('✅ Booking created:', bookingRef, status || 'No status');
+        
+        setBookingReference(bookingRef);
+        setBookingId(bookingIdValue);
+        setBookingComplete(true);
+        setCurrentStep(BOOKING_STEPS.length - 1);
+        
+        
+        // Handle different booking scenarios
+        if (requiresManualConfirmation || status === 'PENDING_CONFIRMATION' || status === 'WEBSITE_QUOTE' || tourplanStatus === 'NO' || tourplanStatus === 'WQ') {
+          console.log('📋 Manual confirmation required:', status);
+          
+          // Store additional data for manual confirmation workflow
+          sessionStorage.setItem('manualConfirmationBooking', JSON.stringify({
+            reference: bookingRef,
+            bookingId: bookingIdValue, // Include TourPlan BookingId for My Bookings access
+            message: dataSource.message || 'Booking requires manual confirmation. You will be contacted within 48 hours.',
+            productCode: dataSource.productDetails?.code,
+            dateFrom: dataSource.productDetails?.dateFrom,
+            adults: dataSource.productDetails?.adults,
+            children: dataSource.productDetails?.children
+          }));
+          
+          // Check if this booking allows payment (e.g., rail products)
+          if (dataSource.allowPayment || status === 'PAYMENT_PENDING') {
+            console.log('💳 Manual confirmation booking allows payment - staying on payment step');
+            // Stay on payment step - will redirect after successful payment
+            // The payment success handler will redirect to confirmation
+          } else {
+            console.log('📋 No payment required - redirecting to confirmation');
+            // Redirect to confirmation page with manual confirmation flag
+            router.push(`/booking-confirmation?reference=${bookingRef}&bookingId=${bookingIdValue || ''}&manual=true`);
+          }
+        } else if (!bookingIdValue) {
+          console.log('⚠️ Booking succeeded but no TourPlan BookingId received - manual follow-up may be needed');
+          router.push(`/booking-confirmation?reference=${bookingRef}&bookingId=${bookingIdValue || ''}&status=partial`);
+        } else {
+          // Standard TourPlan booking success
+          router.push(`/booking-confirmation?reference=${bookingRef}&bookingId=${bookingIdValue || ''}`);
+        }
+      } else if (result.success === false && result.message && result.message.includes('booking ID received')) {
+        // Special case: "Invalid booking response - no booking ID received" 
+        // This means the booking likely succeeded but we couldn't parse the ID
+        console.log('⚠️ Booking likely succeeded but BookingId parsing failed:', result.message);
+        
+        const tempRef = `TEMP-${Date.now()}`;
+        setBookingReference(tempRef);
+        setBookingComplete(true);
+        setCurrentStep(BOOKING_STEPS.length - 1);
+        
+        alert(`Booking appears to have been created but we couldn't retrieve the booking ID. Reference: ${tempRef}. Please contact support for confirmation.`);
+        router.push(`/booking-confirmation?reference=${tempRef}&status=partial`);
       } else {
         console.error("Booking error:", result)
-        alert(result.error || result.details || "Failed to create booking")
+        console.error("Response was:", {
+          status: response.status,
+          statusText: response.statusText,
+          result: result
+        })
+        
+        // Check if this is actually a successful booking with unclear response structure
+        const hasBookingReference = result.data?.bookingRef || result.data?.bookingReference || result.data?.reference || result.bookingRef || result.bookingReference || result.reference;
+        const hasManualConfirmation = result.data?.requiresManualConfirmation;
+        const isQuoteStatus = result.data?.status === 'WEBSITE_QUOTE' || result.data?.status === 'PENDING_CONFIRMATION';
+        
+        if (hasBookingReference || hasManualConfirmation || isQuoteStatus) {
+          console.log('🎯 Found booking reference/confirmation despite success=false, treating as successful:', hasBookingReference);
+          
+          // Show less alarming message for successful bookings that need confirmation
+          if (hasManualConfirmation || isQuoteStatus) {
+            alert('Booking submitted successfully! Your quote is being prepared and you will be contacted within 48 hours.');
+          } else {
+            // Just a quick "Processing..." message instead of error
+            alert('Processing complete. Redirecting to confirmation...');
+          }
+          
+          setBookingReference(hasBookingReference || `TIA-${Date.now()}`);
+          setBookingComplete(true);
+          setCurrentStep(BOOKING_STEPS.length - 1);
+          router.push(`/booking-confirmation?reference=${hasBookingReference || `TIA-${Date.now()}`}`);
+          return;
+        }
+        
+        // Only show error for actual failures
+        let errorMsg = "Unable to complete booking at this time"
+        if (result.message && !result.message.includes('booking')) {
+          errorMsg = result.message
+        } else if (result.error && !result.error.includes('booking')) {
+          errorMsg = result.error
+        } else if (response.status >= 500) {
+          errorMsg = "Server temporarily unavailable - please try again"
+        } else if (response.status === 400) {
+          errorMsg = "Please check your information and try again"
+        }
+        
+        // Only alert if this seems like a real error (no booking reference found)
+        alert(errorMsg)
       }
     } catch (error) {
       console.error("Booking error:", error)
@@ -554,10 +852,10 @@ export default function BookingCreatePage() {
                     </div>
                     <p className="text-gray-600 mb-4">{product.comment || product.description || "Experience the magic of Africa"}</p>
                     <div className="text-lg font-bold">
-                      {product.rates?.[0]?.twinRateFormatted ? (
+                      {product.rates?.[0]?.twinRateFormatted && product.rates[0].twinRateFormatted !== 'Price on application' ? (
                         product.rates[0].twinRateFormatted
                       ) : (
-                        <Button className="bg-amber-500 hover:bg-amber-600">Book Now</Button>
+                        <div className="text-amber-600">Price shown after date selection</div>
                       )}
                     </div>
                   </div>
@@ -586,12 +884,48 @@ export default function BookingCreatePage() {
                           onSelect={handleDateSelect}
                           initialFocus
                           disabled={(date) => {
-                            // Allow any future date
-                            return date < new Date()
+                            // Disable past dates
+                            if (date < new Date()) return true
+                            
+                            // If we have available dates, only allow those
+                            if (availableDates.size > 0) {
+                              // Convert date to local timezone string for comparison
+                              const year = date.getFullYear()
+                              const month = String(date.getMonth() + 1).padStart(2, '0')
+                              const day = String(date.getDate()).padStart(2, '0')
+                              const dateStr = `${year}-${month}-${day}`
+                              return !availableDates.has(dateStr)
+                            }
+                            
+                            // Otherwise allow any future date
+                            return false
+                          }}
+                          modifiers={{
+                            available: (date) => {
+                              // Convert date to local timezone string for comparison
+                              const year = date.getFullYear()
+                              const month = String(date.getMonth() + 1).padStart(2, '0')
+                              const day = String(date.getDate()).padStart(2, '0')
+                              const dateStr = `${year}-${month}-${day}`
+                              return availableDates.has(dateStr)
+                            }
+                          }}
+                          modifiersStyles={{
+                            available: {
+                              backgroundColor: '#10b981',
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }
                           }}
                         />
                         <div className="p-3 border-t border-gray-100">
-                          <p className="text-sm text-gray-500">Available departure dates highlighted</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded"></div>
+                            <p className="text-sm text-gray-600">Available departure dates</p>
+                          </div>
+                          {isLoadingDates && (
+                            <p className="text-xs text-gray-500 mt-1">Loading available dates...</p>
+                          )}
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -709,224 +1043,185 @@ export default function BookingCreatePage() {
               <div>
                 <h2 className="text-xl font-bold mb-6">Traveler Information</h2>
 
+
+                {/* Lead Traveler Only */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                  <h3 className="text-lg font-semibold mb-4">Lead Traveler Contact Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="lead-firstName">First Name *</Label>
                       <Input
-                        id="firstName"
+                        id="lead-firstName"
                         name="firstName"
-                        value={formData.contactInfo.firstName}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
+                        value={formData.travelersInfo[0]?.firstName || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         required
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lead-lastName">Last Name *</Label>
                       <Input
-                        id="lastName"
+                        id="lead-lastName"
                         name="lastName"
-                        value={formData.contactInfo.lastName}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
+                        value={formData.travelersInfo[0]?.lastName || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         required
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="lead-email">Email Address *</Label>
                       <Input
-                        id="email"
+                        id="lead-email"
                         name="email"
                         type="email"
-                        value={formData.contactInfo.email}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
+                        value={formData.travelersInfo[0]?.email || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         required
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="lead-phone">Phone Number *</Label>
                       <Input
-                        id="phone"
+                        id="lead-phone"
                         name="phone"
-                        value={formData.contactInfo.phone}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
+                        value={formData.travelersInfo[0]?.phone || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         required
                         className="mt-1"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        name="address"
-                        value={formData.contactInfo.address}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
-                        required
-                        className="mt-1"
+                        placeholder="+61 123 456 789"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="city">City</Label>
+                      <Label htmlFor="lead-nationality">Nationality (Optional)</Label>
                       <Input
-                        id="city"
-                        name="city"
-                        value={formData.contactInfo.city}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
-                        required
+                        id="lead-nationality"
+                        name="nationality"
+                        value={formData.travelersInfo[0]?.nationality || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         className="mt-1"
+                        placeholder="e.g. Australian"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="postalCode">Postal Code</Label>
+                      <Label htmlFor="lead-passport">Passport Number (Optional)</Label>
                       <Input
-                        id="postalCode"
-                        name="postalCode"
-                        value={formData.contactInfo.postalCode}
-                        onChange={(e) => handleInputChange(e, "contactInfo")}
-                        required
+                        id="lead-passport"
+                        name="passport"
+                        value={formData.travelersInfo[0]?.passport || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
                         className="mt-1"
+                        placeholder="Can be provided later"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="country">Country</Label>
-                      <Select
-                        value={formData.contactInfo.country}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            contactInfo: { ...prev.contactInfo, country: value },
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="w-full mt-1">
-                          <SelectValue placeholder="Select country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="australia">Australia</SelectItem>
-                          <SelectItem value="new-zealand">New Zealand</SelectItem>
-                          <SelectItem value="united-states">United States</SelectItem>
-                          <SelectItem value="canada">Canada</SelectItem>
-                          <SelectItem value="united-kingdom">United Kingdom</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="lead-dietaryRequirements">Dietary Requirements (Optional)</Label>
+                      <Input
+                        id="lead-dietaryRequirements"
+                        name="dietaryRequirements"
+                        value={formData.travelersInfo[0]?.dietaryRequirements || ''}
+                        onChange={(e) => handleInputChange(e, "traveler", 0)}
+                        className="mt-1"
+                        placeholder="Any special dietary needs for your group"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Traveler details */}
-                {formData.travelersInfo.map((traveler, index) => {
-                  const isFirstAdult = index === 0
-                  const isChild = traveler.isChild
-                  const childIndex = isChild ? index - formData.adults + 1 : 0
-                  const adultIndex = !isChild ? index + 1 : 0
-                  
-                  return (
-                  <div key={index} className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4">
-                      {isFirstAdult 
-                        ? "Lead Traveler (Adult)" 
-                        : isChild 
-                          ? `Child ${childIndex} (Age ${traveler.age})` 
-                          : `Adult ${adultIndex}`}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor={`traveler-${index}-firstName`}>First Name</Label>
-                        <Input
-                          id={`traveler-${index}-firstName`}
-                          name="firstName"
-                          value={traveler.firstName}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`traveler-${index}-lastName`}>Last Name</Label>
-                        <Input
-                          id={`traveler-${index}-lastName`}
-                          name="lastName"
-                          value={traveler.lastName}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`traveler-${index}-dob`}>Date of Birth</Label>
-                        <Input
-                          id={`traveler-${index}-dob`}
-                          name="dob"
-                          type="date"
-                          value={traveler.dob}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`traveler-${index}-nationality`}>Nationality</Label>
-                        <Select
-                          value={traveler.nationality}
-                          onValueChange={(value) => {
-                            const updatedTravelers = [...formData.travelersInfo]
-                            updatedTravelers[index] = { ...updatedTravelers[index], nationality: value }
-                            setFormData((prev) => ({ ...prev, travelersInfo: updatedTravelers }))
-                          }}
-                        >
-                          <SelectTrigger className="w-full mt-1">
-                            <SelectValue placeholder="Select nationality" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="australian">Australian</SelectItem>
-                            <SelectItem value="new-zealander">New Zealander</SelectItem>
-                            <SelectItem value="american">American</SelectItem>
-                            <SelectItem value="canadian">Canadian</SelectItem>
-                            <SelectItem value="british">British</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor={`traveler-${index}-passport`}>Passport Number</Label>
-                        <Input
-                          id={`traveler-${index}-passport`}
-                          name="passport"
-                          value={traveler.passport}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`traveler-${index}-passportExpiry`}>Passport Expiry Date</Label>
-                        <Input
-                          id={`traveler-${index}-passportExpiry`}
-                          name="passportExpiry"
-                          type="date"
-                          value={traveler.passportExpiry}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          required
-                          className="mt-1"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Label htmlFor={`traveler-${index}-dietaryRequirements`}>Dietary Requirements (Optional)</Label>
-                        <Input
-                          id={`traveler-${index}-dietaryRequirements`}
-                          name="dietaryRequirements"
-                          value={traveler.dietaryRequirements}
-                          onChange={(e) => handleInputChange(e, "traveler", index)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                    {index < formData.travelersInfo.length - 1 && <Separator className="mt-6" />}
+
+                {/* Other Adult Travelers */}
+                {formData.adults > 1 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4">Other Adult Travelers</h3>
+                    <p className="text-gray-600 mb-4">Please provide names for all travelers. Other details are optional.</p>
+                    {Array.from({ length: formData.adults - 1 }, (_, i) => {
+                      const index = i + 1
+                      return (
+                        <div key={index} className="mb-6">
+                          <h4 className="text-md font-medium mb-3">Adult {index + 1}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`adult-${index}-firstName`}>First Name *</Label>
+                              <Input
+                                id={`adult-${index}-firstName`}
+                                name="firstName"
+                                value={formData.travelersInfo[index]?.firstName || ''}
+                                onChange={(e) => handleInputChange(e, "traveler", index)}
+                                required
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`adult-${index}-lastName`}>Last Name *</Label>
+                              <Input
+                                id={`adult-${index}-lastName`}
+                                name="lastName"
+                                value={formData.travelersInfo[index]?.lastName || ''}
+                                onChange={(e) => handleInputChange(e, "traveler", index)}
+                                required
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  )
-                })}
+                )}
+
+                {/* Children */}
+                {formData.children.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4">Children</h3>
+                    <p className="text-gray-600 mb-4">Date of birth is required for children to confirm age eligibility.</p>
+                    {formData.children.map((child, childIndex) => {
+                      const travelerIndex = formData.adults + childIndex
+                      return (
+                        <div key={travelerIndex} className="mb-6">
+                          <h4 className="text-md font-medium mb-3">Child {childIndex + 1} (Age {child.age})</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`child-${childIndex}-firstName`}>First Name *</Label>
+                              <Input
+                                id={`child-${childIndex}-firstName`}
+                                name="firstName"
+                                value={formData.travelersInfo[travelerIndex]?.firstName || ''}
+                                onChange={(e) => handleInputChange(e, "traveler", travelerIndex)}
+                                required
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`child-${childIndex}-lastName`}>Last Name *</Label>
+                              <Input
+                                id={`child-${childIndex}-lastName`}
+                                name="lastName"
+                                value={formData.travelersInfo[travelerIndex]?.lastName || ''}
+                                onChange={(e) => handleInputChange(e, "traveler", travelerIndex)}
+                                required
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`child-${childIndex}-dob`}>Date of Birth *</Label>
+                              <Input
+                                id={`child-${childIndex}-dob`}
+                                name="dob"
+                                type="date"
+                                value={formData.travelersInfo[travelerIndex]?.dob || child.dateOfBirth}
+                                onChange={(e) => handleInputChange(e, "traveler", travelerIndex)}
+                                required
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -979,12 +1274,71 @@ export default function BookingCreatePage() {
                     </div>
                   </div>
                   
+                  {/* Important Disclaimer */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-amber-800 mb-1">Important Notice</h4>
+                        <p className="text-amber-700 text-sm">
+                          Please note that online bookings are subject to final confirmation from the This is Africa team.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   {total > 0 ? (
                     <StripePaymentForm
                       amount={total * 0.3} // 30% deposit
-                      onSuccess={(paymentIntentId) => {
+                      onSuccess={async (paymentIntentId) => {
                         console.log('Payment successful:', paymentIntentId)
-                        handleSubmitBooking()
+                        
+                        // Check if this is a manual confirmation booking that already exists
+                        const manualBookingData = sessionStorage.getItem('manualConfirmationBooking')
+                        if (manualBookingData) {
+                          console.log('💳 Payment completed for manual confirmation booking')
+                          const bookingData = JSON.parse(manualBookingData)
+                          
+                          // Create Supabase record for rail booking so it appears in My Bookings
+                          try {
+                            const leadTraveler = formData.travelersInfo[0]
+                            const supabaseBookingData: Omit<BookingRecord, 'id' | 'created_at' | 'updated_at'> = {
+                              product_code: bookingData.productCode || product.code,
+                              product_name: product.name,
+                              departure_date: bookingData.dateFrom || formData.selectedDates?.start || formData.departureDate,
+                              return_date: formData.selectedDates?.end,
+                              adults: formData.adults,
+                              children: formData.children.length,
+                              lead_traveler_first_name: leadTraveler?.firstName || '',
+                              lead_traveler_last_name: leadTraveler?.lastName || '',
+                              lead_traveler_email: leadTraveler?.email || '',
+                              lead_traveler_phone: leadTraveler?.phone || '',
+                              special_requests: formData.specialRequests,
+                              status: 'pending_confirmation', // Special status for manual rail bookings
+                              total_price: Math.round(total * 100), // Store in cents
+                              currency: 'AUD',
+                              booking_source: 'website',
+                              tourplan_reference: bookingData.bookingReference || bookingData.bookingRef || bookingData.id,
+                              payment_status: 'deposit_paid',
+                              accommodation_preferences: formData.accommodationPreferences,
+                              dietary_requirements: formData.dietaryRequirements?.join(', ') || '',
+                              user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : undefined,
+                            }
+                            
+                            const supabaseBooking = await createBookingRecord(supabaseBookingData)
+                            console.log('✅ Manual booking record created in database:', supabaseBooking.id)
+                          } catch (supabaseError) {
+                            console.error('❌ Failed to create rail booking record:', supabaseError)
+                            // Don't fail the flow - payment was successful
+                          }
+                          
+                          // Go directly to confirmation with payment success
+                          const bookingRef = bookingData.reference || bookingData.bookingReference || bookingData.bookingRef || bookingData.id
+                          router.push(`/booking-confirmation?reference=${bookingRef}&manual=true&paid=true`)
+                        } else {
+                          // Standard booking flow
+                          handleSubmitBooking()
+                        }
                       }}
                       onError={(error) => {
                         console.error('Payment error:', error)
@@ -1157,13 +1511,13 @@ export default function BookingCreatePage() {
                   <p className="text-2xl font-bold text-amber-700">{bookingReference}</p>
                 </div>
                 <p className="text-gray-600 mb-8">
-                  We've sent a confirmation email to {formData.contactInfo.email} with all the details of your booking.
+                  We've sent a confirmation email to {formData.travelersInfo[0]?.email} with all the details of your booking.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button onClick={() => router.push("/")} variant="outline">
                     Return to Homepage
                   </Button>
-                  <Button onClick={() => router.push(`/booking/confirmation?bookingId=${bookingId}`)} className="bg-amber-500 hover:bg-amber-600">
+                  <Button onClick={() => router.push(`/booking-confirmation?reference=${bookingReference}`)} className="bg-amber-500 hover:bg-amber-600">
                     View Booking Details
                   </Button>
                 </div>

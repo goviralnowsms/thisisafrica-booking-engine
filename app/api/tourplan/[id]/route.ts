@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import * as TourPlanAPI from "@/lib/tourplan-api"
+import { getBookingDetails } from "@/lib/tourplan/services"
 
 /**
  * API route for getting a specific booking
@@ -7,13 +7,9 @@ import * as TourPlanAPI from "@/lib/tourplan-api"
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const bookingId = params.id
-    const result = await TourPlanAPI.getBooking(bookingId)
+    const result = await getBookingDetails(bookingId)
 
-    if (!result.success) {
-      return NextResponse.json(result, { status: 404 })
-    }
-
-    return NextResponse.json(result)
+    return NextResponse.json({ success: true, data: result })
   } catch (error) {
     console.error("API error getting booking:", error)
     return NextResponse.json({ success: false, error: "Failed to get booking details" }, { status: 500 })
@@ -28,9 +24,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const bookingId = params.id
     const body = await request.json()
 
-    const result = await TourPlanAPI.updateBooking(bookingId, body)
-
-    return NextResponse.json(result)
+    // TODO: Implement updateBooking function
+    return NextResponse.json({ success: false, error: "Update booking not implemented yet" }, { status: 501 })
   } catch (error) {
     console.error("API error updating booking:", error)
     return NextResponse.json({ success: false, error: "Failed to update booking" }, { status: 500 })
@@ -45,9 +40,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const bookingId = params.id
     const { reason } = await request.json()
 
-    const result = await TourPlanAPI.cancelBooking(bookingId, reason || "No reason provided")
-
-    return NextResponse.json(result)
+    // TODO: Implement cancelBooking function
+    return NextResponse.json({ success: false, error: "Cancel booking not implemented yet" }, { status: 501 })
   } catch (error) {
     console.error("API error cancelling booking:", error)
     return NextResponse.json({ success: false, error: "Failed to cancel booking" }, { status: 500 })
