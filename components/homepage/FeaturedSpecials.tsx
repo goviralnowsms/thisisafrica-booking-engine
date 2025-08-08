@@ -161,22 +161,35 @@ export default function FeaturedSpecials() {
     const rate = offer.rates[0]
     if (!rate || (!rate.twinRate && !rate.doubleRate && !rate.singleRate)) return 'POA'
     
+    // Check if this is static data vs API data
+    const isStaticData = staticOffers.some(staticOffer => staticOffer.id === offer.id)
+    
     // Show per person twin share pricing if available
     if (rate.twinRate && rate.twinRate > 0) {
-      // For special deals, the rate is already per person twin share (not total for twin room)
-      // Savanna Lodge shows 2407 which should be $1,204 per person (half of 2407)
-      const perPerson = Math.round(rate.twinRate / 2)
-      return `From $${perPerson.toLocaleString()}`
+      if (isStaticData) {
+        // Static data: prices are already in cents, convert to dollars and show per person
+        const perPerson = Math.round(rate.twinRate / 200) // Divide by 200 (100 for cents + 2 for twin share)
+        return `From $${perPerson.toLocaleString()}`
+      } else {
+        // API data: assume rate is per person
+        const perPerson = Math.round(rate.twinRate / 100) // Just convert cents to dollars
+        return `From $${perPerson.toLocaleString()}`
+      }
     }
     
     if (rate.doubleRate && rate.doubleRate > 0) {
-      // Same logic for double rate
-      const perPerson = Math.round(rate.doubleRate / 2)
-      return `From $${perPerson.toLocaleString()}`
+      if (isStaticData) {
+        const perPerson = Math.round(rate.doubleRate / 200)
+        return `From $${perPerson.toLocaleString()}`
+      } else {
+        const perPerson = Math.round(rate.doubleRate / 100)
+        return `From $${perPerson.toLocaleString()}`
+      }
     }
     
     if (rate.singleRate && rate.singleRate > 0) {
-      return `From $${rate.singleRate.toLocaleString()}`
+      const price = isStaticData ? Math.round(rate.singleRate / 100) : rate.singleRate
+      return `From $${price.toLocaleString()}`
     }
     
     return 'POA'
