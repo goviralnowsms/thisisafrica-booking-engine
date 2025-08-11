@@ -65,7 +65,7 @@ export default function FeaturedSpecials() {
       image: '/images/products/kruger-package.jpeg',
       carouselImages: ['/images/products/kruger-package.jpeg', '/images/products/kruger-zebra.jpeg'],
       mapImage: '/images/products/cheetah.jpeg',
-      rates: [{ currency: 'AUD', twinRate: 4540, rateName: 'Special Package' }], // $2,270 per person twin share (2270 * 2 = 4540)
+      rates: [{ currency: 'AUD', twinRate: 455000, rateName: 'Special Package' }], // $2,275 per person twin share (455000/200 = 2275)
       originalPrice: 5000, // Regular price for comparison
       discount: '25% Off'
     },
@@ -169,7 +169,11 @@ export default function FeaturedSpecials() {
       offerName: offer.name,
       isStaticData,
       rawRate: rate,
-      twinRate: rate.twinRate
+      twinRate: rate.twinRate,
+      productCode: offer.code,
+      source: offer.source || 'api',
+      divisionResult: rate.twinRate / 200,
+      finalPrice: Math.round(rate.twinRate / 200)
     })
     
     // Show per person twin share pricing if available
