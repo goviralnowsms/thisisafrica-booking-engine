@@ -81,10 +81,13 @@ export async function POST(request: NextRequest) {
     
     const data = validationResult.data;
     console.log('🔄 Creating booking for:', data.productCode);
+    console.log('📅 Booking dates:', data.dateFrom, 'to', data.dateTo);
+    console.log('👥 Passengers:', data.adults, 'adults,', data.children || 0, 'children');
+    
     const result = await createBooking({
       customerName: data.customerName,
       productCode: data.productCode,
-      rateId: data.rateId,
+      rateId: data.rateId || '',
       dateFrom: data.dateFrom,
       dateTo: data.dateTo,
       isQuote: data.bookingType === 'quote',
@@ -95,39 +98,98 @@ export async function POST(request: NextRequest) {
       infants: data.infants,
     });
     
+    // Log the full TourPlan response for debugging
+    console.log('📥 TourPlan booking response:', {
+      status: result.status,
+      bookingId: result.bookingId,
+      reference: result.reference || result.bookingRef,
+      message: result.message,
+      totalCost: result.totalCost
+    });
+    
+    // Define products that successfully book into TourPlan (based on testing)
+    // IMPORTANT: Cruise products require specific departure days (Mon/Wed/Fri)
+    const WORKING_PRODUCTS = {
+      GROUP_TOURS: ['NBOGTARP001CKEKEE', 'NBOGTARP001THRKE3'],
+      RAIL: ['VFARLROV001VFPRDX', 'VFARLROV001VFPRRY', 'VFARLROV001VFPYPM'],
+      CRUISE: [
+        'BBKCRCHO018TIACP2',  // Chobe Princess 2 night (Mon/Wed only)
+        'BBKCRCHO018TIACP3',  // Chobe Princess 3 night (Mon/Wed)
+        'BBKCRTVT001ZAM3NM',  // Zambezi Queen 3 night NM variant (Fridays only, Aug 15 - Nov 28)
+        // Note: BBKCRTVT001ZAM3NS (NS variant) declines even with correct Friday dates
+        // BBKCRCHO018TIACP4 status unknown - need departure days
+      ]
+    };
+    
+    // Check if this product is known to work with TourPlan
+    const isWorkingProduct = 
+      WORKING_PRODUCTS.GROUP_TOURS.includes(data.productCode) ||
+      WORKING_PRODUCTS.RAIL.includes(data.productCode) ||
+      WORKING_PRODUCTS.CRUISE.includes(data.productCode);
+    
+    // Check if this is a Group Tour (should go directly to TourPlan)
+    const isGroupTour = data.productCode.includes('GT');
+    if (isGroupTour) {
+      console.log('✅ This is a Group Tour - should book directly into TourPlan');
+      if (WORKING_PRODUCTS.GROUP_TOURS.includes(data.productCode)) {
+        console.log('✅ This Group Tour product is configured correctly in TourPlan');
+      } else {
+        console.log('⚠️ This Group Tour product may be declined by TourPlan');
+      }
+    }
+    
     // Handle different TourPlan responses
     if (result.status === 'NO' || result.status === 'RQ' || result.status === 'WQ') {
       // NO = Declined, RQ = On Request, WQ = Website Quote (what we want!)
       console.log(`⚠️ TourPlan returned status: ${result.status} - handling as quote requiring manual confirmation`);
       
+      if (isWorkingProduct && result.status === 'NO') {
+        console.error('❌ ERROR: A normally working product was declined by TourPlan!');
+        console.error('Product:', data.productCode);
+        console.error('Check: Date availability, rate validity, or TourPlan configuration changes');
+      }
+      
       // For quotes, we might still get a reference from TourPlan
       const tourplanRef = result.reference || result.bookingRef || null;
       const tourplanBookingId = result.bookingId || null;
       
-      // Generate our own reference if TourPlan didn't provide one
-      // Use product-specific prefixes for different product types
-      const isCruise = data.productCode.includes('CRCHO') ||    // Chobe Princess codes (BBKCRCHO...)
-                       data.productCode.includes('CRTVT') ||    // Zambezi Queen codes (BBKCRTVT...)  
-                       data.productCode.includes('BBKCR') ||    // Botswana cruise codes
-                       data.productCode.toLowerCase().includes('cruise');
-                       
-      const isRail = data.productCode.includes('RLROV') ||     // Rovos Rail codes
-                     data.productCode.includes('RAIL') ||      // General rail codes
-                     data.productCode.toLowerCase().includes('rail') ||
-                     data.productCode.includes('BLUE') ||      // Blue Train codes
-                     data.productCode.includes('PREMIER') ||   // Premier Classe codes
-                     data.productCode.includes('VFARLROV') ||  // Victoria Falls rail
-                     data.productCode.includes('CPTRLROV') ||  // Cape Town rail
-                     data.productCode.includes('PRYRLROV');    // Pretoria rail
+      // Only generate TIA reference if TourPlan didn't provide one AND product is not known to work
+      let bookingRef = tourplanRef;
       
-      let productPrefix = 'TIA';
-      if (isCruise) {
-        productPrefix = 'TIA-CRUISE';
-      } else if (isRail) {
-        productPrefix = 'TIA-RAIL';  
+      if (!tourplanRef) {
+        // Only use TIA fallback for products that don't work with TourPlan
+        if (isWorkingProduct) {
+          // Working products should have gotten a TAWB reference
+          console.error('⚠️ Warning: Working product did not get TourPlan reference!');
+          bookingRef = `TIA-ERROR-${Date.now()}`;
+        } else {
+          // Non-working products get appropriate TIA prefix
+          const isCruise = data.productCode.includes('CRCHO') ||    // Chobe Princess codes
+                           data.productCode.includes('CRTVT') ||    // Zambezi Queen codes  
+                           data.productCode.includes('BBKCR') ||    // Botswana cruise codes
+                           data.productCode.toLowerCase().includes('cruise');
+                           
+          const isRail = data.productCode.includes('RLROV') ||     // Rovos Rail codes
+                         data.productCode.includes('RAIL') ||      // General rail codes
+                         data.productCode.toLowerCase().includes('rail') ||
+                         data.productCode.includes('BLUE') ||      // Blue Train codes
+                         data.productCode.includes('PREMIER') ||   // Premier Classe codes
+                         data.productCode.includes('VFARLROV') ||  // Victoria Falls rail
+                         data.productCode.includes('CPTRLROV') ||  // Cape Town rail
+                         data.productCode.includes('PRYRLROV');    // Pretoria rail
+          
+          let productPrefix = 'TIA';
+          if (isCruise && !WORKING_PRODUCTS.CRUISE.includes(data.productCode)) {
+            productPrefix = 'TIA-CRUISE';
+            console.log('📝 Using TIA-CRUISE fallback for non-working cruise product');
+          } else if (isRail && !WORKING_PRODUCTS.RAIL.includes(data.productCode)) {
+            productPrefix = 'TIA-RAIL';
+            console.log('📝 Using TIA-RAIL fallback for non-working rail product');
+          }
+          
+          bookingRef = `${productPrefix}-${Date.now()}`;
+        }
       }
-      
-      const bookingRef = tourplanRef || `${productPrefix}-${Date.now()}`;
       
       // Create a booking record with manual confirmation requirement
       const quotedBooking = {
@@ -156,7 +218,7 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
         message: result.status === 'WQ' 
           ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
-          : `Your ${isCruise ? 'cruise' : isRail ? 'rail' : ''} booking has been received. Our team will contact you within 48 hours to confirm availability.`,
+          : 'Your booking has been received. Our team will contact you within 48 hours to confirm availability.',
         rawResponse: result.rawResponse
       };
       
@@ -169,7 +231,7 @@ export async function POST(request: NextRequest) {
           reference: bookingRef,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           customerName: data.customerName,
-          productName: `${data.productCode} - ${isCruise ? 'Cruise' : isRail ? 'Rail Journey' : 'Tour'}`,
+          productName: data.productCode,
           dateFrom: data.dateFrom,
           dateTo: data.dateTo,
           totalCost: result.totalCost || 0,
@@ -184,7 +246,7 @@ export async function POST(request: NextRequest) {
           customerName: data.customerName,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           productCode: data.productCode,
-          productName: `${data.productCode} - ${isCruise ? 'Cruise' : isRail ? 'Rail Journey' : 'Tour'}`,
+          productName: data.productCode,
           dateFrom: data.dateFrom,
           totalCost: result.totalCost || 0,
           currency: result.currency || 'AUD',

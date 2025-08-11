@@ -93,7 +93,53 @@ export default function MyBookingsPage() {
     try {
       console.log('🔍 Attempting booking lookup:', { bookingId: loginForm.bookingId, surname: loginForm.surname });
       
-      // Call TourPlan API to look up booking
+      // Check if this is a TIA booking first (stored locally)
+      if (loginForm.bookingId.startsWith('TIA-')) {
+        const tiaBookings = JSON.parse(localStorage.getItem('tiaBookings') || '{}');
+        const tiaBooking = tiaBookings[loginForm.bookingId];
+        
+        if (tiaBooking) {
+          // Verify surname matches
+          const bookingSurname = tiaBooking.customerName?.split(' ').pop()?.toLowerCase();
+          if (bookingSurname === loginForm.surname.toLowerCase()) {
+            console.log('✅ Found TIA booking in local storage');
+            setIsAuthenticated(true);
+            
+            // Format TIA booking for display
+            const bookingForDisplay = {
+              id: tiaBooking.reference,
+              reference: tiaBooking.reference,
+              tourName: tiaBooking.productName || 'African Adventure',
+              destination: tiaBooking.productLocation || 'Africa',
+              startDate: tiaBooking.dateFrom ? new Date(tiaBooking.dateFrom).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+              }) : 'TBD',
+              endDate: tiaBooking.dateFrom ? new Date(tiaBooking.dateFrom).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+              }) : 'TBD',
+              duration: 'Multiple days',
+              travelers: tiaBooking.adults + (tiaBooking.children || 0),
+              roomType: '1 Room',
+              status: 'pending-confirmation',
+              totalAmount: tiaBooking.totalCost ? Math.round(tiaBooking.totalCost / 100) : 0,
+              image: "/images/safari-lion.png",
+              supplier: tiaBooking.productSupplier || '',
+              productCode: tiaBooking.productCode,
+              note: 'This booking requires manual confirmation. You will be contacted within 48 hours.'
+            };
+            
+            setBookings([bookingForDisplay]);
+            setIsLoggingIn(false);
+            return;
+          }
+        }
+      }
+      
+      // If not TIA or not found locally, try TourPlan API
       const response = await fetch(`/api/tourplan/booking/lookup?bookingId=${encodeURIComponent(loginForm.bookingId)}&surname=${encodeURIComponent(loginForm.surname)}`)
       console.log('📡 API Response status:', response.status, response.statusText);
       

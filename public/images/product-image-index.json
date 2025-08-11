@@ -23382,5 +23382,23 @@
       "id": 2071,
       "status": "exists"
     }
+  ],
+  "HDSSPMAKUTSMSSCLS": [
+    {
+      "originalName": "kruger-package.jpeg",
+      "localFilename": "kruger-package.jpeg",
+      "localPath": "/images/products/kruger-package.jpeg",
+      "id": 2072,
+      "status": "exists"
+    }
+  ],
+  "NBOPKARP001CKSNPK": [
+    {
+      "originalName": "kruger-zebra.jpeg",
+      "localFilename": "kruger-zebra.jpeg",
+      "localPath": "/images/products/kruger-zebra.jpeg",
+      "id": 2073,
+      "status": "exists"
+    }
   ]
 }

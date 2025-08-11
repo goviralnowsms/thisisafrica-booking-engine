@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageSquare, X, Send, Plane, Calendar, Users, DollarSign, Sparkles } from "lucide-react"
 
+// Generate unique IDs for messages to avoid React key warnings
+let messageIdCounter = 0;
+function generateMessageId(): string {
+  messageIdCounter++;
+  return `${Date.now()}-${messageIdCounter}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
 type Message = {
   id: string
   content: string
@@ -86,7 +93,7 @@ export function RecommendationAssistant() {
 
     // Add user message
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       content: inputValue,
       sender: "user",
       timestamp: new Date(),
@@ -102,7 +109,7 @@ export function RecommendationAssistant() {
   const handleOptionClick = (option: string) => {
     // Add user message with the selected option
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       content: option,
       sender: "user",
       timestamp: new Date(),
@@ -126,7 +133,7 @@ export function RecommendationAssistant() {
           })
 
           const budgetMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: `Great! ${input} is a wonderful choice. What's your approximate budget per person for this trip?`,
             sender: "bot",
             timestamp: new Date(),
@@ -143,7 +150,7 @@ export function RecommendationAssistant() {
           })
 
           const travelersMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: "How many travelers will be joining this adventure?",
             sender: "bot",
             timestamp: new Date(),
@@ -160,7 +167,7 @@ export function RecommendationAssistant() {
           })
 
           const durationMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: "How long are you planning to travel?",
             sender: "bot",
             timestamp: new Date(),
@@ -177,7 +184,7 @@ export function RecommendationAssistant() {
           })
 
           const interestsMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: "What experiences are you most interested in? (You can select multiple in your reply)",
             sender: "bot",
             timestamp: new Date(),
@@ -202,7 +209,7 @@ export function RecommendationAssistant() {
 
           // Thinking message
           const thinkingMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: "Thanks for sharing your preferences! Let me find some perfect options for you...",
             sender: "bot",
             timestamp: new Date(),
@@ -222,7 +229,7 @@ export function RecommendationAssistant() {
 
         default:
           const fallbackMessage: Message = {
-            id: Date.now().toString(),
+            id: generateMessageId(),
             content: "I'm not sure I understand. Could you please rephrase that?",
             sender: "bot",
             timestamp: new Date(),
@@ -241,7 +248,7 @@ export function RecommendationAssistant() {
     // Safari recommendation
     if (destination?.toLowerCase().includes("safari") || destination?.toLowerCase().includes("multiple")) {
       recommendations.push({
-        id: Date.now().toString() + "-1",
+        id: generateMessageId(),
         content: `Based on your preferences, I recommend our **Luxury Safari Experience**. This 10-day journey through Kenya & Tanzania includes premium lodges, private game drives, and incredible wildlife viewing opportunities. Perfect for ${travelers} with a ${duration} timeframe.`,
         sender: "bot",
         timestamp: new Date(),
@@ -251,7 +258,7 @@ export function RecommendationAssistant() {
     // Beach recommendation
     if (destination?.toLowerCase().includes("beach") || destination?.toLowerCase().includes("multiple")) {
       recommendations.push({
-        id: Date.now().toString() + "-2",
+        id: generateMessageId(),
         content: `You might also enjoy our **Zanzibar Beach Escape**. This package includes 7 nights at a luxury beachfront resort with stunning ocean views, water activities, and optional cultural tours to Stone Town. Ideal for relaxation after a safari adventure.`,
         sender: "bot",
         timestamp: new Date(),
@@ -261,7 +268,7 @@ export function RecommendationAssistant() {
     // Victoria Falls recommendation
     if (destination?.toLowerCase().includes("multiple") || !destination?.toLowerCase().includes("beach")) {
       recommendations.push({
-        id: Date.now().toString() + "-3",
+        id: generateMessageId(),
         content: `Another excellent option is our **Victoria Falls Explorer** package. Experience one of the Seven Natural Wonders of the World with guided tours, river cruises, and luxury accommodations overlooking the Zambezi River.`,
         sender: "bot",
         timestamp: new Date(),
@@ -271,7 +278,7 @@ export function RecommendationAssistant() {
     // If no specific recommendations match
     if (recommendations.length === 0) {
       recommendations.push({
-        id: Date.now().toString() + "-fallback",
+        id: generateMessageId(),
         content: `Based on your interest in ${destination} with a ${budget} budget for ${travelers} traveling for ${duration}, I'd recommend speaking with one of our travel specialists who can create a custom itinerary for you.`,
         sender: "bot",
         timestamp: new Date(),
@@ -283,7 +290,7 @@ export function RecommendationAssistant() {
 
     // Follow-up message
     const followUpMessage: Message = {
-      id: Date.now().toString() + "-followup",
+      id: generateMessageId(),
       content:
         "Would you like more details about any of these packages, or would you prefer to speak with a travel specialist for a custom itinerary?",
       sender: "bot",
@@ -298,7 +305,7 @@ export function RecommendationAssistant() {
   const handleFollowUpQuestion = (input: string) => {
     if (input.toLowerCase().includes("more detail") || input.toLowerCase().includes("details")) {
       const detailsMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content: "I'd be happy to provide more details! Which package are you most interested in learning more about?",
         sender: "bot",
         timestamp: new Date(),
@@ -307,7 +314,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, detailsMessage])
     } else if (input.toLowerCase().includes("specialist") || input.toLowerCase().includes("speak")) {
       const specialistMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content:
           "I'll connect you with one of our Africa specialists who can help create your perfect itinerary. Would you like to schedule a call, or would you prefer they email you?",
         sender: "bot",
@@ -317,7 +324,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, specialistMessage])
     } else if (input.toLowerCase().includes("more options") || input.toLowerCase().includes("show more")) {
       const moreOptionsMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content:
           "Here are some additional options that might interest you:\n\n**Cape Town & Winelands** - Explore South Africa's most beautiful city and nearby wine regions.\n\n**Botswana Delta Safari** - Experience the unique Okavango Delta ecosystem with luxury camps.\n\n**Rwanda Gorilla Trekking** - An unforgettable encounter with mountain gorillas in their natural habitat.",
         sender: "bot",
@@ -326,7 +333,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, moreOptionsMessage])
 
       const followUpMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content: "Would you like more information about any of these options?",
         sender: "bot",
         timestamp: new Date(),
@@ -340,7 +347,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, followUpMessage])
     } else if (input.toLowerCase().includes("email") || input.toLowerCase().includes("send")) {
       const emailMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content: "I'd be happy to email these recommendations to you. Could you please provide your email address?",
         sender: "bot",
         timestamp: new Date(),
@@ -348,7 +355,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, emailMessage])
     } else if (input.toLowerCase().includes("luxury safari")) {
       const safariDetailsMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content:
           "**Luxury Safari Experience** (10 days / 9 nights)\n\n**Highlights:**\n• 3 nights in Masai Mara, Kenya\n• 3 nights in Serengeti, Tanzania\n• 2 nights at Ngorongoro Crater\n• 1 night in Nairobi\n\n**Includes:**\n• Luxury accommodations\n• All meals and drinks\n• Private game drives\n• Expert guides\n• Internal flights\n• Airport transfers\n\n**Price:** From $3,499 per person\n**Best time to visit:** June to October",
         sender: "bot",
@@ -357,7 +364,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, safariDetailsMessage])
 
       const nextStepsMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content:
           "Would you like to see available dates for this package or speak with a specialist about customizing it?",
         sender: "bot",
@@ -367,7 +374,7 @@ export function RecommendationAssistant() {
       setMessages((prev) => [...prev, nextStepsMessage])
     } else {
       const fallbackMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         content: "I'm here to help with any questions about our Africa travel packages. What would you like to know?",
         sender: "bot",
         timestamp: new Date(),

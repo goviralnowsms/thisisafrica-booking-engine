@@ -93,46 +93,189 @@ const RAIL_CATALOG: Record<string, string[]> = {
 
 /**
  * Curated accommodation catalog
- * Maps destinations to known accommodation product codes that exist in TourPlan
- * These are realistic examples - in practice, you'd populate this with actual codes
+ * Since TourPlan ButtonName="Accommodation" returns empty results,
+ * we use a curated list of known accommodation and tour products with lodging
  */
 const ACCOMMODATION_CATALOG: Record<string, string[]> = {
-  'botswana': [
-    'MUBGTSUNWAYSUNA13', // Example Botswana accommodation - Maun area
-    'NBOPKARP001FIMMGV', // Safari camp in Okavango region
-    'NBOGTSOAEASN13124', // Botswana lodge
+  'all': [
+    // Kenya accommodations and tours with lodging
+    'NBOGTARP001CKSE', // Classic Kenya - Serena lodges (confirmed working)
+    'NBOGTARP001CKEKEE', // Classic Kenya - Keekorok
+    'NBOGTARP001CKSO', // Classic Kenya - other variant
+    'NBOGTARP001CKSLP', // Classic Kenya luxury package
+    'NBOGTARP001THRKE3', // Three parks Kenya
+    'NBOGTARP001THRSE3', // Three parks Serena
+    'NBOGTARP001THRSM3', // Three parks mixed
+    'NBOGTARP001THRSO3', // Three parks other
+    'NBOGTARP001EAESE', // East Africa Serena
+    'NBOPKARP001CKSNPK', // Kenya National Parks
+    'NBOPKARP001FIMMGV', // Governor's Camp
+    'NBOPKARP001FIMMKT', // Kenya tented camp
+    'NBOPKARP001FIMMLG', // Luxury lodge
+    'NBOGTSOAEASN13124', // East Africa Safari Network
+    
+    // South Africa accommodations
+    'CPTGTSUNWAYSUCV21', // Cape & Victoria Falls
+    'CPTGTSUNWAYSUNA21', // Southern Africa tour
+    'HDSSPMAKUTSMSSCLS', // Classic Kruger Package
+    'JNBGTSUNWAYSUNA14', // Johannesburg based tours
+    'JNBGTSATOURSAJOUR', // SA Journey
+    
+    // Tanzania accommodations
+    'JROGTARP001SIMSE7', // Serengeti 7 days
+    'JROGTARP001SIMTW7', // Tanzania wildlife
+    'JROGTARP001SIMWEP', // Wilderness experience
+    
+    // Zimbabwe/Victoria Falls
+    'VFAGTJENMANJENW12', // Victoria Falls 12 days
+    'VFAGTJENMANJENW15', // Victoria Falls 15 days
+    
+    // Namibia
+    'WDHGTSOANAMHINAMC', // Namibia classic
+    'WDHGTULTSAFULTNAM', // Ultimate Namibia
+    
+    // Botswana
+    'MUBGTSUNWAYSUNA13', // Botswana tours
+    
+    // Packages with accommodation
+    'NBOPKTHISSAWLWFPC', // Wildlife package
+    'BBKPKTVT001BOD6KM', // Botswana package
+    'BBKPKTVT001CGLCOK', // Chobe/Okavango
   ],
   'kenya': [
-    'NBOGTARP001CKSE', // Classic Kenya Serena (we know this exists)
-    'NBOGTARP001CKEKEE', // Classic Kenya Keekorok (we know this exists)
-    'NBOGTARP001THRKE3', // Samburu area accommodation
-    'NBOGTARP001EAESE', // Eastern Kenya accommodation
+    'NBOGTARP001CKSE', 'NBOGTARP001CKEKEE', 'NBOGTARP001CKSO', 'NBOGTARP001CKSLP',
+    'NBOGTARP001THRKE3', 'NBOGTARP001THRSE3', 'NBOGTARP001THRSM3', 'NBOGTARP001THRSO3',
+    'NBOGTARP001EAESE', 'NBOPKARP001CKSNPK', 'NBOPKARP001FIMMGV', 'NBOPKARP001FIMMKT',
+    'NBOPKARP001FIMMLG', 'NBOGTSOAEASN13124', 'NBOPKTHISSAWLWFPC'
   ],
   'south-africa': [
-    'CPTGTSUNWAYSUCV21', // Southern Africa accommodation
-    'CPTGTSUNWAYSUNA21', // Cape Town area
-    'HDSSPMAKUTSMSSCLS', // Classic Kruger Package (has accommodation component)
-    'CPTRLROV001CTPPUL', // South Africa luxury train/lodge
+    'CPTGTSUNWAYSUCV21', 'CPTGTSUNWAYSUNA21', 'HDSSPMAKUTSMSSCLS',
+    'JNBGTSUNWAYSUNA14', 'JNBGTSATOURSAJOUR'
   ],
   'tanzania': [
-    'JROGTARP001SIMSE7', // Serengeti accommodation
-    'JROGTARP001SIMTW7', // Tanzania accommodation
-    'JROGTARP001SIMWEP', // Tanzania wilderness camp
-  ],
-  'namibia': [
-    'WDHGTSOANAMHINAMC', // Namibia accommodation
-    'WDHGTULTSAFULTNAM', // Namibia safari lodge
+    'JROGTARP001SIMSE7', 'JROGTARP001SIMTW7', 'JROGTARP001SIMWEP'
   ],
   'zimbabwe': [
-    'VFAGTJENMANJENW12', // Victoria Falls area
-    'VFAGTJENMANJENW15', // Zimbabwe accommodation
-    'VFARLROV001VFPRDX', // Victoria Falls luxury
-    'VFARLROV001VFPRRY', // Zimbabwe rail/lodge
+    'VFAGTJENMANJENW12', 'VFAGTJENMANJENW15'
   ],
-  'zambia': [
-    'VFARLROV001VFPYPM', // Zambia accommodation near Victoria Falls
+  'namibia': [
+    'WDHGTSOANAMHINAMC', 'WDHGTULTSAFULTNAM'
+  ],
+  'botswana': [
+    'MUBGTSUNWAYSUNA13', 'BBKPKTVT001BOD6KM', 'BBKPKTVT001CGLCOK'
+  ],
+  'victoria-falls': [
+    'VFAGTJENMANJENW12', 'VFAGTJENMANJENW15', 'CPTGTSUNWAYSUCV21'
   ]
 };
+
+/**
+ * Search accommodation using curated catalog
+ * Since TourPlan ButtonName="Accommodation" returns empty results
+ */
+async function searchAccommodationFromCatalog(criteria: {
+  productType: string;
+  destination?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  adults?: number;
+  children?: number;
+  class?: string;
+}): Promise<SearchResult> {
+  try {
+    console.log('🏨 Accommodation catalog search for:', criteria.destination || 'all destinations');
+    
+    // Determine which accommodation products to fetch based on destination
+    const destination = criteria.destination?.toLowerCase() || 'all';
+    let accommodationCodes = ACCOMMODATION_CATALOG[destination] || ACCOMMODATION_CATALOG['all'];
+    
+    // If specific destination not found, use all
+    if (!ACCOMMODATION_CATALOG[destination] && destination !== 'all') {
+      console.log(`🏨 No specific catalog for ${destination}, using all accommodations`);
+      accommodationCodes = ACCOMMODATION_CATALOG['all'];
+    }
+    
+    console.log(`🏨 Fetching ${accommodationCodes.length} accommodation products`);
+    
+    // Fetch product details for each accommodation code
+    const accommodationPromises = accommodationCodes.map(async (code) => {
+      try {
+        const productData = await getProductDetails(code);
+        
+        if (productData) {
+          return {
+            id: productData.code || code,
+            code: productData.code || code,
+            name: productData.name || `Accommodation ${code}`,
+            description: productData.description || '',
+            supplier: productData.supplier || 'This is Africa',
+            duration: productData.duration || '',
+            destination: productData.destination || criteria.destination || '',
+            image: productData.image || getLocalAssets(code).image || '/images/safari-lodge.png',
+            rates: productData.rates || [],
+            dateRanges: productData.dateRanges || [],
+            productType: 'Accommodation',
+            tourLevel: productData.tourLevel || 'standard'
+          };
+        }
+        return null;
+      } catch (error) {
+        console.error(`Error fetching accommodation ${code}:`, error);
+        return null;
+      }
+    });
+    
+    const accommodationResults = await Promise.all(accommodationPromises);
+    const validAccommodations = accommodationResults.filter(r => r !== null);
+    
+    console.log(`🏨 Successfully loaded ${validAccommodations.length} accommodation products`);
+    
+    // Apply date filtering if provided
+    let filteredAccommodations = validAccommodations;
+    if (criteria.dateFrom || criteria.dateTo) {
+      filteredAccommodations = validAccommodations.filter(accommodation => {
+        // If accommodation has date ranges, check availability
+        if (accommodation.dateRanges && accommodation.dateRanges.length > 0) {
+          return accommodation.dateRanges.some((range: any) => {
+            const rangeStart = new Date(range.dateFrom);
+            const rangeEnd = new Date(range.dateTo || range.dateFrom);
+            const searchStart = criteria.dateFrom ? new Date(criteria.dateFrom) : rangeStart;
+            const searchEnd = criteria.dateTo ? new Date(criteria.dateTo) : rangeEnd;
+            
+            return rangeStart <= searchEnd && rangeEnd >= searchStart;
+          });
+        }
+        // If no date ranges, include it (always available)
+        return true;
+      });
+    }
+    
+    // Filter out test products
+    const accommodationsBeforeTestFilter = filteredAccommodations.length;
+    filteredAccommodations = filteredAccommodations.filter((product: any) => 
+      !product.name?.toLowerCase().includes('test') &&
+      !product.description?.toLowerCase().includes('test')
+    );
+    if (accommodationsBeforeTestFilter > filteredAccommodations.length) {
+      console.log(`🧪 Filtered out ${accommodationsBeforeTestFilter - filteredAccommodations.length} test accommodation products`);
+    }
+    
+    return {
+      products: filteredAccommodations,
+      totalResults: filteredAccommodations.length,
+      searchCriteria: criteria,
+      message: `Found ${filteredAccommodations.length} accommodation options`,
+    };
+  } catch (error) {
+    console.error('❌ Accommodation catalog search error:', error);
+    return {
+      products: [],
+      totalResults: 0,
+      searchCriteria: criteria,
+      error: 'Failed to search accommodations',
+    };
+  }
+}
 
 /**
  * Get destinations and classes for a country/product type
@@ -217,7 +360,17 @@ async function searchRailFromCatalog(criteria: {
     
     // Wait for all rail products to be fetched
     const railResults = await Promise.all(railPromises);
-    const validRailProducts = railResults.filter(product => product !== null);
+    let validRailProducts = railResults.filter(product => product !== null);
+    
+    // Filter out test products
+    const railBeforeTestFilter = validRailProducts.length;
+    validRailProducts = validRailProducts.filter((product: any) => 
+      !product.name?.toLowerCase().includes('test') &&
+      !product.description?.toLowerCase().includes('test')
+    );
+    if (railBeforeTestFilter > validRailProducts.length) {
+      console.log(`🧪 Filtered out ${railBeforeTestFilter - validRailProducts.length} test rail products`);
+    }
     
     console.log(`🚂 Successfully fetched ${validRailProducts.length} rail products`);
     
@@ -302,103 +455,23 @@ async function searchCruisesFromCatalog(criteria: {
   
   console.log(`🚢 Successfully loaded ${cruiseProducts.length} cruise products`);
   
+  // Filter out test products
+  const cruisesBeforeTestFilter = cruiseProducts.length;
+  const filteredCruiseProducts = cruiseProducts.filter((product: any) => 
+    !product.name?.toLowerCase().includes('test') &&
+    !product.description?.toLowerCase().includes('test')
+  );
+  if (cruisesBeforeTestFilter > filteredCruiseProducts.length) {
+    console.log(`🧪 Filtered out ${cruisesBeforeTestFilter - filteredCruiseProducts.length} test cruise products`);
+  }
+  
   return {
-    products: cruiseProducts,
-    totalResults: cruiseProducts.length,
+    products: filteredCruiseProducts,
+    totalResults: filteredCruiseProducts.length,
     searchCriteria: criteria
   };
 }
 
-/**
- * Search accommodation using curated catalog
- * Since TourPlan returns empty results for accommodation searches
- */
-async function searchAccommodationFromCatalog(criteria: {
-  productType: string;
-  destination?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  adults?: number;
-  children?: number;
-}) {
-  console.log('🏨 Searching accommodation catalog with criteria:', criteria);
-  
-  // Get product codes for the destination
-  const destination = criteria.destination?.toLowerCase() || '';
-  let productCodes: string[] = [];
-  
-  // Match destination to catalog entries
-  if (destination && destination.trim()) {
-    for (const [catalogDestination, codes] of Object.entries(ACCOMMODATION_CATALOG)) {
-      if (destination.includes(catalogDestination) || catalogDestination.includes(destination)) {
-        productCodes = codes;
-        break;
-      }
-    }
-  }
-  
-  // If no specific destination match, get a sample from all destinations
-  if (productCodes.length === 0) {
-    // Return a mix from all destinations for general search
-    productCodes = [
-      ...ACCOMMODATION_CATALOG['kenya'].slice(0, 2),
-      ...ACCOMMODATION_CATALOG['south-africa'].slice(0, 2),
-      ...ACCOMMODATION_CATALOG['botswana'].slice(0, 1),
-      ...ACCOMMODATION_CATALOG['tanzania'].slice(0, 1)
-    ];
-  }
-  
-  console.log('🏨 Found product codes for destination:', productCodes);
-  
-  // Fetch details for each accommodation
-  const accommodationProducts = [];
-  for (const productCode of productCodes) {
-    try {
-      console.log(`🏨 Fetching details for accommodation: ${productCode}`);
-      const productDetails = await getProductDetails(productCode);
-      
-      if (productDetails && productDetails.name) {
-        accommodationProducts.push({
-          id: productCode,
-          code: productCode,
-          name: productDetails.name,
-          description: productDetails.description || 'Luxury accommodation in Africa',
-          supplier: productDetails.supplierName || 'Premium Hotel Group',
-          duration: productDetails.duration || 'Multiple nights available',
-          country: productDetails.location || '',
-          locality: productDetails.location || '',
-          rates: [], // Accommodation shows "On Request" pricing
-          images: [],
-          inclusions: [],
-          exclusions: []
-        });
-      }
-    } catch (error) {
-      console.warn(`🏨 Failed to fetch details for ${productCode}:`, error);
-      // Add a fallback entry
-      accommodationProducts.push({
-        id: productCode,
-        code: productCode,
-        name: `Accommodation ${productCode}`,
-        description: 'Luxury accommodation in Africa',
-        supplier: 'Premium Hotel Group',
-        duration: 'Multiple nights available',
-        rates: [],
-        images: [],
-        inclusions: [],
-        exclusions: []
-      });
-    }
-  }
-  
-  console.log(`🏨 Successfully loaded ${accommodationProducts.length} accommodation products`);
-  
-  return {
-    products: accommodationProducts,
-    totalResults: accommodationProducts.length,
-    searchCriteria: criteria
-  };
-}
 
 /**
  * Search for tours/products
@@ -428,21 +501,9 @@ export async function searchProducts(criteria: {
         break;
         
       case 'Accommodation':
-        // Test direct TourPlan accommodation search
-        console.log('🏨 Testing TourPlan accommodation search');
-        const roomConfigs = [{
-          Adults: criteria.adults || 2,
-          Children: criteria.children || 0,
-          Type: 'DB',
-          Quantity: 1
-        }];
-        xml = buildAccommodationSearchRequest(
-          criteria.destination || '', 
-          criteria.dateFrom || '', 
-          criteria.dateTo || '', 
-          roomConfigs
-        );
-        break;
+        // Since TourPlan ButtonName="Accommodation" returns empty, use catalog approach
+        console.log('🏨 Using curated accommodation catalog (ButtonName search returns empty)');
+        return searchAccommodationFromCatalog(criteria);
         
       case 'Hotels':
         // Test Hotels ButtonName as alternative to Accommodation
@@ -718,6 +779,16 @@ export async function searchProducts(criteria: {
       console.log(`🏨 Filtered from ${products.length} to ${finalProducts.length} accommodation products`);
     }
     
+    // Filter out test products from all results
+    const productsBeforeTestFilter = finalProducts.length;
+    finalProducts = finalProducts.filter((product: any) => 
+      !product.name?.toLowerCase().includes('test') &&
+      !product.description?.toLowerCase().includes('test')
+    );
+    if (productsBeforeTestFilter > finalProducts.length) {
+      console.log(`🧪 Filtered out ${productsBeforeTestFilter - finalProducts.length} test products`);
+    }
+    
     return {
       products: finalProducts,
       totalResults: finalProducts.length,
@@ -892,7 +963,7 @@ export async function getProductDetails(productCode: string) {
         doubleRate: rate.doubleRate || rate.twinRate || 0,
         twinRate: twinRateValue,
         twinRateFormatted: twinRateValue > 0
-          ? `${rate.currency} $${Math.round(twinRateValue / 2).toLocaleString()}`
+          ? `${rate.currency} $${Math.round(twinRateValue / 2 / 100).toLocaleString()}`
           : 'POA',
         twinRateTotal: twinRateValue,
         currency: rate.currency,
@@ -944,15 +1015,23 @@ export async function getProductDetails(productCode: string) {
 export async function getPricingForDateRange(productCode: string, dateFrom: string, dateTo: string, adults: number = 2, children: number = 0, roomType: string = 'DB') {
   try {
     // Determine the correct Info parameter based on product type
-    // Rail products use GMFTD (Group/Multi/Family/Tour/Day), others use GS (General Services)
+    // Adding availability flags (A=basic availability, E=full availability, I=detailed)
     const isRail = productCode.includes('RLROV') ||     // Rovos Rail codes like CPTRLROV001CTPPUL
                    productCode.includes('RAIL') ||      // General rail codes
                    productCode.toLowerCase().includes('rail') ||
                    productCode.includes('BLUE') ||      // Blue Train codes
                    productCode.includes('PREMIER')      // Premier Classe codes
     
-    const infoParam = isRail ? 'GMFTD' : 'GS'
-    console.log(`🚂 Using Info parameter "${infoParam}" for product ${productCode} (isRail: ${isRail})`)
+    const isCruise = productCode.includes('CRCHO') ||   // Chobe cruise codes
+                     productCode.includes('CRTVT') ||   // Zambezi cruise codes
+                     productCode.includes('BBKCR')      // Botswana cruise codes
+    
+    // WordPress uses specific Info parameters to get availability data
+    // From tourplan-api-classes.php: uses 'GDM' for general queries, but needs 'A' for availability
+    const baseInfo = isRail ? 'GMFTD' : 'GDM'  // WordPress uses GDM, not GS
+    const infoParam = `${baseInfo}A`  // Add availability flag like WordPress does
+    
+    console.log(`📊 Using Info parameter "${infoParam}" for product ${productCode} (isRail: ${isRail}, isCruise: ${isCruise}) - includes availability flags`)
     
     const xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
@@ -964,6 +1043,7 @@ export async function getPricingForDateRange(productCode: string, dateFrom: stri
     <Info>${infoParam}</Info>
     <DateFrom>${dateFrom}</DateFrom>
     <DateTo>${dateTo}</DateTo>
+    <ACache>N</ACache>
     <RateConvert>Y</RateConvert>
     <RoomConfigs>
       <RoomConfig>
@@ -981,18 +1061,32 @@ export async function getPricingForDateRange(productCode: string, dateFrom: stri
     const response = await wpXmlRequest(xml);
     const optionInfo = extractResponseData(response, 'OptionInfoReply');
     
-    // Debug: Log the raw response for rail products to see what TourPlan actually returns
-    if (isRail) {
-      console.log('🚂 Raw TourPlan response for rail product:', JSON.stringify(optionInfo, null, 2));
+    // Debug: Log the raw response to see what TourPlan returns with availability flags
+    if (isRail || isCruise) {
+      console.log(`📊 Raw TourPlan response for ${isRail ? 'rail' : 'cruise'} product:`, JSON.stringify(optionInfo, null, 2));
     }
     
     if (!optionInfo?.Option) {
       return { dateRanges: [], error: 'No pricing data found' };
     }
     
-    // Extract date ranges with pricing
+    // Check for availability data that WordPress uses (OptAvail field)
     const option = optionInfo.Option;
+    if (option.OptAvail) {
+      console.log('📊 WordPress-style availability data found:', {
+        OptAvail: option.OptAvail
+      });
+      
+      // Process OptAvail like WordPress does (space-separated availability codes)
+      const availCodes = option.OptAvail.toString().split(' ');
+      console.log('📊 Availability codes for', availCodes.length, 'days:', availCodes.slice(0, 10), '...');
+    }
+    
+    // Extract date ranges with pricing
     const dateRanges: any[] = [];
+    
+    // Extract OptAvail data for WordPress-style availability processing FIRST
+    const optAvail = option.OptAvail ? option.OptAvail.toString().split(' ') : null;
     
     if (option.OptDateRanges?.OptDateRange) {
       const ranges = extractArray(option.OptDateRanges.OptDateRange);
@@ -1006,12 +1100,13 @@ export async function getPricingForDateRange(productCode: string, dateFrom: stri
                 dateFrom: range.DateFrom,
                 dateTo: range.DateTo,
                 currency: range.Currency || 'AUD',
-                singleRate: roomRates.SingleRate ? Math.round(parseFloat(roomRates.SingleRate) / 100) : 0,
-                doubleRate: roomRates.DoubleRate ? Math.round(parseFloat(roomRates.DoubleRate) / 100) : 0,
-                twinRate: roomRates.TwinRate ? Math.round(parseFloat(roomRates.TwinRate) / 100) : 0,
+                singleRate: roomRates.SingleRate ? parseFloat(roomRates.SingleRate) : 0,
+                doubleRate: roomRates.DoubleRate ? parseFloat(roomRates.DoubleRate) : 0,
+                twinRate: roomRates.TwinRate ? parseFloat(roomRates.TwinRate) : 0,
                 rateName: rateSet.RateName || 'Standard',
                 appliesDaysOfWeek: rateSet.AppliesDaysOfWeek,
-                available: isRail ? true : !rateSet.IsClosed // Rail products show as available since they require manual confirmation
+                available: isRail ? true : (rateSet.IsClosed !== 'Y'), // Rail products show as available since they require manual confirmation
+                optAvail: optAvail  // Pass WordPress-style availability data
               });
             }
           });
@@ -1019,7 +1114,12 @@ export async function getPricingForDateRange(productCode: string, dateFrom: stri
       });
     }
     
-    return { dateRanges, rawResponse: optionInfo };
+    
+    return { 
+      dateRanges, 
+      rawResponse: optionInfo,
+      optAvail: optAvail  // WordPress-style availability codes
+    };
   } catch (error) {
     console.error('Error getting pricing for date range:', error);
     return { dateRanges: [], error: error instanceof Error ? error.message : 'Pricing request failed' };
@@ -1213,6 +1313,10 @@ export async function createBooking(bookingData: {
       rateIdToUse = 'Default';
     }
     
+    // Check if this is a Group Tour
+    const isGroupTour = bookingData.productCode.includes('GT');
+    console.log(`🎯 Product analysis: ${isGroupTour ? 'GROUP TOUR' : 'Other product type'} - ${bookingData.productCode}`);
+    
     // Check if this is a rail product
     const isRail = bookingData.productCode.includes('RLROV') ||     // Rovos Rail codes
                    bookingData.productCode.includes('RAIL') ||      // General rail codes
@@ -1231,6 +1335,10 @@ export async function createBooking(bookingData: {
     // Continue with standard TourPlan booking for all products (including rail)
     console.log('📋 Proceeding with TourPlan booking');
     
+    // Determine booking type - Group Tours should be quotes (QB=Q) for manual confirmation
+    const bookingType = isGroupTour ? 'Q' : (bookingData.isQuote ? 'Q' : 'B');
+    console.log(`📋 Using booking type: QB=${bookingType} ${bookingType === 'Q' ? '(Quote for manual confirmation)' : '(Direct booking)'}`);
+    
     // Standard TourPlan booking format for all products  
     xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
@@ -1240,7 +1348,7 @@ export async function createBooking(bookingData: {
     <Password>${config.password}</Password>
     <NewBookingInfo>
       <Name>${firstName} ${lastName}</Name>
-      <QB>B</QB>
+      <QB>${bookingType}</QB>
     </NewBookingInfo>
     <Opt>${bookingData.productCode}</Opt>
     <RateId>${rateIdToUse}</RateId>
@@ -1498,7 +1606,7 @@ function extractRatesFromOption(option: any): any[] {
             if (roomRates.SingleRate) {
               rates.push({
                 currency: dateRange.Currency || 'AUD',
-                singleRate: Math.round(parseFloat(roomRates.SingleRate) / 100),
+                singleRate: parseFloat(roomRates.SingleRate),
                 rateName: rateSet.RateName || 'Single',
                 dateFrom: dateRange.DateFrom,
                 dateTo: dateRange.DateTo
@@ -1508,7 +1616,7 @@ function extractRatesFromOption(option: any): any[] {
             if (roomRates.DoubleRate) {
               rates.push({
                 currency: dateRange.Currency || 'AUD',
-                doubleRate: Math.round(parseFloat(roomRates.DoubleRate) / 100),
+                doubleRate: parseFloat(roomRates.DoubleRate),
                 rateName: rateSet.RateName || 'Double',
                 dateFrom: dateRange.DateFrom,
                 dateTo: dateRange.DateTo
@@ -1518,7 +1626,7 @@ function extractRatesFromOption(option: any): any[] {
             if (roomRates.TwinRate) {
               rates.push({
                 currency: dateRange.Currency || 'AUD',
-                twinRate: Math.round(parseFloat(roomRates.TwinRate) / 100),
+                twinRate: parseFloat(roomRates.TwinRate),
                 rateName: rateSet.RateName || 'Twin',
                 dateFrom: dateRange.DateFrom,
                 dateTo: dateRange.DateTo

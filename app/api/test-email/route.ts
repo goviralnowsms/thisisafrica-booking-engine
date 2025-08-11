@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   sendEmail, 
   sendBookingConfirmation, 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         });
     }
     
-    return Response.json({ 
+    return NextResponse.json({ 
       success: true, 
       message: 'Email sent successfully',
       result,
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Test email error:', error);
-    return Response.json({ 
+    return NextResponse.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to send test email' 
     }, { status: 500 });
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return Response.json({
+  return NextResponse.json({
     message: 'Email test endpoint',
     usage: {
       endpoint: 'POST /api/test-email',

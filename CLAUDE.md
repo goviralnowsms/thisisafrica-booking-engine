@@ -210,6 +210,68 @@ TourPlan returns XML responses with this structure:
 - **Rich Data**: API returns comprehensive product details, pricing, availability, inclusions
 - **Currency**: Prices returned in cents/smallest currency unit (e.g., 911569 = AUD $9,115.69)
 
+### Known TourPlan API Quirks (from Support Feedback)
+
+#### Working ButtonName Searches
+- **Group Tours**: WORKS but REQUIRES DestinationName parameter (e.g., "Kenya", "Tanzania")
+- **Packages**: WORKS with Info="GDM" and SCUqty=1095 (WordPress implementation)
+- **Special Offers/Deals**: Returns empty
+
+#### Non-Working ButtonName Searches  
+- **Cruises**: Always returns empty (use direct product codes instead)
+- **Rail**: Always returns empty (use direct product codes instead)
+- **Accommodation/Hotels**: Always returns empty (use direct product codes instead)
+
+#### Accommodation Searches
+- Must use `ButtonDestinations` structure instead of simple `DestinationName`:
+  ```xml
+  <ButtonDestinations>
+    <ButtonDestination>
+      <ButtonName></ButtonName>
+      <DestinationName></DestinationName>
+    </ButtonDestination>
+  </ButtonDestinations>
+  ```
+- Use `Info="S"` for confirmed rates only (not "GS")
+- For Info="S" to return results, the rate must be confirmed and not a zero rate
+- Empty results may indicate zero-rate products
+
+#### Products That Accept API Bookings (Return TAWB References)
+Based on comprehensive testing (August 2025), only these specific products work:
+
+**Group Tours (2 of 9 work):**
+- ✅ `NBOGTARP001CKEKEE` - Classic Kenya - Keekorok lodges (Sundays only)
+- ✅ `NBOGTARP001THRKE3` - Three Kings Kenya (Sundays only)
+- ❌ All other Group Tour variants return Status="NO" (declined)
+
+**Rail (4 of 9 work):**
+- ✅ `VFARLROV001VFPRDX` - Victoria Falls to Pretoria
+- ✅ `VFARLROV001VFPRRY` - Victoria Falls to Pretoria return
+- ✅ `VFARLROV001VFPYPM` - Victoria Falls route
+- ✅ `CPTRLROV001RRCTPR` - Return Cape Town to Pretoria
+- ❌ Other Cape Town and Pretoria routes return Status="NO" (declined)
+
+**Cruise (1 of 6 work):**
+- ✅ `BBKCRCHO018TIACP3` - Chobe Princess 3 night
+- ❌ Other durations and Zambezi Queen products return Status="NO" (declined)
+
+**Important:** Products not on the working list will get TIA-xxx reference numbers for manual processing
+
+#### Cruise Bookings
+- **Product setup limitation**: Only Monday and Wednesday departures work
+- Other days return Status="NO" (declined) - this is expected behavior per TourPlan support
+- Test with dates like 2025-10-27 (Monday) or 2025-10-29 (Wednesday)
+- Issue confirmed by TourPlan: "There is available rates however it only applies for Mondays and Wednesdays"
+
+#### Rail Bookings  
+- May return Status="??" until TourPlan configures WR (Web Request) service status
+- Configuration path in TourPlan: Code Setup >> Bookings >> Service Status
+- Status="??" indicates undefined internet status in TourPlan configuration
+- **CancelDeleteStatus logic (from TourPlan support)**:
+  - "D" = Booking status has "Deleted" box ticked AND "Internet ReadOnly" NOT ticked (can be deleted)
+  - "C" = Booking status does NOT have "Deleted" or "Internet ReadOnly" ticked (can be cancelled)
+  - blank = Booking status has "Internet ReadOnly" ticked (cannot cancel/delete via XML)
+
 ## Key TypeScript Interfaces
 
 ### Search Types

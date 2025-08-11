@@ -27,6 +27,8 @@ function BookingConfirmationContent() {
       try {
         initialBookingDetails = JSON.parse(storedBooking)
         setBookingDetails(initialBookingDetails)
+        // Don't clear immediately - wait until user navigates away
+        // sessionStorage.removeItem('manualConfirmationBooking')
       } catch (error) {
         console.error('Error parsing stored booking:', error)
       }
@@ -45,7 +47,12 @@ function BookingConfirmationContent() {
       setLoading(false)
     }, 1000)
 
-    return () => clearTimeout(timer)
+    // Clean up sessionStorage when component unmounts (user navigates away)
+    return () => {
+      clearTimeout(timer)
+      // Clear booking data when leaving the page to prevent stale data
+      sessionStorage.removeItem('manualConfirmationBooking')
+    }
   }, [bookingId]) // Removed bookingDetails from dependency array to prevent loop
 
   if (loading) {
@@ -142,19 +149,23 @@ function BookingConfirmationContent() {
                 <MapPin className="h-5 w-5 text-amber-500 mt-0.5" />
                 <div>
                   <h3 className="font-semibold">
-                    {bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP2' ? 'Chobe Princess 2 Night Cruise' :
-                     bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP3' ? 'Chobe Princess 3 Night Cruise' :
-                     bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana River Cruise' :
-                     bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Rovos Rail Journey' :
-                     'African Adventure'}
+                    {bookingDetails?.productName || 
+                     bookingDetails?.productDetails?.name ||
+                     (bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP2' ? 'Chobe Princess 2 Night Cruise' :
+                      bookingDetails?.productDetails?.code === 'BBKCRCHO018TIACP3' ? 'Chobe Princess 3 Night Cruise' :
+                      bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana River Cruise' :
+                      bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Rovos Rail Journey' :
+                      'African Adventure')}
                   </h3>
                   <p className="text-gray-600">
-                    {bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana' :
-                     bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Southern Africa' :
-                     'Africa'}
+                    {bookingDetails?.productLocation || 
+                     bookingDetails?.productDetails?.location ||
+                     (bookingDetails?.productDetails?.code?.includes('BBKCR') ? 'Botswana' :
+                      bookingDetails?.productDetails?.code?.includes('RLROV') ? 'Southern Africa' :
+                      'Africa')}
                   </p>
                   <Badge variant="secondary" className="mt-1">
-                    {bookingDetails?.productDetails?.code || effectiveBookingReference}
+                    {bookingDetails?.productCode || bookingDetails?.productDetails?.code || effectiveBookingReference}
                   </Badge>
                 </div>
               </div>
@@ -164,8 +175,8 @@ function BookingConfirmationContent() {
                 <div>
                   <h4 className="font-medium">Departure Date</h4>
                   <p className="text-gray-600">
-                    {bookingDetails?.productDetails?.dateFrom ? 
-                      new Date(bookingDetails.productDetails.dateFrom).toLocaleDateString('en-US', { 
+                    {bookingDetails?.dateFrom || bookingDetails?.productDetails?.dateFrom ? 
+                      new Date(bookingDetails?.dateFrom || bookingDetails.productDetails.dateFrom).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric' 
@@ -190,7 +201,13 @@ function BookingConfirmationContent() {
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total Amount</span>
-                  <span className="text-2xl font-bold text-amber-600">$8,047</span>
+                  <span className="text-2xl font-bold text-amber-600">
+                    ${bookingDetails?.totalAmount ? 
+                      bookingDetails.totalAmount.toLocaleString() : 
+                      bookingDetails?.totalCost ? 
+                        Math.round(bookingDetails.totalCost / 100).toLocaleString() : 
+                        'Contact for Pricing'}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Including taxes and fees</p>
               </div>

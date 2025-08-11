@@ -126,22 +126,16 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
     }
   }
 
-  // Format rate for display - handle special pricing corrections
+  // Format rate for display - rates come from services.ts in cents, convert to dollars
   const formatRateForDisplay = (rate: number, type: 'single' | 'twin'): number => {
-    // For Classic Kruger Package, Kenya tours, Sabi Sabi and Savanna Lodge, rates are already corrected in dollars
-    if (productCode === 'HDSSPMAKUTSMSSCLS' || productCode === 'NBOGTARP001CKEKEE' || productCode === 'NBOGTARP001CKSE' || productCode === 'NBOGPARP001CKSLP' || productCode === 'GKPSPSABBLDSABBLS' || productCode === 'GKPSPSAV002SAVLHM') {
-      if (type === 'twin') {
-        // Twin rate is total for room, show per person
-        return Math.round(rate / 2)
-      }
-      return Math.round(rate)
-    }
+    // All rates from services.ts are in cents, convert to dollars first
+    const rateInDollars = rate / 100
     
-    // Rates are already converted from cents to dollars in services.ts
     if (type === 'twin') {
-      return Math.round(rate / 2)
+      // Twin rate is total for room, show per person
+      return Math.round(rateInDollars / 2)
     }
-    return Math.round(rate)
+    return Math.round(rateInDollars)
   }
 
   const navigateMonth = (direction: 'prev' | 'next') => {

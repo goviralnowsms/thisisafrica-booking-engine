@@ -164,6 +164,14 @@ export default function FeaturedSpecials() {
     // Check if this is static data vs API data
     const isStaticData = staticOffers.some(staticOffer => staticOffer.id === offer.id)
     
+    console.log('🎁 Special Offers pricing debug:', {
+      offerId: offer.id,
+      offerName: offer.name,
+      isStaticData,
+      rawRate: rate,
+      twinRate: rate.twinRate
+    })
+    
     // Show per person twin share pricing if available
     if (rate.twinRate && rate.twinRate > 0) {
       if (isStaticData) {
@@ -171,8 +179,10 @@ export default function FeaturedSpecials() {
         const perPerson = Math.round(rate.twinRate / 200) // Divide by 200 (100 for cents + 2 for twin share)
         return `From $${perPerson.toLocaleString()}`
       } else {
-        // API data: assume rate is per person
-        const perPerson = Math.round(rate.twinRate / 100) // Just convert cents to dollars
+        // API data: These values appear to be already in dollars, just need per person calculation
+        // Values like 11596, 2407, 4550 are total prices in dollars for twin room
+        const perPerson = Math.round(rate.twinRate / 2) // Just divide by 2 for per person
+        console.log('🎁 API data converted price:', perPerson)
         return `From $${perPerson.toLocaleString()}`
       }
     }
@@ -182,7 +192,8 @@ export default function FeaturedSpecials() {
         const perPerson = Math.round(rate.doubleRate / 200)
         return `From $${perPerson.toLocaleString()}`
       } else {
-        const perPerson = Math.round(rate.doubleRate / 100)
+        // API data: divide by 2 for per person
+        const perPerson = Math.round(rate.doubleRate / 2)
         return `From $${perPerson.toLocaleString()}`
       }
     }

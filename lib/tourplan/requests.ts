@@ -17,6 +17,20 @@ export class OptionInfoRequest {
     return this;
   }
 
+  setButtonDestinations(destinations: Array<{ButtonName?: string, DestinationName?: string}>): this {
+    if (destinations.length > 0) {
+      const buttonDestXml = destinations.map(dest => {
+        let xml = '<ButtonDestination>';
+        if (dest.ButtonName) xml += `<ButtonName>${dest.ButtonName}</ButtonName>`;
+        if (dest.DestinationName) xml += `<DestinationName>${dest.DestinationName}</DestinationName>`;
+        xml += '</ButtonDestination>';
+        return xml;
+      }).join('');
+      this.params.ButtonDestinations = `<ButtonDestinations>${buttonDestXml}</ButtonDestinations>`;
+    }
+    return this;
+  }
+
   setInfo(info: string): this {
     this.params.Info = info;
     return this;
@@ -56,7 +70,7 @@ export class OptionInfoRequest {
   build(): string {
     const content = Object.entries(this.params)
       .map(([key, value]) => {
-        if (key === 'RoomConfigs') {
+        if (key === 'RoomConfigs' || key === 'ButtonDestinations') {
           return value; // Already formatted XML
         }
         return `<${key}>${value}</${key}>`;
@@ -278,6 +292,7 @@ export function buildTourSearchRequest(destination?: string, dateFrom?: string, 
 }
 
 // Search accommodation using the exact format required by TourPlan
+// Updated based on TourPlan feedback: use ButtonDestinations structure
 export function buildAccommodationSearchRequest(
   destination: string, 
   dateFrom: string, 
@@ -286,14 +301,19 @@ export function buildAccommodationSearchRequest(
 ): string {
   const request = new OptionInfoRequest()
     .setButtonName('Accommodation')
-    .setInfo('GS')
+    .setInfo('S') // Changed from 'GS' to 'S' per TourPlan: "Info S to return results the rate should be confirmed"
     .setDateRange(dateFrom, dateTo)
     .setRateConvert(true)
     .setRoomConfigs(roomConfigs);
     
-  // Only set destination if it's not empty
+  // Use ButtonDestinations structure as suggested by TourPlan
   if (destination && destination.trim()) {
-    request.setDestination(destination);
+    request.setButtonDestinations([
+      {
+        ButtonName: '', // Empty ButtonName as shown in TourPlan's example
+        DestinationName: destination
+      }
+    ]);
   }
   
   return request.build();
@@ -378,7 +398,7 @@ export function buildGroupTourProperSearchRequest(buttonName: string, destinatio
   return xml;
 }
 
-// Build Packages search request with correct Info parameter (P)
+// Build Packages search request with correct Info parameter (GDM like WordPress)
 export function buildPackagesProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, adults: number = 2, children: number = 0): string {
   const agentId = process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID || '';
   const password = process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD || '';
@@ -397,19 +417,20 @@ export function buildPackagesProperSearchRequest(buttonName: string, destination
     <DestinationName>${destination}</DestinationName>`;
   }
   
-  // Use P for Packages per CLAUDE.md documentation
+  // Use GDM for Packages (same as WordPress implementation)
+  // WordPress uses Info="GDM" not "P" for packages
   xml += `
-    <Info>P</Info>`;
+    <Info>GDM</Info>`;
 
-  if (dateFrom) {
-    xml += `
-    <DateFrom>${dateFrom}</DateFrom>`;
-  }
+  // WordPress implementation uses DateFrom and SCUqty (1095 days = 3 years)
+  // This gives a wide date range for package availability
+  const startDate = dateFrom || new Date().toISOString().split('T')[0];
+  xml += `
+    <DateFrom>${startDate}</DateFrom>
+    <SCUqty>1095</SCUqty>`;
 
-  if (dateTo) {
-    xml += `
-    <DateTo>${dateTo}</DateTo>`;
-  }
+  // Note: WordPress doesn't use DateTo for packages search
+  // It uses DateFrom + SCUqty instead
 
   // Always include RoomConfig as it's required
   xml += `

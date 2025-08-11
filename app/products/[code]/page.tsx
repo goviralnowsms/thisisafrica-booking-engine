@@ -757,6 +757,49 @@ export default function ProductDetailsPage() {
           </div>
         </div>
       </section>
+
+      {/* Brochure Download Banner */}
+      <section className="relative py-16 mt-12">
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: 'url(/products/rsz_leopard-in-tree.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Discover More African Adventures
+          </h2>
+          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+            Download our comprehensive 2025 brochure featuring all our tours, 
+            exclusive packages, and expert travel tips for your African journey.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/pdfs/products/Brochure-2025-Web.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors"
+            >
+              <span className="mr-2">📥</span>
+              Download 2025 Brochure
+            </a>
+            <Link
+              href="/contact?subject=brochure-request"
+              className="inline-flex items-center justify-center px-8 py-3 bg-white hover:bg-gray-100 text-gray-800 font-bold rounded-lg transition-colors"
+            >
+              <span className="mr-2">✉️</span>
+              Request Printed Copy
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

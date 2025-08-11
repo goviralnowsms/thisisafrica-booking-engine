@@ -12,7 +12,14 @@ export async function POST(request: NextRequest) {
     
     // Search for base64 images in the provided content
     const base64Regex = /data:image\/([^;]+);base64,([A-Za-z0-9+/=]+)/g;
-    const matches = [];
+    const matches: Array<{
+      format: string;
+      data: string;
+      fullMatch: string;
+      position: number;
+      size: number;
+      preview: string;
+    }> = [];
     let match;
 
     while ((match = base64Regex.exec(content)) !== null) {
@@ -61,11 +68,12 @@ export async function GET() {
   `;
   
   // Test the search function
-  const response = await POST(new Request('http://localhost', {
+  const testRequest = new NextRequest('http://localhost', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content: sampleContent })
-  }));
+  });
+  const response = await POST(testRequest);
   
   return response;
 }

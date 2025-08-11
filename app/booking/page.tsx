@@ -18,7 +18,7 @@ export default function BookingPage() {
   const [selectedTour, setSelectedTour] = useState<any | null>(null)
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [searchCriteria, setSearchCriteria] = useState({
-    productType: "",
+    productType: "Group Tours", // Default to Group Tours
     country: "",
     destination: "",
     class: ""
@@ -165,33 +165,20 @@ export default function BookingPage() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6">Search tours & safaris</h2>
             <div className="bg-gray-100 rounded-lg p-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <Select value={searchCriteria.productType} onValueChange={(value) => setSearchCriteria(prev => ({...prev, productType: value}))}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Tour Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Group Tours">Group Tours</SelectItem>
-                    <SelectItem value="Accommodation">Accommodation</SelectItem>
-                    <SelectItem value="Cruises">Cruises</SelectItem>
-                    <SelectItem value="Rail">Rail Tours</SelectItem>
-                    <SelectItem value="Packages">Packages</SelectItem>
-                  </SelectContent>
-                </Select>
-
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
                     <SelectValue placeholder="Country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="botswana">Botswana</SelectItem>
-                    <SelectItem value="kenya">Kenya</SelectItem>
-                    <SelectItem value="south-africa">South Africa</SelectItem>
-                    <SelectItem value="tanzania">Tanzania</SelectItem>
-                    <SelectItem value="namibia">Namibia</SelectItem>
-                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                    <SelectItem value="zambia">Zambia</SelectItem>
-                    <SelectItem value="uganda">Uganda</SelectItem>
+                    <SelectItem value="Botswana">Botswana</SelectItem>
+                    <SelectItem value="Kenya">Kenya</SelectItem>
+                    <SelectItem value="South Africa">South Africa</SelectItem>
+                    <SelectItem value="Tanzania">Tanzania</SelectItem>
+                    <SelectItem value="Namibia">Namibia</SelectItem>
+                    <SelectItem value="Zimbabwe">Zimbabwe</SelectItem>
+                    <SelectItem value="Zambia">Zambia</SelectItem>
+                    <SelectItem value="Uganda">Uganda</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -290,7 +277,7 @@ export default function BookingPage() {
                               <p className="text-lg font-bold text-blue-600">On Request</p>
                             ) : (
                               <p className="text-xl font-bold">
-                                ${tour.rates[0]?.singleRate ? tour.rates[0].singleRate.toLocaleString() : 'POA'}
+                                ${tour.rates[0]?.singleRate ? Math.round(tour.rates[0].singleRate / 100).toLocaleString() : 'POA'}
                               </p>
                             )}
                           </div>
@@ -301,16 +288,16 @@ export default function BookingPage() {
                               variant="outline"
                               className="w-full bg-transparent"
                             >
-                              View Details
+                              View details
                             </Button>
                           </Link>
                           {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
                             <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
-                              <Button className="w-full bg-blue-500 hover:bg-blue-600">Get Quote</Button>
+                              <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
                             </Link>
                           ) : (
                             <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
-                              <Button className="w-full bg-amber-500 hover:bg-amber-600">Book Now</Button>
+                              <Button className="w-full bg-amber-500 hover:bg-amber-600">Book now</Button>
                             </Link>
                           )}
                         </div>

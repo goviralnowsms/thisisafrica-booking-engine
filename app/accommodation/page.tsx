@@ -23,6 +23,34 @@ export default function AccommodationPage() {
   const [children, setChildren] = useState(0)
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
 
+  // Format pricing from TourPlan rates (same format as Special Offers)
+  const formatPrice = (tour: any) => {
+    if (!tour.rates || tour.rates.length === 0) {
+      return 'On Request'
+    }
+    
+    const rate = tour.rates[0]
+    if (!rate) return 'On Request'
+    
+    // Get the best available rate (twin > double > single)
+    const price = rate.twinRate || rate.doubleRate || rate.singleRate
+    if (!price || price === 0) return 'On Request'
+    
+    console.log('🏨 Accommodation pricing debug:', {
+      tourCode: tour.code,
+      tourName: tour.name,
+      rawPrice: price,
+      rateData: rate
+    })
+    
+    // TourPlan rates are in cents, need to convert to dollars first
+    // Then divide by 2 to get per person pricing
+    const perPerson = Math.round(price / 100 / 2)
+    
+    console.log('🏨 Formatted price:', `From $${perPerson.toLocaleString()}`)
+    return `From $${perPerson.toLocaleString()}`
+  }
+
   // Load the product image index once on component mount
   useEffect(() => {
     const loadImageIndex = async () => {
@@ -135,7 +163,7 @@ export default function AccommodationPage() {
       <section className="bg-white py-8 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">Find Your Perfect Accommodation</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">Find your perfect accommodation</h2>
             <p className="text-gray-600 text-center mb-6 max-w-3xl mx-auto">
               Accommodation in Africa can range from basic to the ultimate in luxury. Accommodation styles include tented camps, or 'glamping', which range from 3 star to 5 stars, boutique hotels, chalets, manors, rondavels, guesthouses and self-erected tents. Some popular accommodation options are included on our website.
             </p>
@@ -148,12 +176,12 @@ export default function AccommodationPage() {
                   <SelectContent>
                     <SelectItem value="botswana">Botswana</SelectItem>
                     <SelectItem value="kenya">Kenya</SelectItem>
+                    <SelectItem value="namibia">Namibia</SelectItem>
                     <SelectItem value="south-africa">South Africa</SelectItem>
                     <SelectItem value="tanzania">Tanzania</SelectItem>
-                    <SelectItem value="namibia">Namibia</SelectItem>
-                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                    <SelectItem value="zambia">Zambia</SelectItem>
                     <SelectItem value="uganda">Uganda</SelectItem>
+                    <SelectItem value="zambia">Zambia</SelectItem>
+                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -288,18 +316,18 @@ export default function AccommodationPage() {
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">Pricing</p>
-                              <p className="text-lg font-bold text-blue-600">On Request</p>
+                              <p className="text-lg font-bold text-blue-600">{formatPrice(tour)}</p>
                             </div>
                           </div>
                           
                           <div className="flex gap-3">
                             <Link href={`/products/${tour.code}`} className="flex-1">
                               <Button variant="outline" className="w-full">
-                                View Details
+                                View details
                               </Button>
                             </Link>
                             <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=accommodation`} className="flex-1">
-                              <Button className="w-full bg-blue-500 hover:bg-blue-600">Get Quote</Button>
+                              <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
                             </Link>
                           </div>
                         </div>
@@ -320,7 +348,7 @@ export default function AccommodationPage() {
                       setTours([])
                       setFilteredTours([])
                     }}>
-                      Clear Search
+                      Clear search
                     </Button>
                   </div>
                 )}
@@ -335,13 +363,13 @@ export default function AccommodationPage() {
         <section className="py-12 bg-amber-50">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-6">Why Choose Our Accommodation?</h2>
+              <h2 className="text-3xl font-bold mb-6">Why choose our accommodation?</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Bed className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Handpicked Properties</h3>
+                  <h3 className="text-xl font-semibold mb-2">Handpicked properties</h3>
                   <p className="text-gray-600">
                     Every lodge and hotel is carefully selected for quality, location, and authentic African experience
                   </p>
@@ -350,7 +378,7 @@ export default function AccommodationPage() {
                   <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Star className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Exceptional Service</h3>
+                  <h3 className="text-xl font-semibold mb-2">Exceptional service</h3>
                   <p className="text-gray-600">
                     Experience warm African hospitality with staff trained to provide outstanding service
                   </p>
@@ -359,7 +387,7 @@ export default function AccommodationPage() {
                   <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MapPin className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Prime Locations</h3>
+                  <h3 className="text-xl font-semibold mb-2">Prime locations</h3>
                   <p className="text-gray-600">Strategically located near major attractions and wildlife areas</p>
                 </div>
               </div>
@@ -368,24 +396,54 @@ export default function AccommodationPage() {
         </section>
       )}
 
-      {/* Call to Action */}
+      {/* Brochure Download Banner */}
       {!searchPerformed && (
-        <section className="py-12 bg-amber-50">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4 text-gray-900">Ready to Find Your Perfect Stay?</h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Select your preferred destination above to discover our handpicked accommodation options. 
-              From luxury safari lodges to boutique city hotels, we have the perfect place for your African adventure.
+        <section className="relative py-16">
+          <div 
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: 'url("/images/products/rsz_leopard-in-tree.jpg")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          >
+            <div className="absolute inset-0 bg-black/60"></div>
+          </div>
+          
+          <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Discover more African adventures
+            </h2>
+            <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+              Download our comprehensive 2025 brochure featuring all our tours, 
+              exclusive packages, and expert travel tips for your African journey.
             </p>
-            <div className="flex justify-center gap-4">
-              <Button 
-                onClick={() => document.querySelector('.bg-gray-100')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-amber-500 hover:bg-amber-600"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <a
+                href="/pdfs/products/Brochure-2025-Web.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors"
               >
-                Search Accommodation
-              </Button>
+                <span className="mr-2">📥</span>
+                Download 2025 brochure
+              </a>
+              <Link
+                href="/contact?subject=brochure-request"
+                className="inline-flex items-center justify-center px-8 py-3 bg-white hover:bg-gray-100 text-gray-800 font-bold rounded-lg transition-colors"
+              >
+                <span className="mr-2">✉️</span>
+                Request printed copy
+              </Link>
+            </div>
+            <div className="text-white/80">
               <Link href="/contact">
-                <Button variant="outline">Need Help Choosing?</Button>
+                <Button 
+                  className="bg-transparent border border-white text-white hover:bg-white hover:text-gray-800 mr-4"
+                >
+                  Need help?
+                </Button>
               </Link>
             </div>
           </div>

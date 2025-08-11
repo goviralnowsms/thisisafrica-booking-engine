@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getBookingDetails } from '@/lib/tourplan';
+import { getBookingDetails, TourPlanClient } from '@/lib/tourplan';
 import { 
   validateRequestBody,
   successResponse, 
@@ -70,7 +70,7 @@ export async function PATCH(
     if (validationResult.error) return validationResult.error;
     
     const data = validationResult.data;
-    const client = getTourPlanClient();
+    const client = new TourPlanClient();
     
     // Build update object
     const updates: Record<string, any> = {};
@@ -113,7 +113,7 @@ export async function DELETE(
       return errorResponse('Booking ID is required', 400);
     }
     
-    const client = getTourPlanClient();
+    const client = new TourPlanClient();
     
     // First get the booking to get the reference
     const booking = await client.getBooking(bookingId);

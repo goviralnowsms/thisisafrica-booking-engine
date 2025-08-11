@@ -17,10 +17,11 @@ function formatDisplayPrice(productCode: string, pricing: any): string {
   
   // For other products, rates are in cents, convert to dollars
   if (pricing.twinRate > 0) {
-    return `${pricing.currency} $${Math.round(pricing.twinRate / 2).toLocaleString()}`
+    // Twin rate is total for 2 people in cents, divide by 2 for per person, then by 100 for dollars
+    return `${pricing.currency} $${Math.round(pricing.twinRate / 2 / 100).toLocaleString()}`
   }
   if (pricing.singleRate > 0) {
-    return `${pricing.currency} $${Math.round(pricing.singleRate).toLocaleString()}`
+    return `${pricing.currency} $${Math.round(pricing.singleRate / 100).toLocaleString()}`
   }
   return 'POA'
 }
@@ -84,6 +85,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Process and fix pricing data from TourPlan API
     let pricingData = result.dateRanges
     
+    // Extract OptAvail data for WordPress-style availability processing
+    const optAvailData = result.optAvail || null
+    
     // Detect product types based on code patterns and referer
     const isCruise = productCode.includes('CRCHO') ||   // Chobe cruise codes like BBKCRCHO018TIACP2
                      productCode.includes('CRTVT') ||   // Victoria Falls cruise codes like BBKCRTVT001ZAM3NS
@@ -98,19 +102,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     let correctDepartureDay = null
     
     if (isCruise) {
-      // Different cruise types have different departure patterns
-      if (productCode.includes('CRCHO')) {
-        // Chobe cruises typically depart on Fridays based on user feedback
-        correctDepartureDay = { '@_Fri': 'Y' }
-      } else if (productCode.includes('CRTVT')) {
-        // Victoria Falls cruises typically depart on Sundays
-        correctDepartureDay = { '@_Sun': 'Y' }
-      } else {
-        // Default to checking what TourPlan actually returns, or fallback to Sunday
-        correctDepartureDay = pricingData.length > 0 && pricingData[0]?.appliesDaysOfWeek 
-          ? pricingData[0].appliesDaysOfWeek 
-          : { '@_Sun': 'Y' }
-      }
+      // For cruise products, use OptAvail data for accurate availability
+      // Don't override with hardcoded departure days - let WordPress-style logic handle it
+      correctDepartureDay = null
     } else if (isRail) {
       // FORCE HARDCODED DATES FOR RAIL PRODUCTS
       // TourPlan is not returning the correct specific departure dates
@@ -246,7 +240,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     
     // Process the date ranges to create calendar-friendly data
     console.log('Processing calendar data with', pricingData.length, 'pricing items')
-    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode)
+    console.log('OptAvail data available:', !!optAvailData, optAvailData?.length || 0, 'codes')
+    // Pass the API's actual dateFrom for OptAvail indexing
+    const apiDateFrom = pricingData.length > 0 ? pricingData[0].dateFrom : dateFrom
+    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom)
     console.log('Generated calendar data:', calendarData.length, 'days')
     
     const response = NextResponse.json({ 
@@ -282,7 +279,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Process date ranges into calendar-friendly format
  * Fixed to handle timezone consistently and avoid UTC date shifts
  */
-function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean) {
+function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string) {
   const calendar: any[] = []
   
   // Helper function to create local date from YYYY-MM-DD string
@@ -321,7 +318,8 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
         twinRate: range.twinRate,
         currency: range.currency,
         rateName: range.rateName,
-        appliesDaysOfWeek: range.appliesDaysOfWeek
+        appliesDaysOfWeek: range.appliesDaysOfWeek,
+        optAvail: optAvailData // Pass WordPress-style availability data
       })
       current.setDate(current.getDate() + 1)
     }
@@ -368,31 +366,81 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
       
       if (dateMap.has(dateKey)) {
         const pricing = dateMap.get(dateKey)
+        console.log('🔍 Pricing object for', dateKey, 'has optAvail:', !!pricing.optAvail)
         
-        // Check if this day is valid based on AppliesDaysOfWeek
+        // Check if this day is valid using WordPress-style OptAvail data
         let validDay = true
         
         if (isAccommodation) {
           // For accommodation products, every day is valid
           validDay = true
           console.log(`🏨 Accommodation product - all days valid: ${dateKey}`)
+        } else if (pricing.optAvail && Array.isArray(pricing.optAvail)) {
+          console.log('🎯 Using WordPress-style availability logic for', dateKey);
+          // Use WordPress-style availability processing instead of appliesDaysOfWeek
+          // Calculate days since start using WordPress-compatible logic (handles AEST/AEDT transition)
+          // Use apiDateFrom for OptAvail indexing (the actual start date of the API response)
+          const optAvailStartDate = apiDateFrom || startDate;
+          
+          // WordPress uses DateTime->diff()->days which counts calendar days, not 24-hour periods
+          // This handles DST transitions correctly (Oct 5, 2025 AEST->AEDT in Australia)
+          const startDateParts = optAvailStartDate.split('-').map(Number);
+          const currentDateParts = dateKey.split('-').map(Number);
+          
+          // Create dates at noon to avoid DST transition issues (WordPress equivalent)
+          const startDate_WP = new Date(startDateParts[0], startDateParts[1] - 1, startDateParts[2], 12, 0, 0);
+          const currentDate_WP = new Date(currentDateParts[0], currentDateParts[1] - 1, currentDateParts[2], 12, 0, 0);
+          
+          // Calculate difference in calendar days (WordPress DateTime->diff()->days equivalent)
+          const daysSinceStart = Math.round((currentDate_WP.getTime() - startDate_WP.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceStart >= 0 && daysSinceStart < pricing.optAvail.length) {
+            const availCode = pricing.optAvail[daysSinceStart];
+            
+            // WordPress availability logic from tourplan-api-classes.php line 382-387
+            // -1 = Not available, -2 = On free sell, -3 = On request, >0 = Available (number of units)
+            
+            // Check if this is a Group Tour product
+            const isGroupTour = productCode.includes('NBOGTARP') || productCode.includes('GROUPTOUR');
+            
+            if (isGroupTour) {
+              // For Group Tours, WordPress productdetails.php only shows days with Status "Available"
+              // This means only positive availability codes (>0), not "On request" (-3) days
+              validDay = parseInt(availCode) > 0;  // Only show positive availability for Group Tours
+            } else {
+              // For other products (Cruise, Rail, etc.), use the general logic
+              validDay = availCode !== '-1';  // Everything except -1 is considered available
+            }
+            
+            let statusText = 'Unknown';
+            if (availCode === '-1') statusText = 'Not available';
+            else if (availCode === '-3') statusText = 'On request';
+            else if (availCode === '-2') statusText = 'On free sell';
+            else if (parseInt(availCode) > 0) statusText = `Available (${availCode} units)`;
+            
+            console.log('📊 WordPress-style availability check:', {
+              dateKey,
+              optAvailStartDate,
+              daysSinceStart,
+              availCode,
+              statusText,
+              validDay,
+              dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+              isDSTTransitionMonth: dateKey.includes('2025-10'), // October 2025 has DST transition
+              productCode: productCode.includes('NBOGTARP') ? '(Group Tour)' : '(Other)'
+            });
+          } else {
+            console.log('⚠️ Day index out of range for OptAvail:', { daysSinceStart, optAvailLength: pricing.optAvail.length });
+          }
         } else if (pricing.appliesDaysOfWeek) {
+          // Fallback to old logic if no OptAvail data
           const dayKeys = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
           const dayKey = dayKeys[dayOfWeek]
           validDay = pricing.appliesDaysOfWeek[`@_${dayKey}`] === 'Y'
           
-          console.log('🗓️ Day validation:', {
-            dateKey,
-            dayOfWeek,
-            dayKey,
-            dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
-            appliesDaysOfWeek: pricing.appliesDaysOfWeek,
-            validDay
+          console.log('⚠️ Using fallback appliesDaysOfWeek logic (should be using OptAvail):', {
+            dateKey, dayKey, validDay
           })
-          
-          if (validDay) {
-            console.log(`📅 Valid date found: ${dateKey} ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]} validDay: ${validDay} available: ${pricing.available}`)
-          }
         }
         
         calendar.push({

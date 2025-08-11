@@ -11,22 +11,20 @@ import FeaturedSpecials from "@/components/homepage/FeaturedSpecials"
 export default function Home() {
   const router = useRouter()
   const [searchCriteria, setSearchCriteria] = useState({
-    productType: "",
     country: "",
     destination: "",
     class: ""
   })
 
   const handleSearch = () => {
-    // For Group Tours, require either country or destination to be selected
-    if (searchCriteria.productType === 'Group Tours' && !searchCriteria.country && !searchCriteria.destination) {
-      alert('Please select a country or destination to search for Group Tours')
+    // Require either country or destination to be selected
+    if (!searchCriteria.country && !searchCriteria.destination) {
+      alert('Please select a country or destination to search for tours and experiences')
       return
     }
     
     // Build search URL with parameters
     const params = new URLSearchParams()
-    if (searchCriteria.productType) params.set('productType', searchCriteria.productType)
     if (searchCriteria.country) params.set('country', searchCriteria.country)
     if (searchCriteria.destination) params.set('destination', searchCriteria.destination)
     if (searchCriteria.class) params.set('class', searchCriteria.class)
@@ -75,21 +73,7 @@ export default function Home() {
       <section id="search-section" className="bg-white py-8">
         <div className="container mx-auto px-4">
           <div className="bg-gray-100 rounded-lg p-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Select value={searchCriteria.productType} onValueChange={(value) => setSearchCriteria(prev => ({...prev, productType: value}))}>
-                <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Tour Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Group Tours">Guided group tours</SelectItem>
-                  <SelectItem value="Day Tours">Day Tours</SelectItem>
-                  <SelectItem value="Accommodation">Accommodation</SelectItem>
-                  <SelectItem value="Cruises">Cruises</SelectItem>
-                  <SelectItem value="Rail">Rail journeys</SelectItem>
-                  <SelectItem value="Packages">Pre-designed packages</SelectItem>
-                </SelectContent>
-              </Select>
-
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
                 <SelectTrigger className="bg-amber-500 text-white border-amber-500">
                   <SelectValue placeholder="Country" />
@@ -165,7 +149,7 @@ export default function Home() {
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => router.push('/group-tours')}
+                  onClick={() => window.open('/group-tours', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now
@@ -192,7 +176,7 @@ export default function Home() {
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => router.push('/packages')}
+                  onClick={() => window.open('/packages', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now
@@ -246,7 +230,7 @@ export default function Home() {
                   Discover our rail journeys. The Blue Train, Shongololo Express and more.
                 </p>
                 <Button 
-                  onClick={() => router.push('/rail')}
+                  onClick={() => window.open('/rail', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now
@@ -271,7 +255,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold mb-2 text-gray-900">CRUISES</h3>
                 <p className="text-gray-600 mb-4">Discover our cruise options. Zambezi River cruises and more.</p>
                 <Button 
-                  onClick={() => router.push('/cruise')}
+                  onClick={() => window.open('/cruise', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now
@@ -298,7 +282,7 @@ export default function Home() {
                   Great group tours. Choose from a variety of hotels. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => router.push('/accommodation')}
+                  onClick={() => window.open('/accommodation', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now

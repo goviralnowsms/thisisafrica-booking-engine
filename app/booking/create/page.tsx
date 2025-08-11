@@ -178,18 +178,10 @@ export default function BookingCreatePage() {
         roomType: 'DB'
       })
 
-      console.log('📅 Booking calendar fetching dates:', {
-        productCode: tourId,
-        dateFrom: startDate.toISOString().split('T')[0],
-        dateTo: endDate.toISOString().split('T')[0],
-        adults: (adults || formData.adults),
-        children: (childrenCount !== undefined ? childrenCount : formData.children.length)
-      })
 
       const response = await fetch(`/api/tourplan/pricing/${tourId}?${params}`)
       const result = await response.json()
       
-      console.log('📅 Booking calendar API response:', result.data)
       
       if (result.success && result.data?.calendar) {
         const validDates = new Set<string>()
@@ -200,14 +192,11 @@ export default function BookingCreatePage() {
             const [year, month, dayNum] = day.date.split('-').map(Number)
             const localDate = new Date(year, month - 1, dayNum)
             const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long' })
-            console.log('📅 Valid date found:', day.date, dayOfWeek, 'validDay:', day.validDay, 'available:', day.available)
           }
         })
-        console.log('📅 Total valid dates:', validDates.size, Array.from(validDates).slice(0, 5))
         setAvailableDates(validDates)
       }
     } catch (error) {
-      console.error('Error fetching available dates:', error)
     } finally {
       setIsLoadingDates(false)
     }
@@ -227,14 +216,12 @@ export default function BookingCreatePage() {
         const response = await fetch(`/api/tourplan/product/${encodeURIComponent(tourId)}`)
         
         if (!response.ok) {
-          console.error('Product API error:', response.status, response.statusText)
           setProductError(`Failed to load tour details (${response.status})`)
           return
         }
         
         const contentType = response.headers.get('content-type')
         if (!contentType || !contentType.includes('application/json')) {
-          console.error('Product API returned non-JSON response:', contentType)
           setProductError('Invalid response from server')
           return
         }
@@ -253,7 +240,6 @@ export default function BookingCreatePage() {
         }
       } catch (err) {
         setProductError("Failed to load tour details")
-        console.error(err)
       } finally {
         setIsLoadingProduct(false)
       }
@@ -397,11 +383,9 @@ export default function BookingCreatePage() {
   // Get base price from product
   const getBasePrice = () => {
     if (!product?.rates || product.rates.length === 0) {
-      console.log('❌ No rates found, product:', product?.name, 'rates:', product?.rates)
       return 0
     }
     const rate = product.rates[0]
-    console.log('✅ Rate found:', rate)
     
     // Check if this is a rail product
     const isRail = product.code?.includes('RLROV') ||     // Rovos Rail codes
@@ -411,7 +395,6 @@ export default function BookingCreatePage() {
                    product.code?.includes('PREMIER')      // Premier Classe codes
     
     // Product type detection for pricing
-    console.log('Product type:', product.code, isRail ? 'Rail' : 'Standard');
     
     // Check if this product has corrected pricing (rates already in dollars)
     const hasCorrectedPricing = product.code === 'HDSSPMAKUTSMSSCLS' || 
@@ -426,23 +409,22 @@ export default function BookingCreatePage() {
     if (isRail && (rate.twinRateTotal || rate.twinRate)) {
       const twinRateTotal = rate.twinRateTotal || rate.twinRate || 0
       const price = typeof twinRateTotal === 'string' ? parseFloat(twinRateTotal) : twinRateTotal
-      const perPersonPrice = price / 2 // Divide by 2 for per person (already converted from cents in services.ts)
-      console.log('🚂 Rail pricing - twin rate total:', price, 'per person:', perPersonPrice)
+      // Convert from cents to dollars, then divide by 2 for per person
+      const perPersonPrice = price / 2 / 100
       return perPersonPrice
     } else if (hasCorrectedPricing) {
       // For products with corrected pricing, rates are already in dollars, divide twin rate by 2 for per person
       const baseRate = rate.twinRateTotal || rate.twinRate || rate.doubleRate || rate.singleRate || 0
       const price = typeof baseRate === 'string' ? parseFloat(baseRate) : baseRate
       const perPersonPrice = (rate.twinRateTotal || rate.twinRate) ? price / 2 : price // Divide twin rates by 2 for per person
-      console.log('💰 Corrected pricing (already in dollars):', price, 'per person:', perPersonPrice, 'from:', rate.twinRateTotal ? 'twinRateTotal' : rate.twinRate ? 'twinRate' : rate.doubleRate ? 'doubleRate' : rate.singleRate ? 'singleRate' : 'none')
       return perPersonPrice
     } else {
-      // For standard products, use rates already converted from cents in services.ts
+      // For standard products, rates are in cents and need conversion to dollars
       const baseRate = rate.twinRateTotal || rate.twinRate || rate.doubleRate || rate.singleRate || 0
       const price = typeof baseRate === 'string' ? parseFloat(baseRate) : baseRate
-      // If using twinRateTotal, divide by 2 for per person; otherwise use the rate as-is
-      const perPersonPrice = rate.twinRateTotal ? price / 2 : price
-      console.log('💰 Standard pricing (already converted from cents in services.ts):', price, 'per person:', perPersonPrice)
+      // Convert from cents to dollars, then if using twinRateTotal, divide by 2 for per person
+      const rateInDollars = price / 100
+      const perPersonPrice = rate.twinRateTotal ? rateInDollars / 2 : rateInDollars
       return perPersonPrice
     }
   }
@@ -553,39 +535,25 @@ export default function BookingCreatePage() {
           throw new Error('No departure date selected')
         }
         const dateFromStr = format(formData.departureDate, 'yyyy-MM-dd')
-        console.log('🔍 Fetching rate details for:', {
-          productCode: tourId,
-          dateFrom: dateFromStr,
-          adults: formData.adults,
-          children: formData.children.length
-        })
         
         const rateResponse = await fetch(`/api/tourplan/rate-details?productCode=${tourId}&dateFrom=${dateFromStr}&adults=${formData.adults}&children=${formData.children.length}`)
         const rateResult = await rateResponse.json()
         
         if (rateResult.success && rateResult.data?.rateId) {
           const foundRateId = rateResult.data.rateId
-          console.log('✅ Found RateId from rate details:', foundRateId)
-          
-          // Use the RateId from the response
           rateId = foundRateId
-          console.log('✅ Using RateId from rate details:', rateId)
         } else {
-          console.log('⚠️ No valid RateId found, will omit from request')
           rateId = null // This will cause RateId element to be omitted
         }
       } catch (error) {
-        console.log('⚠️ Error getting rate details, will omit RateId:', error)
         rateId = null // Fallback to omitting RateId
       }
       
-      console.log('Rate ID determined:', rateId || '(empty - TourPlan default)')
       
       // Skip Supabase pricing calculations - going directly to TourPlan
       // If needed for display, use: const { total, basePrice, accommodationCost, activitiesCost, subtotal, taxes } = calculateTotal()
       
       
-      console.log('🎯 Creating TourPlan booking directly...')
       const leadTraveler = formData.travelersInfo[0]
       
       // Create booking via TourPlan API
@@ -604,7 +572,6 @@ export default function BookingCreatePage() {
         note: formData.specialRequests,
       }
 
-      console.log('Submitting booking for product:', bookingData.productCode)
       
       const response = await fetch('/api/tourplan/booking', {
         method: 'POST',
@@ -620,7 +587,6 @@ export default function BookingCreatePage() {
       try {
         result = responseText ? JSON.parse(responseText) : {}
       } catch (parseError) {
-        console.error('JSON parse error:', parseError)
         result = { error: 'Invalid JSON response', rawResponse: responseText }
       }
 
@@ -633,7 +599,6 @@ export default function BookingCreatePage() {
                        (result.data?.requiresManualConfirmation && result.data?.reference) ||
                        (result.data?.status === 'WEBSITE_QUOTE' && result.data?.reference);
       
-      console.log('Booking response:', result.success ? 'Success' : 'Failed', result.data?.status || 'No status');
       
       if (isSuccess) {
         // For quote bookings, rail bookings, and standard bookings, use appropriate data source
@@ -644,7 +609,6 @@ export default function BookingCreatePage() {
         const status = dataSource.status;
         const tourplanStatus = dataSource.tourplanStatus;
         
-        console.log('✅ Booking created:', bookingRef, status || 'No status');
         
         setBookingReference(bookingRef);
         setBookingId(bookingIdValue);
@@ -654,31 +618,56 @@ export default function BookingCreatePage() {
         
         // Handle different booking scenarios
         if (requiresManualConfirmation || status === 'PENDING_CONFIRMATION' || status === 'WEBSITE_QUOTE' || tourplanStatus === 'NO' || tourplanStatus === 'WQ') {
-          console.log('📋 Manual confirmation required:', status);
           
-          // Store additional data for manual confirmation workflow
-          sessionStorage.setItem('manualConfirmationBooking', JSON.stringify({
+          // Debug: Log product data to understand what's available
+          console.log('Product data:', product);
+          console.log('DataSource product details:', dataSource.productDetails);
+          
+          // Clear any previous booking data to prevent stale data issues
+          sessionStorage.removeItem('manualConfirmationBooking');
+          
+          // Store booking data for confirmation page
+          const bookingData = {
             reference: bookingRef,
             bookingId: bookingIdValue, // Include TourPlan BookingId for My Bookings access
             message: dataSource.message || 'Booking requires manual confirmation. You will be contacted within 48 hours.',
-            productCode: dataSource.productDetails?.code,
-            dateFrom: dataSource.productDetails?.dateFrom,
-            adults: dataSource.productDetails?.adults,
-            children: dataSource.productDetails?.children
-          }));
+            productCode: dataSource.productDetails?.code || product?.code || tourId,
+            productName: product?.name || dataSource.productDetails?.name || 'African Adventure',
+            productLocation: product?.location || dataSource.productDetails?.location || 'Africa',
+            productSupplier: product?.supplierName || product?.supplier || dataSource.productDetails?.supplier,
+            dateFrom: formData.departureDate ? format(formData.departureDate, 'yyyy-MM-dd') : (dataSource.productDetails?.dateFrom || ''),
+            adults: formData.adults || dataSource.productDetails?.adults || formData.travelersInfo.filter(t => t.type === 'Adult').length,
+            children: formData.children?.length || dataSource.productDetails?.children || formData.travelersInfo.filter(t => t.type === 'Child').length,
+            totalCost: dataSource.productDetails?.totalCost || (getBasePrice() * formData.travelersInfo.length * 100), // Store in cents
+            customerName: `${formData.travelersInfo[0]?.firstName} ${formData.travelersInfo[0]?.lastName}`,
+            customerEmail: formData.travelersInfo[0]?.email,
+            customerPhone: formData.travelersInfo[0]?.phone
+          };
+          
+          // Store for confirmation page
+          sessionStorage.setItem('manualConfirmationBooking', JSON.stringify(bookingData));
+          
+          // For TIA bookings, also store in localStorage for My Bookings retrieval
+          if (bookingRef.startsWith('TIA-')) {
+            const tiaBookings = JSON.parse(localStorage.getItem('tiaBookings') || '{}');
+            tiaBookings[bookingRef] = {
+              ...bookingData,
+              createdAt: new Date().toISOString(),
+              status: 'pending-confirmation'
+            };
+            localStorage.setItem('tiaBookings', JSON.stringify(tiaBookings));
+            console.log('📌 Stored TIA booking for My Bookings:', bookingRef);
+          }
           
           // Check if this booking allows payment (e.g., rail products)
           if (dataSource.allowPayment || status === 'PAYMENT_PENDING') {
-            console.log('💳 Manual confirmation booking allows payment - staying on payment step');
             // Stay on payment step - will redirect after successful payment
             // The payment success handler will redirect to confirmation
           } else {
-            console.log('📋 No payment required - redirecting to confirmation');
             // Redirect to confirmation page with manual confirmation flag
             router.push(`/booking-confirmation?reference=${bookingRef}&bookingId=${bookingIdValue || ''}&manual=true`);
           }
         } else if (!bookingIdValue) {
-          console.log('⚠️ Booking succeeded but no TourPlan BookingId received - manual follow-up may be needed');
           router.push(`/booking-confirmation?reference=${bookingRef}&bookingId=${bookingIdValue || ''}&status=partial`);
         } else {
           // Standard TourPlan booking success
@@ -687,7 +676,6 @@ export default function BookingCreatePage() {
       } else if (result.success === false && result.message && result.message.includes('booking ID received')) {
         // Special case: "Invalid booking response - no booking ID received" 
         // This means the booking likely succeeded but we couldn't parse the ID
-        console.log('⚠️ Booking likely succeeded but BookingId parsing failed:', result.message);
         
         const tempRef = `TEMP-${Date.now()}`;
         setBookingReference(tempRef);
@@ -697,12 +685,6 @@ export default function BookingCreatePage() {
         alert(`Booking appears to have been created but we couldn't retrieve the booking ID. Reference: ${tempRef}. Please contact support for confirmation.`);
         router.push(`/booking-confirmation?reference=${tempRef}&status=partial`);
       } else {
-        console.error("Booking error:", result)
-        console.error("Response was:", {
-          status: response.status,
-          statusText: response.statusText,
-          result: result
-        })
         
         // Check if this is actually a successful booking with unclear response structure
         const hasBookingReference = result.data?.bookingRef || result.data?.bookingReference || result.data?.reference || result.bookingRef || result.bookingReference || result.reference;
@@ -710,7 +692,6 @@ export default function BookingCreatePage() {
         const isQuoteStatus = result.data?.status === 'WEBSITE_QUOTE' || result.data?.status === 'PENDING_CONFIRMATION';
         
         if (hasBookingReference || hasManualConfirmation || isQuoteStatus) {
-          console.log('🎯 Found booking reference/confirmation despite success=false, treating as successful:', hasBookingReference);
           
           // Show less alarming message for successful bookings that need confirmation
           if (hasManualConfirmation || isQuoteStatus) {
@@ -743,7 +724,6 @@ export default function BookingCreatePage() {
         alert(errorMsg)
       }
     } catch (error) {
-      console.error("Booking error:", error)
       alert("Failed to create booking. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -1291,12 +1271,10 @@ export default function BookingCreatePage() {
                     <StripePaymentForm
                       amount={total * 0.3} // 30% deposit
                       onSuccess={async (paymentIntentId) => {
-                        console.log('Payment successful:', paymentIntentId)
                         
                         // Check if this is a manual confirmation booking that already exists
                         const manualBookingData = sessionStorage.getItem('manualConfirmationBooking')
                         if (manualBookingData) {
-                          console.log('💳 Payment completed for manual confirmation booking')
                           const bookingData = JSON.parse(manualBookingData)
                           
                           // Create Supabase record for rail booking so it appears in My Bookings
@@ -1326,9 +1304,7 @@ export default function BookingCreatePage() {
                             }
                             
                             const supabaseBooking = await createBookingRecord(supabaseBookingData)
-                            console.log('✅ Manual booking record created in database:', supabaseBooking.id)
                           } catch (supabaseError) {
-                            console.error('❌ Failed to create rail booking record:', supabaseError)
                             // Don't fail the flow - payment was successful
                           }
                           
@@ -1341,7 +1317,6 @@ export default function BookingCreatePage() {
                         }
                       }}
                       onError={(error) => {
-                        console.error('Payment error:', error)
                         alert(`Payment failed: ${error}`)
                       }}
                     />
