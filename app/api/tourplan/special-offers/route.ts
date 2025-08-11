@@ -74,12 +74,12 @@ export async function GET() {
                 let correctedRates = details.rates;
                 
                 if (productCode === 'GKPSPSAV002SAVLHM' && details.rates?.length > 0) {
-                  // Override with the correct rate - 2407 for twin rate (which is $1204 per person)
+                  // Override with the correct rate - 240800 cents for twin rate (which is $1204 per person)
                   correctedRates = [{
                     currency: 'AUD',
                     singleRate: 0,
-                    doubleRate: 2407,
-                    twinRate: 2407,
+                    doubleRate: 240800,
+                    twinRate: 240800,
                     rateName: 'Standard'
                   }];
                 }

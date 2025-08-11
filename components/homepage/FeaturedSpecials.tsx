@@ -179,9 +179,9 @@ export default function FeaturedSpecials() {
         const perPerson = Math.round(rate.twinRate / 200) // Divide by 200 (100 for cents + 2 for twin share)
         return `From $${perPerson.toLocaleString()}`
       } else {
-        // API data: These values appear to be already in dollars, just need per person calculation
-        // Values like 11596, 2407, 4550 are total prices in dollars for twin room
-        const perPerson = Math.round(rate.twinRate / 2) // Just divide by 2 for per person
+        // API data: Values like 115964, 227500, 240700 are in cents for twin room
+        // Need to convert from cents and divide by 2 for per person
+        const perPerson = Math.round(rate.twinRate / 200) // Divide by 200 (100 for cents + 2 for twin share)
         console.log('🎁 API data converted price:', perPerson)
         return `From $${perPerson.toLocaleString()}`
       }
@@ -192,14 +192,14 @@ export default function FeaturedSpecials() {
         const perPerson = Math.round(rate.doubleRate / 200)
         return `From $${perPerson.toLocaleString()}`
       } else {
-        // API data: divide by 2 for per person
-        const perPerson = Math.round(rate.doubleRate / 2)
+        // API data: convert from cents and divide by 2 for per person
+        const perPerson = Math.round(rate.doubleRate / 200)
         return `From $${perPerson.toLocaleString()}`
       }
     }
     
     if (rate.singleRate && rate.singleRate > 0) {
-      const price = isStaticData ? Math.round(rate.singleRate / 100) : rate.singleRate
+      const price = isStaticData ? Math.round(rate.singleRate / 100) : Math.round(rate.singleRate / 100)
       return `From $${price.toLocaleString()}`
     }
     
