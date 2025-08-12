@@ -9,17 +9,17 @@ export async function GET() {
     
     // Make a request to an IP checking service
     let outboundIp = 'Unknown';
-    let fixieWorking = false;
+    let proxyWorking = false;
     
     try {
       // Use ipify to check our outbound IP
       let response: Response;
       
       // If Fixie URL is available, use it for proxy
-      if (fixieUrl) {
+      if (proxyUrl) {
         const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
-        const agent = new HttpsProxyAgent(fixieUrl);
+        const agent = new HttpsProxyAgent(proxyUrl);
         // @ts-ignore
         response = await nodeFetch('https://api.ipify.org?format=json', {
           method: 'GET',
@@ -57,10 +57,10 @@ export async function GET() {
       
       let response: Response;
       
-      if (fixieUrl) {
+      if (proxyUrl) {
         const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
-        const agent = new HttpsProxyAgent(fixieUrl);
+        const agent = new HttpsProxyAgent(proxyUrl);
         // @ts-ignore
         response = await nodeFetch(
           'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
