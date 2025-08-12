@@ -519,6 +519,12 @@ Use React Context + Custom Hooks:
 - Mobile-first responsive
 - Accessibility (ARIA labels)
 
+### Git Commits
+
+- Use conventional commit format
+- Do NOT include "Generated with Claude Code" signatures
+- Keep commit messages concise and professional
+
 ### API Integration
 
 - Never expose credentials client-side
