@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Check if FIXIE_URL is configured
-    const fixieUrl = process.env.FIXIE_URL;
-    const hasFixie = !!fixieUrl;
+    // Check if proxy is configured (EC2 or FixieIP)
+    const proxyUrl = process.env.PROXY_URL || process.env.FIXIE_URL;
+    const hasProxy = !!proxyUrl;
+    const proxyType = process.env.PROXY_URL ? 'EC2' : (process.env.FIXIE_URL ? 'FixieIP' : 'None');
     
     // Make a request to an IP checking service
     let outboundIp = 'Unknown';
@@ -32,9 +33,10 @@ export async function GET() {
       const data = await response.json();
       outboundIp = data.ip;
       
-      // Check if this matches known Fixie IPs
+      // Check if this matches known proxy IPs
       const fixieIps = ['52.5.155.132', '52.87.82.133'];
-      fixieWorking = fixieIps.includes(outboundIp);
+      // For EC2 proxy, check if it's not a Vercel IP (starts with 3.)
+      proxyWorking = process.env.PROXY_URL ? !outboundIp.startsWith('3.') : fixieIps.includes(outboundIp);
     } catch (error) {
       console.error('Error checking IP:', error);
     }
@@ -95,17 +97,19 @@ export async function GET() {
     return NextResponse.json({
       diagnostics: {
         environment: process.env.NODE_ENV,
-        hasFixieUrl: hasFixie,
-        fixieUrlConfigured: fixieUrl ? 'Yes (hidden for security)' : 'No',
+        proxyType,
+        hasProxyUrl: hasProxy,
+        proxyUrlConfigured: proxyUrl ? 'Yes (hidden for security)' : 'No',
         outboundIp,
-        isUsingFixie: fixieWorking,
-        expectedFixieIps: ['52.5.155.132', '52.87.82.133'],
+        isUsingProxy: proxyWorking,
+        expectedFixieIps: proxyType === 'FixieIP' ? ['52.5.155.132', '52.87.82.133'] : 'N/A',
+        expectedEC2IP: process.env.PROXY_URL ? 'Your EC2 IP' : 'N/A',
         tourplanApiReachable: tourplanReachable,
         tourplanError: tourplanError || 'None',
       },
-      message: fixieWorking 
-        ? `✅ FixieIP is working correctly. Outbound IP: ${outboundIp}`
-        : `⚠️ FixieIP may not be working. Outbound IP: ${outboundIp}`,
+      message: proxyWorking 
+        ? `✅ Proxy (${proxyType}) is working correctly. Outbound IP: ${outboundIp}`
+        : `⚠️ Proxy (${proxyType}) may not be working. Outbound IP: ${outboundIp}`,
     });
   } catch (error: any) {
     return NextResponse.json(

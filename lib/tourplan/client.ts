@@ -70,8 +70,9 @@ export class TourPlanClient {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-        // Use Fixie proxy if available (for Vercel deployment)
-        const fixieUrl = process.env.FIXIE_URL;
+        // Use proxy if available (for Vercel deployment)
+        // Support both FixieIP and custom EC2 proxy
+        const proxyUrl = process.env.PROXY_URL || process.env.FIXIE_URL;
         let fetchOptions: RequestInit = {
           method: 'POST',
           headers: {
@@ -81,14 +82,14 @@ export class TourPlanClient {
           signal: controller.signal,
         };
 
-        // If Fixie URL is available, use it for proxy
+        // If proxy URL is available, use it
         let response: Response;
-        if (fixieUrl && typeof window === 'undefined') {
+        if (proxyUrl && typeof window === 'undefined') {
           // Server-side only - use node-fetch with https-proxy-agent
           // This is required because Vercel's native fetch doesn't properly support proxy agents
           const nodeFetch = (await import('node-fetch')).default;
           const { HttpsProxyAgent } = await import('https-proxy-agent');
-          const agent = new HttpsProxyAgent(fixieUrl);
+          const agent = new HttpsProxyAgent(proxyUrl);
           
           // @ts-ignore - node-fetch types differ slightly
           response = await nodeFetch(this.endpoint, {
