@@ -101,6 +101,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Determine the correct departure day for different product types
     let correctDepartureDay = null
     
+    // TEMPORARY FIX: Handle 2-night Zambezi Queen products that show no availability in WordPress
+    let forceNoAvailability = false
+    if (productCode === 'BBKCRTVT001ZAM2NS' || productCode === 'BBKCRTVT001ZAM2NM') {
+      forceNoAvailability = true
+      console.log('🚢 TEMPORARY FIX: Forcing no availability for 2-night Zambezi Queen product:', productCode)
+    }
+    
     if (isCruise) {
       // For cruise products, use OptAvail data for accurate availability
       // Don't override with hardcoded departure days - let WordPress-style logic handle it
@@ -243,7 +250,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log('OptAvail data available:', !!optAvailData, optAvailData?.length || 0, 'codes')
     // Pass the API's actual dateFrom for OptAvail indexing
     const apiDateFrom = pricingData.length > 0 ? pricingData[0].dateFrom : dateFrom
-    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom)
+    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom, forceNoAvailability)
     console.log('Generated calendar data:', calendarData.length, 'days')
     
     const response = NextResponse.json({ 
@@ -279,7 +286,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Process date ranges into calendar-friendly format
  * Fixed to handle timezone consistently and avoid UTC date shifts
  */
-function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string) {
+function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string, forceNoAvailability?: boolean) {
   const calendar: any[] = []
   
   // Helper function to create local date from YYYY-MM-DD string
@@ -371,7 +378,11 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
         // Check if this day is valid using WordPress-style OptAvail data
         let validDay = true
         
-        if (isAccommodation) {
+        if (forceNoAvailability) {
+          // TEMPORARY FIX: Force no availability for specific products
+          validDay = false
+          console.log(`🚢 TEMPORARY FIX: Forced no availability for ${dateKey}`)
+        } else if (isAccommodation) {
           // For accommodation products, every day is valid
           validDay = true
           console.log(`🏨 Accommodation product - all days valid: ${dateKey}`)
