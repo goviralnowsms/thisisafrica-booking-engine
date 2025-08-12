@@ -1,0 +1,97 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1507,
+      "Ref": "TAWB100502",
+      "ServiceLineId": 6397,
+      "SequenceNumber": 10,
+      "Status": "RQ",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6397,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "BBKCRTVT001ZAM3NM",
+          "OptionNumber": 102051,
+          "Date": "2025-10-03",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2248,
+                    "Forename": "Adult 1",
+                    "Surname": "TEst User",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  },
+                  {
+                    "PersonId": 2249,
+                    "Forename": "Adult 2",
+                    "Surname": "TEst User",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 1021420,
+          "SCU": "trip",
+          "SCUqty": 1,
+          "Pickup_Date": "2025-10-03",
+          "puTime": 0,
+          "puRemark": 61413123456,
+          "Dropoff_Date": "2025-10-06",
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Tourvest",
+          "Description": "Zambezi Queen 3 night river cruise",
+          "Description2": "",
+          "Comment": "Master Suite - fully inclusive",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "PriceCode": "ST",
+          "TourplanServiceStatus": "WR",
+          "ServiceCategory": "S",
+          "LocationCode": "BBK",
+          "Voucher_Status": "L",
+          "ServiceLineExpiryDate": "2025-10-03",
+          "SupplierConfirmation": ""
+        }
+      }
+    },
+    "BookingUpdateCount": 2,
+    "ServiceLineUpdateCount": 1
+  }
+}

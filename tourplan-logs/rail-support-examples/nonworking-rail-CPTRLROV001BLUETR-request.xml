@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <QB>B</QB>
+    <Notes>Test booking for TourPlan support - Non-working Rail - Status NO</Notes>
+    <Service>
+      <ServiceType>Rail</ServiceType>
+      <OptionalService>
+        <Opt>CPTRLROV001BLUETR</Opt>
+        <DateFrom>2025-10-15</DateFrom>
+        <SCUqty>2</SCUqty>
+        <RoomConfigs>
+          <RoomConfig>
+            <Adults>2</Adults>
+          </RoomConfig>
+        </RoomConfigs>
+        <RateId>Standard</RateId>
+      </OptionalService>
+      <Passengers>
+        <Passenger>
+          <Title>Mr</Title>
+          <FirstName>John</FirstName>
+          <LastName>Test</LastName>
+          <DateOfBirth>1980-05-15</DateOfBirth>
+        </Passenger>
+        <Passenger>
+          <Title>Mrs</Title>
+          <FirstName>Jane</FirstName>
+          <LastName>Test</LastName>
+          <DateOfBirth>1982-08-22</DateOfBirth>
+        </Passenger>
+      </Passengers>
+    </Service>
+    <BookingCustomer>
+      <PersonName>
+        <Title>Mr</Title>
+        <FirstName>John</FirstName>
+        <LastName>Test</LastName>
+      </PersonName>
+      <Address>
+        <AddressLine>123 Test Street</AddressLine>
+        <CityName>Sydney</CityName>
+        <StateProv>NSW</StateProv>
+        <PostalCode>2000</PostalCode>
+        <CountryName>Australia</CountryName>
+      </Address>
+      <Email>test@thisisafrica.com.au</Email>
+      <Telephone PhoneNumber="+61400123456" />
+    </BookingCustomer>
+  </AddServiceRequest>
+</Request>

@@ -1,0 +1,11 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "ErrorReply": {
+      "Error": "1002 SCN Problem 10 with RateId Manual"
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1487,
+      "Ref": "TAWB100482",
+      "ServiceLineId": 6377,
+      "SequenceNumber": 10,
+      "Status": "RQ",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6377,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "BBKCRCHO018TIACP3",
+          "OptionNumber": 101914,
+          "Date": "2025-11-21",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2208,
+                    "Forename": "Adult 1",
+                    "Surname": "Test User",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  },
+                  {
+                    "PersonId": 2209,
+                    "Forename": "Adult 2",
+                    "Surname": "Test User",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 684663,
+          "SCU": "pkg",
+          "SCUqty": 1,
+          "Pickup_Date": "2025-11-21",
+          "puTime": 0,
+          "puRemark": "",
+          "Dropoff_Date": "2025-11-24",
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Chobe Princesses / House Boat",
+          "Description": "Chobe Princess 3 Night River Cruise",
+          "Description2": "",
+          "Comment": "Standard Cabin - Fully Inclusive",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "PriceCode": "ST",
+          "TourplanServiceStatus": "WR",
+          "ServiceCategory": "S",
+          "LocationCode": "BBK",
+          "Voucher_Status": "L",
+          "ServiceLineExpiryDate": "2025-11-21",
+          "SupplierConfirmation": ""
+        }
+      }
+    },
+    "BookingUpdateCount": 2,
+    "ServiceLineUpdateCount": 1
+  }
+}

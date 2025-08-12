@@ -1,0 +1,21 @@
+TourPlan Rail Booking Analysis Report
+Generated: 2025-08-11T23:47:15.496Z
+Purpose: XML request/response pairs for TourPlan support - Rail booking status analysis
+
+WORKING RAIL PRODUCT TEST:
+Product: VFARLROV001VFPRDX - Victoria Falls to Pretoria
+Status: SUCCESS
+
+
+NON-WORKING RAIL PRODUCT TEST:
+Product: CPTRLROV001BLUETR - Blue Train Cape Town 
+Status: SUCCESS
+
+
+FILES GENERATED:
+- working-rail-VFARLROV001VFPRDX-request.xml
+- working-rail-VFARLROV001VFPRDX-response.xml
+- nonworking-rail-CPTRLROV001BLUETR-request.xml
+- nonworking-rail-CPTRLROV001BLUETR-response.xml
+
+These files can be sent to TourPlan support for analysis.

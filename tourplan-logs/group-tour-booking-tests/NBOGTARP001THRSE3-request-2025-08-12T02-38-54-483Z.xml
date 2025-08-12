@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <Name>Test Customer</Name>
+      <QB>B</QB>
+    </NewBookingInfo>
+    <Service>
+      <ServiceLines>
+        <ServiceLine>
+          <ServiceLineNum>1</ServiceLineNum>
+          <ServiceName>Group Tour Booking</ServiceName>
+        </ServiceLine>
+      </ServiceLines>
+      <Opt>NBOGTARP001THRSE3</Opt>
+      <DateFrom>2025-10-05</DateFrom>
+      <RateId></RateId>
+      <SCUqty>2</SCUqty>
+      <Qty>1</Qty>
+      <PaxList>
+        <Pax>
+          <PaxNum>1</PaxNum>
+          <Forename>John</Forename>
+          <Surname>Smith</Surname>
+          <PaxType>A</PaxType>
+        </Pax>
+        <Pax>
+          <PaxNum>2</PaxNum>
+          <Forename>Jane</Forename>
+          <Surname>Smith</Surname>
+          <PaxType>A</PaxType>
+        </Pax>
+      </PaxList>
+    </Service>
+  </AddServiceRequest>
+</Request>

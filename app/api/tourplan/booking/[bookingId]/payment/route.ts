@@ -21,10 +21,10 @@ const recordPaymentSchema = z.object({
 // POST - Record payment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { bookingId: string } }
+  { params }: { params: Promise<{ bookingId: string }> }
 ) {
   try {
-    const { bookingId } = params;
+    const { bookingId } = await params;
     
     if (!bookingId) {
       return errorResponse('Booking ID is required', 400);

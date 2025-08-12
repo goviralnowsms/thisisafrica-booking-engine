@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <n>Test Customer</n>
+      <QB>B</QB>
+      <Email>test@thisisafrica.com.au</Email>
+      <Mobile>+61 400 123 456</Mobile>
+    </NewBookingInfo>
+    <Opt>NBOGTARP001CKEKEE</Opt>
+    <DateFrom>2025-08-17</DateFrom>
+    <Adults>2</Adults>
+  </AddServiceRequest>
+</Request>

@@ -5,11 +5,13 @@ import { successResponse, errorResponse, handleTourPlanError } from '../../utils
 // GET - Get product details with images and full content
 export async function GET(
   request: NextRequest,
-  { params }: { params: { productCode: string } }
+  { params }: { params: Promise<{ productCode: string }> }
 ) {
+  const resolvedParams = await params;
+  const { productCode } = resolvedParams;
+  
   try {
-    console.log('🔍 Product API called with params:', params);
-    const { productCode } = params;
+    console.log('🔍 Product API called with params:', resolvedParams);
     
     if (!productCode) {
       console.error('❌ No product code provided');
@@ -144,7 +146,7 @@ export async function GET(
     });
     
   } catch (error) {
-    console.error(`❌ Error fetching product details for ${params.productCode}:`, error);
+    console.error(`❌ Error fetching product details for ${productCode}:`, error);
     return handleTourPlanError(error);
   }
 }

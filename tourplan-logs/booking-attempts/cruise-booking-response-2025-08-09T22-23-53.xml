@@ -1,0 +1,11 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "ErrorReply": {
+      "Error": "1052 SCN BBKCRTVT001TIAZBQ2"
+    }
+  }
+}

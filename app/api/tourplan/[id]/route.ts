@@ -4,9 +4,9 @@ import { getBookingDetails } from "@/lib/tourplan/services"
 /**
  * API route for getting a specific booking
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bookingId = params.id
+    const bookingId = (await params).id
     const result = await getBookingDetails(bookingId)
 
     return NextResponse.json({ success: true, data: result })
@@ -19,9 +19,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 /**
  * API route for updating a booking
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bookingId = params.id
+    const bookingId = (await params).id
     const body = await request.json()
 
     // TODO: Implement updateBooking function
