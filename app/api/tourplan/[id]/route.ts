@@ -35,9 +35,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 /**
  * API route for cancelling a booking
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bookingId = params.id
+    const bookingId = (await params).id
     const { reason } = await request.json()
 
     // TODO: Implement cancelBooking function

@@ -1,0 +1,97 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1529,
+      "Ref": "TAWB100524",
+      "ServiceLineId": 6419,
+      "SequenceNumber": 10,
+      "Status": "RQ",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6419,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "BBKCRTVT001ZAM2NM",
+          "OptionNumber": 102053,
+          "Date": "2025-10-22",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2292,
+                    "Forename": "Adult 1",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  },
+                  {
+                    "PersonId": 2293,
+                    "Forename": "Adult 2",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 680947,
+          "SCU": "trip",
+          "SCUqty": 1,
+          "Pickup_Date": "2025-10-22",
+          "puTime": 0,
+          "puRemark": 413131202,
+          "Dropoff_Date": "2025-10-24",
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Tourvest",
+          "Description": "Zambezi Queen 2 night river cruise",
+          "Description2": "",
+          "Comment": "Master Suite - fully inclusive",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "PriceCode": "ST",
+          "TourplanServiceStatus": "WR",
+          "ServiceCategory": "S",
+          "LocationCode": "BBK",
+          "Voucher_Status": "L",
+          "ServiceLineExpiryDate": "2025-10-22",
+          "SupplierConfirmation": ""
+        }
+      }
+    },
+    "BookingUpdateCount": 2,
+    "ServiceLineUpdateCount": 1
+  }
+}
