@@ -284,13 +284,19 @@ export default function GroupToursPage() {
                               </Button>
                             </Link>
                             {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
-                              <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
-                                <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
-                              </Link>
+                              <Button 
+                                className="flex-1 bg-blue-500 hover:bg-blue-600"
+                                onClick={() => router.push(`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`)}
+                              >
+                                Get quote
+                              </Button>
                             ) : (
-                              <Link href={`/booking/create?tourId=${tour.code}`} className="flex-1">
-                                <Button className="w-full bg-amber-500 hover:bg-amber-600">Book now</Button>
-                              </Link>
+                              <Button 
+                                className="flex-1 bg-amber-500 hover:bg-amber-600"
+                                onClick={() => router.push(`/booking/create?tourId=${tour.code}`)}
+                              >
+                                Book now
+                              </Button>
                             )}
                           </div>
                         </div>

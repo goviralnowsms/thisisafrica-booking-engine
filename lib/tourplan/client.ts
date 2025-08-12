@@ -70,14 +70,30 @@ export class TourPlanClient {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-        const response = await fetch(this.endpoint, {
+        // Use Fixie proxy if available (for Vercel deployment)
+        const fixieUrl = process.env.FIXIE_URL;
+        let fetchOptions: RequestInit = {
           method: 'POST',
           headers: {
             'Content-Type': 'text/xml; charset=utf-8',
           },
           body: xml,
           signal: controller.signal,
-        });
+        };
+
+        // If Fixie URL is available, use it for proxy
+        if (fixieUrl && typeof window === 'undefined') {
+          // Server-side only - use https-proxy-agent
+          const { HttpsProxyAgent } = await import('https-proxy-agent');
+          const agent = new HttpsProxyAgent(fixieUrl);
+          fetchOptions = {
+            ...fetchOptions,
+            // @ts-ignore - agent is valid for node-fetch
+            agent,
+          };
+        }
+
+        const response = await fetch(this.endpoint, fetchOptions);
 
         clearTimeout(timeoutId);
 
