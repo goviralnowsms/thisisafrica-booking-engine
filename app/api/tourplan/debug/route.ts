@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <OptionInfoRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <ButtonName>Group Tours</ButtonName>
     <Info>GMFTD</Info>
     <Opt>${productCode}</Opt>
@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <OptionInfoRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <ButtonName>Group Tours</ButtonName>
     <Info>GMFTDIMG</Info>
     <Opt>${productCode}</Opt>
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <OptionInfoRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <ButtonName>Group Tours</ButtonName>
     <Info>GMFTDWEB</Info>
     <Opt>${productCode}</Opt>
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <GetServiceMapRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <Opt>${productCode}</Opt>
   </GetServiceMapRequest>
 </Request>`;
@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <OptionInfoRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <ButtonName>Group Tours</ButtonName>
     <Info>GMFTD</Info>
     <Opt>${productCode}</Opt>

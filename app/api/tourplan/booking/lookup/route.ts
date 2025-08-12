@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <GetBookingRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
     <BookingId>${bookingId}</BookingId>
   </GetBookingRequest>
 </Request>`;

@@ -48,8 +48,8 @@ export async function GET() {
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
   <PingRequest>
-    <AgentID>SAMAGT</AgentID>
-    <Password>S@MAgt01</Password>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
   </PingRequest>
 </Request>`;
       

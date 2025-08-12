@@ -193,11 +193,11 @@ export class TourplanAPI {
     
     // Fallback to hardcoded working credentials if env vars not set
     if (!this.config.endpoint || !this.config.agentId || !this.config.password) {
-      console.warn("Using hardcoded TourPlan credentials");
+      console.warn("Using TourPlan credentials from environment variables or defaults");
       this.config = {
-        endpoint: "https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi",
-        agentId: "SAMAGT",
-        password: "S@MAgt01",
+        endpoint: process.env.TOURPLAN_API_URL || "https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi",
+        agentId: process.env.TOURPLAN_AGENT_ID || "SAMAGT",
+        password: process.env.TOURPLAN_PASSWORD || "S@MAgt01",
         timeout: 30000,
       };
     }
