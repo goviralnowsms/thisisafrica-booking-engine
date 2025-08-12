@@ -278,8 +278,12 @@ export function buildAgentInfoRequest(): string {
 }
 
 // Get service button details (for destinations)
-export function buildServiceButtonDetailsRequest(buttonName: string): string {
-  return buildBaseRequest('GetServiceButtonDetailsRequest', `<ButtonName>${buttonName}</ButtonName>`);
+export function buildServiceButtonDetailsRequest(buttonName: string, countryName?: string): string {
+  let params = `<ButtonName>${buttonName}</ButtonName>`;
+  if (countryName) {
+    params += `<DestinationName>${countryName}</DestinationName>`;
+  }
+  return buildBaseRequest('GetServiceButtonDetailsRequest', params);
 }
 
 /**

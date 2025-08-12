@@ -283,7 +283,7 @@ async function searchAccommodationFromCatalog(criteria: {
  */
 export async function getDestinations(countryName: string, reqType: string = 'Day Tours') {
   try {
-    const xml = buildServiceButtonDetailsRequest(reqType);
+    const xml = buildServiceButtonDetailsRequest(reqType, countryName);
     const response = await wpXmlRequest(xml);
     
     // Extract localities and classes from response
