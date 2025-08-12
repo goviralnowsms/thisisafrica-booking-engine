@@ -82,18 +82,22 @@ export class TourPlanClient {
         };
 
         // If Fixie URL is available, use it for proxy
+        let response: Response;
         if (fixieUrl && typeof window === 'undefined') {
-          // Server-side only - use https-proxy-agent
+          // Server-side only - use node-fetch with https-proxy-agent
+          // This is required because Vercel's native fetch doesn't properly support proxy agents
+          const nodeFetch = (await import('node-fetch')).default;
           const { HttpsProxyAgent } = await import('https-proxy-agent');
           const agent = new HttpsProxyAgent(fixieUrl);
-          fetchOptions = {
+          
+          // @ts-ignore - node-fetch types differ slightly
+          response = await nodeFetch(this.endpoint, {
             ...fetchOptions,
-            // @ts-ignore - agent is valid for node-fetch
             agent,
-          };
+          }) as unknown as Response;
+        } else {
+          response = await fetch(this.endpoint, fetchOptions);
         }
-
-        const response = await fetch(this.endpoint, fetchOptions);
 
         clearTimeout(timeoutId);
 

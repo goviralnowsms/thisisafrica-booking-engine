@@ -56,6 +56,7 @@
     "mysql2": "^3.14.2",
     "next": "15.2.4",
     "next-themes": "latest",
+    "node-fetch": "^2.7.0",
     "react": "^19",
     "react-day-picker": "latest",
     "react-dom": "^19",

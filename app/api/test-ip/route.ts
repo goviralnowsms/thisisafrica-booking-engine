@@ -12,19 +12,23 @@ export async function GET() {
     
     try {
       // Use ipify to check our outbound IP
-      const fetchOptions: RequestInit = {
-        method: 'GET',
-      };
+      let response: Response;
       
       // If Fixie URL is available, use it for proxy
       if (fixieUrl) {
+        const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
         const agent = new HttpsProxyAgent(fixieUrl);
         // @ts-ignore
-        fetchOptions.agent = agent;
+        response = await nodeFetch('https://api.ipify.org?format=json', {
+          method: 'GET',
+          agent,
+        }) as unknown as Response;
+      } else {
+        response = await fetch('https://api.ipify.org?format=json', {
+          method: 'GET',
+        });
       }
-      
-      const response = await fetch('https://api.ipify.org?format=json', fetchOptions);
       const data = await response.json();
       outboundIp = data.ip;
       
@@ -49,25 +53,36 @@ export async function GET() {
   </PingRequest>
 </Request>`;
       
-      const fetchOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
-        },
-        body: testXml,
-      };
+      let response: Response;
       
       if (fixieUrl) {
+        const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
         const agent = new HttpsProxyAgent(fixieUrl);
         // @ts-ignore
-        fetchOptions.agent = agent;
+        response = await nodeFetch(
+          'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/xml; charset=utf-8',
+            },
+            body: testXml,
+            agent,
+          }
+        ) as unknown as Response;
+      } else {
+        response = await fetch(
+          'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/xml; charset=utf-8',
+            },
+            body: testXml,
+          }
+        );
       }
-      
-      const response = await fetch(
-        'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
-        fetchOptions
-      );
       
       tourplanReachable = response.ok;
       if (!response.ok) {
