@@ -27,6 +27,38 @@ function BookingConfirmationContent() {
       try {
         initialBookingDetails = JSON.parse(storedBooking)
         setBookingDetails(initialBookingDetails)
+        
+        // Send confirmation email when confirmation page loads
+        if (initialBookingDetails && !sessionStorage.getItem('emailSent_' + initialBookingDetails.reference)) {
+          console.log('📧 Sending confirmation email from confirmation page');
+          fetch('/api/test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'booking',
+              to: initialBookingDetails.customerEmail,
+              reference: initialBookingDetails.reference,
+              customerName: initialBookingDetails.customerName,
+              productName: initialBookingDetails.productName,
+              dateFrom: initialBookingDetails.dateFrom,
+              dateTo: initialBookingDetails.dateTo,
+              totalCost: initialBookingDetails.totalCost,
+              currency: 'AUD',
+              status: 'PENDING_CONFIRMATION',
+              requiresManualConfirmation: true
+            })
+          })
+          .then(res => res.json())
+          .then(result => {
+            console.log('📧 Email result from confirmation page:', result);
+            // Mark email as sent to avoid duplicates
+            sessionStorage.setItem('emailSent_' + initialBookingDetails.reference, 'true');
+          })
+          .catch(error => {
+            console.error('❌ Failed to send email from confirmation page:', error);
+          });
+        }
+        
         // Don't clear immediately - wait until user navigates away
         // sessionStorage.removeItem('manualConfirmationBooking')
       } catch (error) {
