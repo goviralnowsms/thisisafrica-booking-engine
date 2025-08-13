@@ -1321,13 +1321,16 @@ export default function BookingCreatePage() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
+                                type: 'booking', // CRITICAL: This tells the API to use the booking template
                                 to: leadTravelerForEmail?.email || bookingData.customerEmail,
                                 reference: bookingData.reference,
                                 customerName: bookingData.customerName || `${leadTravelerForEmail?.firstName} ${leadTravelerForEmail?.lastName}`,
                                 productName: product.name || bookingData.productName,
                                 dateFrom: bookingData.dateFrom,
+                                dateTo: bookingData.dateTo,
                                 totalCost: Math.round((total * 0.3) * 100), // Deposit amount in cents
                                 currency: 'AUD',
+                                status: 'PENDING_CONFIRMATION',
                                 requiresManualConfirmation: true
                               })
                             });
