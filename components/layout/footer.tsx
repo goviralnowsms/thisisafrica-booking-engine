@@ -13,7 +13,7 @@ export function Footer() {
             <Link href="/" className="inline-block">
               <div className="relative h-16 w-48">
                 <Image
-                  src="/images/this-is-africa-logo.png"
+                  src="/images/products/this-is-africa-logo.png"
                   alt="This is Africa Logo"
                   fill
                   className="object-contain"
