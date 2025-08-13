@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Current State**: Migrating from WordPress to Next.js with integrated TourPlan booking engine
 - **Goal**: Unified platform on thisisafrica.com.au (no subdomain separation)
 - **Status**: Booking engine previously built and tested - now rebuilding with cleaner architecture
+- **Repository**: https://github.com/goviralnowsms/updated-tia (use `git push vercel main`)
 
 ## Tech Stack
 
@@ -251,17 +252,23 @@ Based on comprehensive testing (August 2025), only these specific products work:
 - ✅ `CPTRLROV001RRCTPR` - Return Cape Town to Pretoria
 - ❌ Other Cape Town and Pretoria routes return Status="NO" (declined)
 
-**Cruise (1 of 6 work):**
-- ✅ `BBKCRCHO018TIACP3` - Chobe Princess 3 night
-- ❌ Other durations and Zambezi Queen products return Status="NO" (declined)
+**Cruise (3 products work):**
+- ✅ `BBKCRCHO018TIACP3` - Chobe Princess 3-night (Fridays only)
+- ✅ `BBKCRTVT001ZAM2NS` - Zambezi Queen 2-night standard (shows all days as available - needs fix)
+- ✅ `BBKCRTVT001ZAM2NM` - Zambezi Queen 2-night master (shows all days as available - needs fix)
+- ❌ `BBKCRTVT001ZAM3NS` - Zambezi Queen 3-night (correctly shows Fridays only but bookings fail with Status="NO")
+- ❌ Other 3-night cruise products return Status="NO" (declined)
 
 **Important:** Products not on the working list will get TIA-xxx reference numbers for manual processing
 
 #### Cruise Bookings
-- **Product setup limitation**: Only Monday and Wednesday departures work
-- Other days return Status="NO" (declined) - this is expected behavior per TourPlan support
-- Test with dates like 2025-10-27 (Monday) or 2025-10-29 (Wednesday)
-- Issue confirmed by TourPlan: "There is available rates however it only applies for Mondays and Wednesdays"
+- **Product setup limitations by product code**:
+  - `BBKCRCHO018TIACP2` (Chobe Princess 2-night): Monday & Wednesday departures only
+  - `BBKCRCHO018TIACP3` (Chobe Princess 3-night): Friday departures only  
+  - `BBKCRTVT001ZAM3NS` (Zambezi Queen 3-night): Friday departures only (but often fails even on Fridays)
+  - Other days return Status="NO" (declined) - this is expected behavior per TourPlan configuration
+- **Important**: Bookings on correct days will get TAWB references (Status="RQ")
+- **Important**: Bookings on incorrect days will fail with Status="NO" and fall back to TIA references
 
 #### Rail Bookings  
 - May return Status="??" until TourPlan configures WR (Web Request) service status
