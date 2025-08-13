@@ -78,7 +78,7 @@ export async function sendBookingConfirmation(booking: {
     subject: `Booking Confirmation - ${booking.reference}`,
     html: template.html,
     text: template.text,
-    replyTo: 'bookings@thisisafrica.com.au'
+    replyTo: 'sales@thisisafrica.com.au'
   });
 }
 
@@ -206,10 +206,12 @@ function getBookingConfirmationTemplate(booking: any) {
             </div>
             ` : ''}
             
+            ${booking.totalCost && booking.totalCost > 0 ? `
             <div class="detail-row">
               <span class="label">Total Cost:</span>
               <span class="value">${booking.currency} ${(booking.totalCost / 100).toFixed(2)}</span>
             </div>
+            ` : ''}
             
             <div class="detail-row">
               <span class="label">Status:</span>
@@ -236,8 +238,8 @@ function getBookingConfirmationTemplate(booking: any) {
           
           <p>If you have any questions, please don't hesitate to contact us:</p>
           <ul>
-            <li>Email: bookings@thisisafrica.com.au</li>
-            <li>Phone: 1300 884 757</li>
+            <li>Email: sales@thisisafrica.com.au</li>
+            <li>Phone: +61 2 9664 9187</li>
             <li>Website: www.thisisafrica.com.au</li>
           </ul>
           
@@ -270,7 +272,7 @@ Reference Number: ${booking.reference}
 Product: ${booking.productName}
 Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
 ${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}
-Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}
+${booking.totalCost && booking.totalCost > 0 ? `Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
 Status: ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}
 
 NEXT STEPS
@@ -280,8 +282,8 @@ ${booking.requiresManualConfirmation ?
   '1. Travel documents will be sent closer to departure\n2. Ensure passport/visa requirements are met\n3. Review travel insurance options'}
 
 Contact Us:
-Email: bookings@thisisafrica.com.au
-Phone: 1300 884 757
+Email: sales@thisisafrica.com.au
+Phone: +61 2 9664 9187
 Website: www.thisisafrica.com.au
 
 Thank you for choosing This is Africa!
@@ -373,7 +375,7 @@ function getQuoteTemplate(quote: any) {
           <p>To confirm this booking, please:</p>
           <ol>
             <li>Reply to this email confirming you wish to proceed</li>
-            <li>Or call us on 1300 884 757</li>
+            <li>Or call us on +61 2 9664 9187</li>
             <li>Or visit our website at www.thisisafrica.com.au</li>
           </ol>
           
@@ -416,12 +418,12 @@ HOW TO BOOK
 -----------
 To confirm this booking:
 1. Reply to this email confirming you wish to proceed
-2. Or call us on 1300 884 757
+2. Or call us on +61 2 9664 9187
 3. Or visit www.thisisafrica.com.au
 
 Contact Us:
 Email: quotes@thisisafrica.com.au
-Phone: 1300 884 757
+Phone: +61 2 9664 9187
 Website: www.thisisafrica.com.au
 
 We look forward to helping you create unforgettable memories in Africa!
@@ -505,10 +507,12 @@ function getAdminNotificationTemplate(booking: any) {
               <span class="value">${new Date(booking.dateFrom).toLocaleDateString('en-AU')}</span>
             </div>
             
+            ${booking.totalCost && booking.totalCost > 0 ? `
             <div class="detail-row">
               <span class="label">Total Cost:</span>
               <span class="value">${booking.currency} ${(booking.totalCost / 100).toFixed(2)}</span>
             </div>
+            ` : ''}
             
             <div class="detail-row">
               <span class="label">TourPlan Status:</span>
@@ -560,7 +564,7 @@ Reference: ${booking.reference}
 Product Code: ${booking.productCode}
 Product Name: ${booking.productName}
 Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
-Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}
+${booking.totalCost && booking.totalCost > 0 ? `Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
 TourPlan Status: ${booking.tourplanStatus || 'N/A'}
 
 ${booking.requiresManualConfirmation ? 
