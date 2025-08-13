@@ -7,7 +7,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Clock, MapPin, Users, Search, Loader2, Star } from "lucide-react"
+import { Clock, MapPin, Users, Search, Loader2, Star, Calendar } from "lucide-react"
+import { getAvailableCountriesFromAPI, getAvailableDestinationsFromAPI, getTourPlanDestinationNameFromValue } from "@/lib/dynamic-destination-mapping"
+import { shouldShowDepartureDay, getDepartureDayMessage } from "@/lib/group-tours-availability"
 
 
 export default function GroupToursPage() {
@@ -20,6 +22,8 @@ export default function GroupToursPage() {
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
+  const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -58,7 +62,44 @@ export default function GroupToursPage() {
     }
     
     loadImageIndex()
+    
+    // Load available countries dynamically from TourPlan API
+    const loadCountries = async () => {
+      try {
+        const countries = await getAvailableCountriesFromAPI('Group Tours')
+        setAvailableCountries(countries)
+        console.log('✅ Loaded', countries.length, 'countries for Group Tours from TourPlan API')
+      } catch (error) {
+        console.error('❌ Failed to load countries:', error)
+        setAvailableCountries([])
+      }
+    }
+    
+    loadCountries()
   }, [])
+
+  // Update available destinations when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const loadDestinations = async () => {
+        try {
+          const destinations = await getAvailableDestinationsFromAPI('Group Tours', selectedCountry)
+          setAvailableDestinations(destinations)
+          console.log('✅ Loaded', destinations.length, 'destinations for', selectedCountry)
+        } catch (error) {
+          console.error('❌ Failed to load destinations for', selectedCountry, error)
+          setAvailableDestinations([])
+        }
+      }
+      
+      loadDestinations()
+      // Reset destination selection when country changes
+      setSelectedDestination("")
+    } else {
+      setAvailableDestinations([])
+      setSelectedDestination("")
+    }
+  }, [selectedCountry])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -74,41 +115,59 @@ export default function GroupToursPage() {
   }
 
   const handleSearch = async () => {
-    if (!selectedCountry && !selectedDestination) {
-      alert('Please select a country or destination to search for Guided group tours')
+    if (!selectedCountry) {
+      alert('Please select a country to search for Group Tours')
       return
     }
 
+    console.log('🦁 Starting group tours search...')
     setLoading(true)
     setSearchPerformed(false)
 
     try {
       // Build search URL with parameters
       const params = new URLSearchParams()
-      params.set('productType', 'Guided group tours')
-      if (selectedCountry) params.set('destination', selectedCountry)
-      if (selectedDestination) params.set('destination', selectedDestination)
+      params.set('productType', 'Group Tours')
+      
+      // Use the correct TourPlan destination name
+      const tourPlanDestination = getTourPlanDestinationNameFromValue('Group Tours', selectedCountry, selectedDestination || selectedCountry)
+      params.set('destination', tourPlanDestination)
+      
       if (selectedClass) params.set('class', selectedClass)
+      
+      console.log('🦁 Group tours search params:', params.toString())
       
       const response = await fetch(`/api/tourplan?${params.toString()}`)
       const result = await response.json()
 
+      console.log('🦁 Group tours search response:', result)
+
       if (result.success) {
+        console.log('🦁 Found', result.tours?.length || 0, 'group tours')
+        console.log('🦁 Setting tours and filteredTours...')
         const tourList = result.tours || []
         setTours(tourList)
         setFilteredTours(tourList)
+        console.log('🦁 Tours state updated')
       } else {
-        console.error("Search failed:", result.error)
+        console.error("🦁 Group tours search failed:", result.error)
         setTours([])
         setFilteredTours([])
       }
     } catch (error) {
-      console.error("Search error:", error)
+      console.error("🦁 Search error:", error)
       setTours([])
       setFilteredTours([])
     } finally {
+      console.log('🦁 Setting loading=false, searchPerformed=true')
       setLoading(false)
       setSearchPerformed(true)
+      console.log('🦁 Search complete. Final state:', { 
+        loading: false, 
+        searchPerformed: true, 
+        toursLength: tours.length,
+        filteredToursLength: filteredTours.length 
+      })
     }
   }
 
@@ -149,33 +208,31 @@ export default function GroupToursPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Country" />
+                    <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="botswana">Botswana</SelectItem>
-                    <SelectItem value="kenya">Kenya</SelectItem>
-                    <SelectItem value="south-africa">South Africa</SelectItem>
-                    <SelectItem value="tanzania">Tanzania</SelectItem>
-                    <SelectItem value="namibia">Namibia</SelectItem>
-                    <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                    <SelectItem value="zambia">Zambia</SelectItem>
-                    <SelectItem value="uganda">Uganda</SelectItem>
+                    {availableCountries.map((country) => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedDestination} onValueChange={(value) => setSelectedDestination(value)}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Destination" />
+                <Select 
+                  value={selectedDestination} 
+                  onValueChange={(value) => setSelectedDestination(value)}
+                  disabled={!selectedCountry || availableDestinations.length === 0}
+                >
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cape-town">Cape Town</SelectItem>
-                    <SelectItem value="nairobi">Nairobi</SelectItem>
-                    <SelectItem value="victoria-falls">Victoria Falls</SelectItem>
-                    <SelectItem value="serengeti">Serengeti</SelectItem>
-                    <SelectItem value="okavango">Okavango Delta</SelectItem>
-                    <SelectItem value="kruger">Kruger National Park</SelectItem>
-                    <SelectItem value="masai-mara">Masai Mara</SelectItem>
-                    <SelectItem value="zanzibar">Zanzibar</SelectItem>
+                    {availableDestinations.map((destination) => (
+                      <SelectItem key={destination.value} value={destination.value}>
+                        {destination.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -273,6 +330,9 @@ export default function GroupToursPage() {
                                 <p className="text-xl font-bold text-green-600">
                                   ${tour.rates[0]?.singleRate ? Math.round(tour.rates[0].singleRate / 100).toLocaleString() : 'POA'}
                                 </p>
+                              )}
+                              {shouldShowDepartureDay(tour.code) && (
+                                <p className="text-xs text-gray-500 mt-1">{getDepartureDayMessage(tour.code)}</p>
                               )}
                             </div>
                           </div>
