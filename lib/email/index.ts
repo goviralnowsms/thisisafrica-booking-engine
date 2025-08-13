@@ -138,22 +138,25 @@ function getBookingConfirmationTemplate(booking: any) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #1e3a5f; color: white; padding: 20px; text-align: center; }
+        .header { background-color: #f59e0b; color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .detail-row { margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .label { font-weight: bold; color: #666; }
+        .label { font-weight: bold; color: #666; display: inline-block; min-width: 120px; }
         .value { color: #333; }
         .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
-        .warning { background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; }
-        .button { display: inline-block; padding: 12px 30px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .warning { background-color: #fff3cd; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .highlight { color: #f59e0b; font-weight: bold; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
+          <img src="https://book.thisisafrica.com.au/images/products/cropped-logo-1.png" alt="This is Africa" class="logo" />
           <h1>Booking ${booking.requiresManualConfirmation ? 'Received' : 'Confirmation'}</h1>
-          <p>Reference: ${booking.reference}</p>
+          <p>Reference: <span class="highlight">${booking.reference}</span></p>
         </div>
         
         <div class="content">
@@ -295,21 +298,24 @@ function getQuoteTemplate(quote: any) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #1e3a5f; color: white; padding: 20px; text-align: center; }
+        .header { background-color: #f59e0b; color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .quote-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .quote-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .detail-row { margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .label { font-weight: bold; color: #666; }
+        .label { font-weight: bold; color: #666; display: inline-block; min-width: 120px; }
         .value { color: #333; }
         .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
-        .button { display: inline-block; padding: 12px 30px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+        .highlight { color: #f59e0b; font-weight: bold; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
+          <img src="https://book.thisisafrica.com.au/images/products/cropped-logo-1.png" alt="This is Africa" class="logo" />
           <h1>Travel Quote</h1>
-          <p>Reference: ${quote.reference}</p>
+          <p>Reference: <span class="highlight">${quote.reference}</span></p>
         </div>
         
         <div class="content">
@@ -434,21 +440,24 @@ function getAdminNotificationTemplate(booking: any) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: ${booking.requiresManualConfirmation ? '#dc3545' : '#28a745'}; color: white; padding: 20px; text-align: center; }
+        .header { background-color: ${booking.requiresManualConfirmation ? '#dc3545' : '#f59e0b'}; color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .detail-row { margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .label { font-weight: bold; color: #666; }
+        .label { font-weight: bold; color: #666; display: inline-block; min-width: 120px; }
         .value { color: #333; }
-        .warning { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .warning { background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px; margin: 20px 0; }
         .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
+        .highlight { color: #f59e0b; font-weight: bold; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
+          <img src="https://book.thisisafrica.com.au/images/products/cropped-logo-1.png" alt="This is Africa" class="logo" />
           <h1>New Booking ${booking.requiresManualConfirmation ? '[MANUAL ACTION REQUIRED]' : 'Confirmed'}</h1>
-          <p>Reference: ${booking.reference}</p>
+          <p>Reference: <span class="highlight">${booking.reference}</span></p>
         </div>
         
         <div class="content">
