@@ -981,6 +981,15 @@ export async function searchProducts(criteria: {
         // For other product types, use the basic search response data
         const productRates = extractRatesFromOption(option);
         
+        // DEBUG: Log what fields are available for cruise products
+        if (criteria.productType === 'Cruises') {
+          console.log('🚢 DEBUG Cruise Option Fields:', {
+            Opt: option.Opt,
+            OptGeneral: option.OptGeneral,
+            allKeys: Object.keys(option)
+          });
+        }
+        
         return {
           id: option.Opt || option['@_Opt'],
           code: option.Opt || option['@_Opt'],
