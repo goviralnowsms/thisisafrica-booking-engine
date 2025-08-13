@@ -1,6 +1,7 @@
 export const runtime = "nodejs"
 import { NextResponse } from "next/server"
 import { getTourplanAPI } from "@/lib/tourplan/core"
+import { sendBookingConfirmation, sendAdminNotification } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -135,8 +136,44 @@ export async function POST(request: Request) {
     }
 
     // TODO: Save to database
-    // TODO: Send confirmation email
-    // TODO: Send notification to suppliers
+    
+    // Send email notifications
+    try {
+      console.log('📧 Sending email notifications for booking:', bookingReference);
+      
+      // Send customer confirmation email
+      await sendBookingConfirmation({
+        reference: bookingReference,
+        customerEmail: bookingData.customerDetails.email,
+        customerName: `${bookingData.customerDetails.firstName} ${bookingData.customerDetails.lastName}`,
+        productName: bookingData.tour.name,
+        dateFrom: bookingData.startDate,
+        dateTo: bookingData.endDate,
+        totalCost: Math.round(totalPrice * 100), // Convert to cents
+        currency: 'AUD',
+        status: tourplanBookingId ? 'CONFIRMED' : 'PENDING_TOURPLAN',
+        requiresManualConfirmation: !tourplanBookingId
+      });
+
+      // Send admin notification
+      await sendAdminNotification({
+        reference: bookingReference,
+        customerName: `${bookingData.customerDetails.firstName} ${bookingData.customerDetails.lastName}`,
+        customerEmail: bookingData.customerDetails.email,
+        productCode: bookingData.tour.id,
+        productName: bookingData.tour.name,
+        dateFrom: bookingData.startDate,
+        totalCost: Math.round(totalPrice * 100), // Convert to cents
+        currency: 'AUD',
+        requiresManualConfirmation: !tourplanBookingId,
+        tourplanStatus: tourplanBookingId ? 'OK' : 'FAILED'
+      });
+
+      console.log('✅ Email notifications sent successfully');
+    } catch (emailError) {
+      console.error('❌ Failed to send email notifications:', emailError);
+      // Don't fail the booking if email fails
+    }
 
     console.log("Booking creation completed:", bookingResult)
 
