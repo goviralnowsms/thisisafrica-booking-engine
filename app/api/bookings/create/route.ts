@@ -5,7 +5,9 @@ import { sendBookingConfirmation, sendAdminNotification } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
-    console.log("🚨🚨🚨 BOOKINGS CREATE API CALLED - EMAIL TEST 🚨🚨🚨");
+    console.error("🚨🚨🚨 BOOKINGS CREATE API CALLED - EMAIL TEST 🚨🚨🚨");
+    console.error("🚨 TIMESTAMP:", new Date().toISOString());
+    console.error("🚨 REQUEST URL:", request.url);
     const { bookingData, paymentSessionId, paymentStatus } = await request.json()
     console.log("Creating booking with payment verification:", { paymentSessionId, paymentStatus })
     console.log("Customer email from booking data:", bookingData?.customerDetails?.email)
