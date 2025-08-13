@@ -150,25 +150,22 @@ function getBookingConfirmationTemplate(booking: any) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #f59e0b; color: white; padding: 30px 20px; text-align: center; }
-        .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
+        .header { background-color: #1e3a5f; color: white; padding: 20px; text-align: center; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; }
         .detail-row { margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .label { font-weight: bold; color: #666; display: inline-block; min-width: 120px; }
+        .label { font-weight: bold; color: #666; }
         .value { color: #333; }
         .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
-        .warning { background-color: #fff3cd; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; }
-        .button { display: inline-block; padding: 12px 30px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; }
-        .highlight { color: #f59e0b; font-weight: bold; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://book.thisisafrica.com.au/images/products/cropped-logo-1.png" alt="This is Africa" class="logo" />
           <h1>Booking ${booking.requiresManualConfirmation ? 'Received' : 'Confirmation'}</h1>
-          <p>Reference: <span class="highlight">${booking.reference}</span></p>
+          <p>Reference: ${booking.reference}</p>
         </div>
         
         <div class="content">
@@ -220,7 +217,7 @@ function getBookingConfirmationTemplate(booking: any) {
             
             <div class="detail-row">
               <span class="label">Total Cost:</span>
-              <span class="value">${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}</span>
+              <span class="value">${booking.currency} ${(booking.totalCost / 100).toFixed(2)}</span>
             </div>
             
             <div class="detail-row">
@@ -282,7 +279,7 @@ Reference Number: ${booking.reference}
 Product: ${booking.productName}
 Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
 ${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}
-Total Cost: ${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}
+Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}
 Status: ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}
 
 NEXT STEPS
