@@ -73,6 +73,37 @@ function BookingConfirmationContent() {
         bookingId: bookingId
       }))
     }
+    
+    // Fallback: If no stored booking data but we have a reference, try to send email anyway
+    if (!storedBooking && bookingReference && !sessionStorage.getItem('emailSent_' + bookingReference)) {
+      console.log('📧 No stored booking data, sending basic email with reference:', bookingReference);
+      
+      // Send a basic confirmation email with just the reference
+      fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'booking',
+          to: 'tess@goviralnow.net', // Hardcoded for now since we don't have the email
+          reference: bookingReference,
+          customerName: 'Customer', // We don't have the name
+          productName: 'African Adventure',
+          dateFrom: new Date().toISOString().split('T')[0],
+          totalCost: 0,
+          currency: 'AUD',
+          status: 'CONFIRMED',
+          requiresManualConfirmation: manualFlag === 'true'
+        })
+      })
+      .then(res => res.json())
+      .then(result => {
+        console.log('📧 Fallback email result:', result);
+        sessionStorage.setItem('emailSent_' + bookingReference, 'true');
+      })
+      .catch(error => {
+        console.error('❌ Failed to send fallback email:', error);
+      });
+    }
 
     // Simulate loading confirmation details
     const timer = setTimeout(() => {
