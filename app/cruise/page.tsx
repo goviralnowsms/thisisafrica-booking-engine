@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Users, Search, Loader2, Star, Ship } from "lucide-react"
+import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 
 
 export default function CruisesPage() {
@@ -20,6 +21,8 @@ export default function CruisesPage() {
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
+  const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -49,7 +52,24 @@ export default function CruisesPage() {
     }
     
     loadImageIndex()
+    
+    // Initialize available countries for Cruises
+    const countries = getAvailableCountries('Cruises')
+    setAvailableCountries(countries)
   }, [])
+
+  // Update available destinations when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const destinations = getAvailableDestinations('Cruises', selectedCountry)
+      setAvailableDestinations(destinations)
+      // Reset destination selection when country changes
+      setSelectedDestination("")
+    } else {
+      setAvailableDestinations([])
+      setSelectedDestination("")
+    }
+  }, [selectedCountry])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -65,8 +85,8 @@ export default function CruisesPage() {
   }
 
   const handleSearch = async () => {
-    if (!selectedCountry && !selectedDestination) {
-      alert('Please select a country or destination to search for Cruises')
+    if (!selectedCountry) {
+      alert('Please select a country to search for Cruises')
       return
     }
 
@@ -78,8 +98,11 @@ export default function CruisesPage() {
       // Build search URL with parameters
       const params = new URLSearchParams()
       params.set('productType', 'Cruises')
-      if (selectedCountry) params.set('destination', selectedCountry)
-      if (selectedDestination) params.set('destination', selectedDestination)
+      
+      // Use the correct TourPlan destination name
+      const tourPlanDestination = getTourPlanDestinationName('Cruises', selectedCountry, selectedDestination || selectedCountry)
+      params.set('destination', tourPlanDestination)
+      
       if (selectedClass) params.set('class', selectedClass)
       
       console.log('🚢 Cruise search params:', params.toString())
@@ -161,25 +184,31 @@ export default function CruisesPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Country" />
+                    <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="botswana">Botswana</SelectItem>
-                    <SelectItem value="namibia">Namibia</SelectItem>
-                    <SelectItem value="zambezi">Zambezi</SelectItem>
+                    {availableCountries.map((country) => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedDestination} onValueChange={(value) => setSelectedDestination(value)}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Destination" />
+                <Select 
+                  value={selectedDestination} 
+                  onValueChange={(value) => setSelectedDestination(value)}
+                  disabled={!selectedCountry || availableDestinations.length === 0}
+                >
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="chobe-river">Chobe River</SelectItem>
-                    <SelectItem value="zambezi-river">Zambezi River</SelectItem>
-                    <SelectItem value="victoria-falls">Victoria Falls</SelectItem>
-                    <SelectItem value="okavango-delta">Okavango Delta</SelectItem>
-                    <SelectItem value="caprivi-strip">Caprivi Strip</SelectItem>
+                    {availableDestinations.map((destination) => (
+                      <SelectItem key={destination.value} value={destination.value}>
+                        {destination.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 

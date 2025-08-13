@@ -7,7 +7,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Clock, MapPin, Users, Search, Loader2, Star, Train } from "lucide-react"
+import { Clock, MapPin, Users, Search, Loader2, Star, Train, Calendar } from "lucide-react"
+import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
+import { hasRailAvailability, getRailAvailability } from "@/lib/rail-availability"
 
 
 export default function RailPage() {
@@ -20,6 +22,8 @@ export default function RailPage() {
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
+  const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -49,7 +53,24 @@ export default function RailPage() {
     }
     
     loadImageIndex()
+    
+    // Initialize available countries for Rail
+    const countries = getAvailableCountries('Rail')
+    setAvailableCountries(countries)
   }, [])
+
+  // Update available destinations when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const destinations = getAvailableDestinations('Rail', selectedCountry)
+      setAvailableDestinations(destinations)
+      // Reset destination selection when country changes
+      setSelectedDestination("")
+    } else {
+      setAvailableDestinations([])
+      setSelectedDestination("")
+    }
+  }, [selectedCountry])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -65,40 +86,58 @@ export default function RailPage() {
   }
 
   const handleSearch = async () => {
-    if (!selectedCountry && !selectedDestination) {
-      alert('Please select a country or destination to search for Rail journeys')
+    if (!selectedCountry) {
+      alert('Please select a country to search for Rail journeys')
       return
     }
 
+    console.log('🚂 Starting rail search...')
     setLoading(true)
     setSearchPerformed(false)
 
     try {
       // Build search URL with parameters
       const params = new URLSearchParams()
-      params.set('productType', 'Rail journeys')
-      if (selectedCountry) params.set('destination', selectedCountry)
-      if (selectedDestination) params.set('destination', selectedDestination)
+      params.set('productType', 'Rail')
+      
+      // Use the correct TourPlan destination name
+      const tourPlanDestination = getTourPlanDestinationName('Rail', selectedCountry, selectedDestination || selectedCountry)
+      params.set('destination', tourPlanDestination)
+      
       if (selectedClass) params.set('class', selectedClass)
+      
+      console.log('🚂 Rail search params:', params.toString())
       
       const response = await fetch(`/api/tourplan?${params.toString()}`)
       const result = await response.json()
 
+      console.log('🚂 Rail search response:', result)
+
       if (result.success) {
+        console.log('🚂 Found', result.tours?.length || 0, 'rail journeys')
+        console.log('🚂 Setting tours and filteredTours...')
         setTours(result.tours || [])
         setFilteredTours(result.tours || [])
+        console.log('🚂 Tours state updated')
       } else {
-        console.error("Search failed:", result.error)
+        console.error("🚂 Rail search failed:", result.error)
         setTours([])
         setFilteredTours([])
       }
     } catch (error) {
-      console.error("Search error:", error)
+      console.error("🚂 Search error:", error)
       setTours([])
       setFilteredTours([])
     } finally {
+      console.log('🚂 Setting loading=false, searchPerformed=true')
       setLoading(false)
       setSearchPerformed(true)
+      console.log('🚂 Search complete. Final state:', { 
+        loading: false, 
+        searchPerformed: true, 
+        toursLength: tours.length,
+        filteredToursLength: filteredTours.length 
+      })
     }
   }
 
@@ -147,23 +186,31 @@ export default function RailPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Country (Rail Available)" />
+                    <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="South Africa">South Africa</SelectItem>
-                    <SelectItem value="Zimbabwe">Zimbabwe</SelectItem>
+                    {availableCountries.map((country) => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedDestination} onValueChange={(value) => setSelectedDestination(value)}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Destination (Optional)" />
+                <Select 
+                  value={selectedDestination} 
+                  onValueChange={(value) => setSelectedDestination(value)}
+                  disabled={!selectedCountry || availableDestinations.length === 0}
+                >
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Cape Town">Cape Town</SelectItem>
-                    <SelectItem value="Victoria Falls">Victoria Falls</SelectItem>
-                    <SelectItem value="Johannesburg">Johannesburg</SelectItem>
-                    <SelectItem value="Pretoria">Pretoria</SelectItem>
+                    {availableDestinations.map((destination) => (
+                      <SelectItem key={destination.value} value={destination.value}>
+                        {destination.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -254,29 +301,54 @@ export default function RailPage() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm text-gray-500">From per person twin share</p>
-                              {tour.rates?.[0]?.rateName === 'Price on Application' || (tour.rates?.[0]?.singleRate === 0 && tour.rates?.[0]?.twinRate === 0) ? (
-                                <p className="text-lg font-bold text-blue-600">On Request</p>
-                              ) : (
-                                <p className="text-xl font-bold text-green-600">
-                                  ${(() => {
-                                    // For rail tours, show per person twin share rate (converted from cents)
-                                    const rate = tour.rates[0];
-                                    const twinRateTotal = rate?.twinRate || rate?.doubleRate || 0;
-                                    if (twinRateTotal > 0) {
-                                      // Convert from cents and divide by 2 for per person twin share
-                                      const perPersonRate = Math.round(twinRateTotal / 100 / 2);
-                                      return perPersonRate.toLocaleString();
-                                    }
-                                    const singleRate = rate?.singleRate || 0;
-                                    if (singleRate > 0) {
-                                      // Convert from cents for single rate
-                                      return Math.round(singleRate / 100).toLocaleString();
-                                    }
-                                    return 'POA';
-                                  })()}
-                                </p>
-                              )}
+                              {(() => {
+                                const hasAvailability = hasRailAvailability(tour.code);
+                                const availabilityInfo = getRailAvailability(tour.code);
+                                
+                                if (!hasAvailability) {
+                                  return (
+                                    <>
+                                      <p className="text-sm text-gray-500">Availability</p>
+                                      <p className="text-lg font-bold text-orange-600">Quote Required</p>
+                                      {availabilityInfo?.departureDay && (
+                                        <p className="text-xs text-gray-500">Departs {availabilityInfo.departureDay}s</p>
+                                      )}
+                                    </>
+                                  );
+                                }
+                                
+                                // Has availability - show pricing
+                                return (
+                                  <>
+                                    <p className="text-sm text-gray-500">From per person twin share</p>
+                                    {tour.rates?.[0]?.rateName === 'Price on Application' || (tour.rates?.[0]?.singleRate === 0 && tour.rates?.[0]?.twinRate === 0) ? (
+                                      <p className="text-lg font-bold text-blue-600">On Request</p>
+                                    ) : (
+                                      <p className="text-xl font-bold text-green-600">
+                                        ${(() => {
+                                          // For rail tours, show per person twin share rate (converted from cents)
+                                          const rate = tour.rates[0];
+                                          const twinRateTotal = rate?.twinRate || rate?.doubleRate || 0;
+                                          if (twinRateTotal > 0) {
+                                            // Convert from cents and divide by 2 for per person twin share
+                                            const perPersonRate = Math.round(twinRateTotal / 100 / 2);
+                                            return perPersonRate.toLocaleString();
+                                          }
+                                          const singleRate = rate?.singleRate || 0;
+                                          if (singleRate > 0) {
+                                            // Convert from cents for single rate
+                                            return Math.round(singleRate / 100).toLocaleString();
+                                          }
+                                          return 'POA';
+                                        })()}
+                                      </p>
+                                    )}
+                                    {availabilityInfo?.departureDay && (
+                                      <p className="text-xs text-gray-500">Departs {availabilityInfo.departureDay}s</p>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                           
@@ -286,15 +358,44 @@ export default function RailPage() {
                                 View details
                               </Button>
                             </Link>
-                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
-                              <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
-                                <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
-                              </Link>
-                            ) : (
-                              <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
-                                <Button className="w-full bg-amber-500 hover:bg-amber-600">Book now</Button>
-                              </Link>
-                            )}
+                            {(() => {
+                              // Check rail availability configuration first
+                              const hasAvailability = hasRailAvailability(tour.code);
+                              const availabilityInfo = getRailAvailability(tour.code);
+                              
+                              // If no availability or rates indicate quote needed
+                              if (!hasAvailability || tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0) {
+                                return (
+                                  <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=rail`} className="flex-1">
+                                    <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                                      {availabilityInfo?.departureDay ? (
+                                        <>
+                                          <Calendar className="mr-2 h-4 w-4" />
+                                          Get quote
+                                        </>
+                                      ) : (
+                                        'Get quote'
+                                      )}
+                                    </Button>
+                                  </Link>
+                                );
+                              } else {
+                                return (
+                                  <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
+                                    <Button className="w-full bg-amber-500 hover:bg-amber-600">
+                                      {availabilityInfo?.departureDay ? (
+                                        <>
+                                          <Calendar className="mr-2 h-4 w-4" />
+                                          Book now ({availabilityInfo.departureDay}s)
+                                        </>
+                                      ) : (
+                                        'Book now'
+                                      )}
+                                    </Button>
+                                  </Link>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>

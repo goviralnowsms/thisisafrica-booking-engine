@@ -328,9 +328,10 @@ export function buildGroupTourSearchRequest(destination?: string, dateFrom?: str
   return buildGroupTourProperSearchRequest('Group Tours', destination, dateFrom, dateTo);
 }
 
-// Search cruises - using 'Cruises' ButtonName without Info parameter (per CLAUDE.md)
+// Search cruises - using 'Cruise' ButtonName (singular) with Botswana destination (FIXED!)
 export function buildCruiseSearchRequest(destination?: string, dateFrom?: string, dateTo?: string): string {
-  return buildSpecialOffersProperSearchRequest('Cruises', destination, dateFrom, dateTo);
+  // Use corrected ButtonName="Cruise" (singular) and force Botswana destination
+  return buildSpecialOffersProperSearchRequest('Cruise', 'Botswana', dateFrom, dateTo);
 }
 
 // Search rail - using 'Rail' ButtonName without Info parameter

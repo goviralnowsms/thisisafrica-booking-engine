@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from "lucide-react"
 import FeaturedSpecials from "@/components/homepage/FeaturedSpecials"
+import { getAvailableCountries, getAvailableDestinations } from "@/lib/destination-mapping"
 
 export default function Home() {
   const router = useRouter()
@@ -15,11 +16,58 @@ export default function Home() {
     destination: "",
     class: ""
   })
+  const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
+  const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
+
+  // Initialize available countries from all product types
+  useEffect(() => {
+    // Get unique countries from all product types
+    const allCountries = new Map<string, string>()
+    
+    // Add countries from each product type
+    ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
+      const countries = getAvailableCountries(productType)
+      countries.forEach(country => {
+        allCountries.set(country.value, country.label)
+      })
+    })
+    
+    // Convert to array and sort
+    const uniqueCountries = Array.from(allCountries.entries()).map(([value, label]) => ({ value, label }))
+    uniqueCountries.sort((a, b) => a.label.localeCompare(b.label))
+    
+    setAvailableCountries(uniqueCountries)
+  }, [])
+
+  // Update available destinations when country changes
+  useEffect(() => {
+    if (searchCriteria.country) {
+      // Get destinations from all product types for this country
+      const allDestinations = new Map<string, {value: string, label: string, tourPlanName: string}>()
+      
+      ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
+        const destinations = getAvailableDestinations(productType, searchCriteria.country)
+        destinations.forEach(dest => {
+          allDestinations.set(dest.value, dest)
+        })
+      })
+      
+      const uniqueDestinations = Array.from(allDestinations.values())
+      uniqueDestinations.sort((a, b) => a.label.localeCompare(b.label))
+      
+      setAvailableDestinations(uniqueDestinations)
+      
+      // Reset destination when country changes
+      setSearchCriteria(prev => ({...prev, destination: ""}))
+    } else {
+      setAvailableDestinations([])
+    }
+  }, [searchCriteria.country])
 
   const handleSearch = () => {
-    // Require either country or destination to be selected
-    if (!searchCriteria.country && !searchCriteria.destination) {
-      alert('Please select a country or destination to search for tours and experiences')
+    // Require country to be selected
+    if (!searchCriteria.country) {
+      alert('Please select a country to search for tours and experiences')
       return
     }
     
@@ -29,8 +77,8 @@ export default function Home() {
     if (searchCriteria.destination) params.set('destination', searchCriteria.destination)
     if (searchCriteria.class) params.set('class', searchCriteria.class)
     
-    // Navigate to booking page with search parameters
-    router.push(`/booking?${params.toString()}`)
+    // Navigate to unified search results page
+    router.push(`/search?${params.toString()}`)
   }
   return (
     <main className="flex min-h-screen flex-col">
@@ -76,33 +124,31 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
                 <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Country" />
+                  <SelectValue placeholder="Select Country" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="botswana">Botswana</SelectItem>
-                  <SelectItem value="kenya">Kenya</SelectItem>
-                  <SelectItem value="south-africa">South Africa</SelectItem>
-                  <SelectItem value="tanzania">Tanzania</SelectItem>
-                  <SelectItem value="namibia">Namibia</SelectItem>
-                  <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                  <SelectItem value="zambia">Zambia</SelectItem>
-                  <SelectItem value="uganda">Uganda</SelectItem>
+                  {availableCountries.map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <Select value={searchCriteria.destination} onValueChange={(value) => setSearchCriteria(prev => ({...prev, destination: value}))}>
-                <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Destination" />
+              <Select 
+                value={searchCriteria.destination} 
+                onValueChange={(value) => setSearchCriteria(prev => ({...prev, destination: value}))}
+                disabled={!searchCriteria.country || availableDestinations.length === 0}
+              >
+                <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                  <SelectValue placeholder={searchCriteria.country ? "Select Destination" : "Select Country First"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cape-town">Cape Town</SelectItem>
-                  <SelectItem value="nairobi">Nairobi</SelectItem>
-                  <SelectItem value="victoria-falls">Victoria Falls</SelectItem>
-                  <SelectItem value="serengeti">Serengeti</SelectItem>
-                  <SelectItem value="okavango">Okavango Delta</SelectItem>
-                  <SelectItem value="kruger">Kruger National Park</SelectItem>
-                  <SelectItem value="masai-mara">Masai Mara</SelectItem>
-                  <SelectItem value="zanzibar">Zanzibar</SelectItem>
+                  {availableDestinations.map((destination) => (
+                    <SelectItem key={destination.value} value={destination.value}>
+                      {destination.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
