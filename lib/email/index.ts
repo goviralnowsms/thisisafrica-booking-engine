@@ -308,7 +308,7 @@ function getBookingConfirmationTemplate(booking: any) {
     <html>
     <body>
       <div style="text-align: center; margin-bottom: 30px;">
-        <img src="https://thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" style="max-width: 200px; height: auto;" />
+        <img src="https://book.thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" style="max-width: 200px; height: auto;" />
       </div>
       <h1>BOOKING CONFIRMATION</h1>
       <p><strong>Reference:</strong> ${booking.reference}</p>
@@ -359,7 +359,7 @@ function getQuoteTemplate(quote: any) {
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" class="logo" />
+          <img src="https://book.thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" class="logo" />
           <h1>Travel Quote</h1>
           <p>Reference: <span class="highlight">${quote.reference}</span></p>
         </div>
@@ -501,7 +501,7 @@ function getAdminNotificationTemplate(booking: any) {
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" class="logo" />
+          <img src="https://book.thisisafrica.com.au/images/products/this-is-africa-logo.png" alt="This is Africa" class="logo" />
           <h1>New Booking ${booking.requiresManualConfirmation ? '[MANUAL ACTION REQUIRED]' : 'Confirmed'}</h1>
           <p>Reference: <span class="highlight">${booking.reference}</span></p>
         </div>
