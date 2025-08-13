@@ -9,6 +9,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Fix Jest worker issues in development
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
 }
 
 export default nextConfig
