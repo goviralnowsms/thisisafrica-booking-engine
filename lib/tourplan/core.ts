@@ -67,14 +67,40 @@ export async function tourplanQuery(inputXml: string): Promise<any> {
  */
 export async function wpXmlRequest(inputXml: string): Promise<any> {
   try {
-    const response = await fetch(TOURPLAN_CONFIG.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/xml; charset=utf-8',
-      },
-      body: inputXml,
-      signal: AbortSignal.timeout(TOURPLAN_CONFIG.timeout),
-    });
+    const config = getTourPlanConfig();
+    
+    // Use proxy if available (for Vercel deployment)
+    // Support both FixieIP and custom EC2 proxy
+    const proxyUrl = process.env.PROXY_URL || process.env.FIXIE_URL;
+    
+    let response: Response;
+    if (proxyUrl && typeof window === 'undefined') {
+      // Server-side only - use node-fetch with https-proxy-agent
+      // This is required because Vercel's native fetch doesn't properly support proxy agents
+      const nodeFetch = (await import('node-fetch')).default;
+      const { HttpsProxyAgent } = await import('https-proxy-agent');
+      const agent = new HttpsProxyAgent(proxyUrl);
+      
+      response = await nodeFetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+        },
+        body: inputXml,
+        agent,
+        // @ts-ignore - node-fetch timeout handling
+        timeout: config.timeout,
+      }) as unknown as Response;
+    } else {
+      response = await fetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+        },
+        body: inputXml,
+        signal: AbortSignal.timeout(config.timeout),
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
