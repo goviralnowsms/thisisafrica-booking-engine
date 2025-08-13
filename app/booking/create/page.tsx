@@ -1315,14 +1315,15 @@ export default function BookingCreatePage() {
                           // Send confirmation email after successful payment
                           try {
                             console.log('📧 Sending confirmation email after payment success');
-                            const leadTravelerInfo = formData.travelersInfo[0];
+                            const leadTravelerForEmail = formData.travelersInfo[0];
+                            console.log('📧 Lead traveler email:', leadTravelerForEmail?.email);
                             const emailResponse = await fetch('/api/test-email', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                to: leadTravelerInfo?.email || bookingData.customerEmail,
+                                to: leadTravelerForEmail?.email || bookingData.customerEmail,
                                 reference: bookingData.reference,
-                                customerName: bookingData.customerName || `${leadTravelerInfo?.firstName} ${leadTravelerInfo?.lastName}`,
+                                customerName: bookingData.customerName || `${leadTravelerForEmail?.firstName} ${leadTravelerForEmail?.lastName}`,
                                 productName: product.name || bookingData.productName,
                                 dateFrom: bookingData.dateFrom,
                                 totalCost: Math.round((total * 0.3) * 100), // Deposit amount in cents
