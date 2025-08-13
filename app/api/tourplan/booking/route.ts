@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
     console.log('🔄 Creating booking for:', data.productCode);
     console.log('📅 Booking dates:', data.dateFrom, 'to', data.dateTo);
     console.log('👥 Passengers:', data.adults, 'adults,', data.children || 0, 'children');
+    console.log('📧 Customer email received:', data.email);
+    console.log('📞 Customer mobile received:', data.mobile);
+    console.log('👤 Customer name received:', data.customerName);
     
     // Get product details to calculate return date from duration
     let calculatedDateTo = data.dateTo;
