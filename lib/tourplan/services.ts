@@ -754,10 +754,10 @@ export async function searchProducts(criteria: {
         break;
 
       case 'Cruises':
-        // Try TourPlan API first with corrected ButtonName="Cruise" and Botswana destination
-        console.log('🚢 Attempting TourPlan API cruise search with ButtonName="Cruise" and Botswana');
+        // Try TourPlan API first, fallback to catalog if no results
+        console.log('🚢 Attempting TourPlan API cruise search first');
         xml = buildCruiseSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo);
-        console.log('🚢 Cruise search XML built with corrected parameters');
+        console.log('🚢 Cruise search XML built - will fallback to catalog if empty');
         break;
         
       case 'Rail':
@@ -898,6 +898,18 @@ export async function searchProducts(criteria: {
     // Check for empty response (no Option elements)
     if (!optionInfo.Option) {
       console.log('Empty response - no tours found');
+      
+      // For Cruises, fallback to catalog approach if TourPlan API returns empty
+      if (criteria.productType === 'Cruises') {
+        console.log('🚢 ⚠️ TourPlan API returned no cruise results, falling back to curated catalog');
+        const cruiseResults = await searchCruisesFromCatalog(criteria);
+        return {
+          products: cruiseResults.products || [],
+          totalResults: cruiseResults.totalResults || 0,
+          searchCriteria: criteria
+        };
+      }
+      
       return {
         products: [],
         totalResults: 0,
@@ -981,15 +993,54 @@ export async function searchProducts(criteria: {
         // For other product types, use the basic search response data
         const productRates = extractRatesFromOption(option);
         
-        // DEBUG: Log what fields are available for cruise products
+        // For Cruises, fetch detailed product information like the product details page does
         if (criteria.productType === 'Cruises') {
-          console.log('🚢 DEBUG Cruise Option Fields:', {
-            Opt: option.Opt,
-            OptGeneral: option.OptGeneral,
-            allKeys: Object.keys(option)
-          });
+          const productCode = option.Opt || option['@_Opt'];
+          console.log('🚢 Fetching detailed cruise info for:', productCode);
+          try {
+            const productDetails = await getProductDetails(productCode);
+            
+            return {
+              id: productCode,
+              code: productCode,
+              name: productDetails.name || `Cruise ${productCode}`,
+              description: productDetails.description || productDetails.content?.introduction || 'River cruise in Southern Africa',
+              supplier: productDetails.supplierName || 'River Cruise Operator',
+              duration: productDetails.duration || 'Multi-day cruise',
+              image: null,
+              rates: productDetails.rates?.length > 0 ? productDetails.rates.map(rate => ({
+                currency: rate.currency,
+                singleRate: rate.singleRate || 0,
+                doubleRate: rate.doubleRate || 0,
+                twinRate: rate.twinRate || 0,
+                rateName: rate.rateName || 'Standard'
+              })) : [{
+                currency: 'AUD',
+                singleRate: 0,
+                rateName: 'Price on Application'
+              }],
+            };
+          } catch (error) {
+            console.error(`🚢 Failed to get detailed cruise info for ${productCode}:`, error);
+            // Fallback to basic info
+            return {
+              id: productCode,
+              code: productCode,
+              name: `Cruise ${productCode}`,
+              description: 'River cruise in Southern Africa',
+              supplier: 'River Cruise Operator',
+              duration: 'Multi-day cruise',
+              image: null,
+              rates: [{
+                currency: 'AUD',
+                singleRate: 0,
+                rateName: 'Price on Application'
+              }],
+            };
+          }
         }
         
+        // For other product types, use the basic search response data
         return {
           id: option.Opt || option['@_Opt'],
           code: option.Opt || option['@_Opt'],
