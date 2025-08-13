@@ -44,16 +44,19 @@ export async function sendEmail(options: EmailOptions) {
 
     if (error) {
       console.error('❌ Email send error:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Full Resend error object:', JSON.stringify(error, null, 2));
+      return { success: false, error: error.message, fullError: error };
     }
 
     console.log('✅ Email sent successfully:', data?.id);
     return { success: true, id: data?.id };
   } catch (error) {
     console.error('❌ Email service error:', error);
+    console.error('❌ Full catch error:', JSON.stringify(error, null, 2));
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Failed to send email' 
+      error: error instanceof Error ? error.message : 'Failed to send email',
+      fullError: error
     };
   }
 }
