@@ -48,19 +48,23 @@ export default function SearchResultsPage() {
 
   // Initialize countries and perform initial search
   useEffect(() => {
-    // Get unique countries from all product types
-    const allCountries = new Map<string, string>()
+    const loadCountries = async () => {
+      // Get unique countries from all product types
+      const allCountries = new Map<string, string>()
+      
+      for (const productType of ['Group Tours', 'Rail', 'Cruises', 'Packages']) {
+        const countries = await getAvailableCountriesFromAPI(productType)
+        countries.forEach(country => {
+          allCountries.set(country.value, country.label)
+        })
+      }
+      
+      const uniqueCountries = Array.from(allCountries.entries()).map(([value, label]) => ({ value, label }))
+      uniqueCountries.sort((a, b) => a.label.localeCompare(b.label))
+      setAvailableCountries(uniqueCountries)
+    }
     
-    ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
-      const countries = getAvailableCountries(productType)
-      countries.forEach(country => {
-        allCountries.set(country.value, country.label)
-      })
-    })
-    
-    const uniqueCountries = Array.from(allCountries.entries()).map(([value, label]) => ({ value, label }))
-    uniqueCountries.sort((a, b) => a.label.localeCompare(b.label))
-    setAvailableCountries(uniqueCountries)
+    loadCountries()
     
     // Load product images
     const loadImageIndex = async () => {
@@ -107,22 +111,26 @@ export default function SearchResultsPage() {
 
   // Update available destinations when country changes
   useEffect(() => {
-    if (searchCriteria.country) {
-      const allDestinations = new Map<string, {value: string, label: string, tourPlanName: string}>()
-      
-      ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
-        const destinations = getAvailableDestinations(productType, searchCriteria.country)
-        destinations.forEach(dest => {
-          allDestinations.set(dest.value, dest)
-        })
-      })
-      
-      const uniqueDestinations = Array.from(allDestinations.values())
-      uniqueDestinations.sort((a, b) => a.label.localeCompare(b.label))
-      setAvailableDestinations(uniqueDestinations)
-    } else {
-      setAvailableDestinations([])
+    const loadDestinations = async () => {
+      if (searchCriteria.country) {
+        const allDestinations = new Map<string, {value: string, label: string, tourPlanName: string}>()
+        
+        for (const productType of ['Group Tours', 'Rail', 'Cruises', 'Packages']) {
+          const destinations = await getAvailableDestinationsFromAPI(productType, searchCriteria.country)
+          destinations.forEach(dest => {
+            allDestinations.set(dest.value, dest)
+          })
+        }
+        
+        const uniqueDestinations = Array.from(allDestinations.values())
+        uniqueDestinations.sort((a, b) => a.label.localeCompare(b.label))
+        setAvailableDestinations(uniqueDestinations)
+      } else {
+        setAvailableDestinations([])
+      }
     }
+    
+    loadDestinations()
   }, [searchCriteria.country])
 
   const performSearch = async (country: string, destination?: string, tourClass?: string) => {
@@ -148,7 +156,7 @@ export default function SearchResultsPage() {
         const params = new URLSearchParams()
         params.set('productType', productType)
         
-        const tourPlanDestination = getTourPlanDestinationName(productType, country, destination || country)
+        const tourPlanDestination = getTourPlanDestinationNameFromValue(productType, country, destination || country)
         params.set('destination', tourPlanDestination)
         
         if (tourClass) params.set('class', tourClass)
