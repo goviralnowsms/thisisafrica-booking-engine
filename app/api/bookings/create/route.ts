@@ -141,10 +141,11 @@ export async function POST(request: Request) {
     
     // Send email notifications
     try {
-      console.log('📧 Sending email notifications for booking:', bookingReference);
+      console.log('📧📧📧 ABOUT TO SEND EMAIL TO:', bookingData.customerDetails.email);
+      console.log('📧📧📧 BOOKING REF:', bookingReference);
       
       // Send customer confirmation email
-      await sendBookingConfirmation({
+      const emailResult = await sendBookingConfirmation({
         reference: bookingReference,
         customerEmail: bookingData.customerDetails.email,
         customerName: `${bookingData.customerDetails.firstName} ${bookingData.customerDetails.lastName}`,
@@ -171,7 +172,8 @@ export async function POST(request: Request) {
         tourplanStatus: tourplanBookingId ? 'OK' : 'FAILED'
       });
 
-      console.log('✅ Email notifications sent successfully');
+      console.log('✅✅✅ EMAIL RESULT:', emailResult);
+      console.log('✅✅✅ EMAILS SENT SUCCESSFULLY');
     } catch (emailError) {
       console.error('❌ Failed to send email notifications:', emailError);
       // Don't fail the booking if email fails
