@@ -91,6 +91,7 @@ export default function ProductDetailsPage() {
   const [isClient, setIsClient] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [hasAvailableDates, setHasAvailableDates] = useState<boolean | null>(null)
 
   // Client-side hydration effect
   useEffect(() => {
@@ -266,6 +267,59 @@ export default function ProductDetailsPage() {
     
     setMapImage(mapPath);
   }, [productCode]);
+
+  // Check availability dates for products with pricing
+  useEffect(() => {
+    if (!product || !productCode) return;
+    
+    // Only check availability for products that have pricing
+    const hasRates = product.rates?.some(rate => {
+      const rateValue = rate.twinRateTotal || rate.twinRate || 0
+      return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
+    });
+    
+    if (!hasRates) {
+      setHasAvailableDates(false);
+      return;
+    }
+    
+    // Check if this product has availability issues (like BBKCRTVT001ZAM2NM)
+    const checkAvailability = async () => {
+      try {
+        // Get next 3 months of pricing data to check for available dates
+        const currentDate = new Date();
+        const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, currentDate.getDate());
+        
+        const params = new URLSearchParams({
+          dateFrom: currentDate.toISOString().split('T')[0],
+          dateTo: endDate.toISOString().split('T')[0],
+          adults: '2',
+          children: '0',
+          roomType: 'DB'
+        });
+
+        const response = await fetch(`/api/tourplan/pricing/${productCode}?${params}`, {
+          cache: 'no-store'
+        });
+        const result = await response.json();
+
+        if (result.success && result.data?.calendar) {
+          // Check if there are any valid/available days in the calendar
+          const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available);
+          setHasAvailableDates(hasValidDays);
+        } else {
+          // If we can't get calendar data, assume no availability
+          setHasAvailableDates(false);
+        }
+      } catch (error) {
+        console.warn('Error checking availability:', error);
+        // On error, assume booking is possible (conservative approach)
+        setHasAvailableDates(true);
+      }
+    };
+    
+    checkAvailability();
+  }, [product, productCode]);
 
   useEffect(() => {
     // Only fetch on client side to avoid hydration mismatch
@@ -700,24 +754,53 @@ export default function ProductDetailsPage() {
 
                 {/* Buttons */}
                 <div className="space-y-3">
-                  {product.rates?.find(rate => {
-                    const rateValue = rate.twinRateTotal || rate.twinRate || 0
-                    return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
-                  }) ? (
-                    <Link 
-                      href={`/booking/create?tourId=${product.code}`}
-                      className="block w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 text-center rounded-lg"
-                    >
-                      🚀 Book Now
-                    </Link>
-                  ) : (
-                    <Link 
-                      href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}`}
-                      className="block w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 text-center rounded-lg"
-                    >
-                      📧 Request Quote
-                    </Link>
-                  )}
+                  {(() => {
+                    // Check if product has pricing
+                    const hasRates = product.rates?.find(rate => {
+                      const rateValue = rate.twinRateTotal || rate.twinRate || 0
+                      return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
+                    });
+                    
+                    // Show appropriate button based on pricing and availability
+                    if (hasRates && hasAvailableDates === true) {
+                      // Has pricing AND available dates - show Book Now
+                      return (
+                        <Link 
+                          href={`/booking/create?tourId=${product.code}`}
+                          className="block w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 text-center rounded-lg"
+                        >
+                          🚀 Book Now
+                        </Link>
+                      );
+                    } else if (hasRates && hasAvailableDates === false) {
+                      // Has pricing but NO available dates - show Get Quote
+                      return (
+                        <Link 
+                          href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&reason=no-availability`}
+                          className="block w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 text-center rounded-lg"
+                        >
+                          📧 Get Quote - No Available Dates
+                        </Link>
+                      );
+                    } else if (hasAvailableDates === null) {
+                      // Still checking availability - show loading state
+                      return (
+                        <div className="block w-full bg-gradient-to-r from-gray-400 to-gray-500 text-white font-bold py-4 text-center rounded-lg">
+                          ⏳ Checking Availability...
+                        </div>
+                      );
+                    } else {
+                      // No pricing or other issues - show Request Quote
+                      return (
+                        <Link 
+                          href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}`}
+                          className="block w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 text-center rounded-lg"
+                        >
+                          📧 Request Quote
+                        </Link>
+                      );
+                    }
+                  })()}
                   
                   <div className="grid grid-cols-2 gap-3">
                     {product.localAssets?.pdfs && product.localAssets.pdfs.length > 0 ? (
