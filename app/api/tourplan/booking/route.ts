@@ -56,6 +56,7 @@ const addServiceSchema = z.object({
 // POST - Create new booking
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚨 BOOKING API POST CALLED - EMAIL DEBUG');
     console.log('📝 Booking API called');
     
     const rawBody = await request.text();
