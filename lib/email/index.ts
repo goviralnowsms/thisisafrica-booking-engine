@@ -271,8 +271,8 @@ BOOKING DETAILS
 Reference Number: ${booking.reference}
 Product: ${booking.productName}
 Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
-${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}
-${booking.totalCost && booking.totalCost > 0 ? `Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
+${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}${booking.totalCost && booking.totalCost > 0 ? `
+Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
 Status: ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}
 
 NEXT STEPS
@@ -563,8 +563,8 @@ BOOKING DETAILS
 Reference: ${booking.reference}
 Product Code: ${booking.productCode}
 Product Name: ${booking.productName}
-Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
-${booking.totalCost && booking.totalCost > 0 ? `Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
+Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}${booking.totalCost && booking.totalCost > 0 ? `
+Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
 TourPlan Status: ${booking.tourplanStatus || 'N/A'}
 
 ${booking.requiresManualConfirmation ? 
