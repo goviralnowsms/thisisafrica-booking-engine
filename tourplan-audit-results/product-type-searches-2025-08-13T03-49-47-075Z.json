@@ -1,0 +1,38 @@
+{
+  "Day Tours": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  },
+  "Group Tours": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  },
+  "Cruises": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  },
+  "Rail": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  },
+  "Packages": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  },
+  "Special Offers": {
+    "success": false,
+    "productCount": 0,
+    "error": "Missing required booking information",
+    "sampleProducts": []
+  }
+}

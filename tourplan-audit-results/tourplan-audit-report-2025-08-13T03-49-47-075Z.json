@@ -1,0 +1,352 @@
+{
+  "auditDate": "2025-08-13T03:50:32.173Z",
+  "summary": {
+    "serviceButtonsConfigured": true,
+    "workingProductTypes": [],
+    "failingProductTypes": [
+      "Day Tours",
+      "Group Tours",
+      "Cruises",
+      "Rail",
+      "Packages",
+      "Special Offers"
+    ],
+    "totalProductsTested": 19,
+    "workingProducts": [],
+    "failingProducts": [
+      {
+        "type": "Group Tours",
+        "code": "NBOGTARP001CKEKEE",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Group Tours",
+        "code": "NBOGTARP001THRKE3",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Group Tours",
+        "code": "NBOGTARP001CKFSKE",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Group Tours",
+        "code": "NBOGTARP001CKENSE",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Group Tours",
+        "code": "NBOGTARP001CKTSKE",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRCHO018TIACP2",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRCHO018TIACP3",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRTVT001ZAM2NS",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRTVT001ZAM2NM",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRTVT001ZAM3NS",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Cruises",
+        "code": "BBKCRTVT001ZAM3NM",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Rail",
+        "code": "VFARLROV001VFPRDX",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Rail",
+        "code": "VFARLROV001VFPRRY",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Rail",
+        "code": "VFARLROV001VFPYPM",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Rail",
+        "code": "CPTRLROV001RRCTPR",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Rail",
+        "code": "CPTRLROV001CTPPUL",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Special Offers",
+        "code": "GKPSPSABBLDSABBLS",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Special Offers",
+        "code": "GKPSPSAV002SAVLHM",
+        "error": "Unexpected end of JSON input"
+      },
+      {
+        "type": "Special Offers",
+        "code": "HDSSPMAKUTSMSSCLS",
+        "error": "Unexpected end of JSON input"
+      }
+    ],
+    "bookingCapable": [],
+    "manualProcessing": []
+  },
+  "details": {
+    "serviceButtons": {
+      "test": "Service Buttons Configuration",
+      "timestamp": "2025-08-13T03:49:51.362Z",
+      "success": true,
+      "findings": {
+        "hasServiceButtons": true,
+        "rawXml": "{\"?xml\":{\"@_version\":1,\"@_encoding\":\"utf-8\"},\"Reply\":{\"GetProductSearchDataReply\":{\"CodeTables\":{\"CodeTable\":[{\"CodeTableType\":\"LOC\",\"CodeTableEntries\":{\"CodeTableEntry\":[{\"Code\":\"BBK\",\"Description\":\"Kasane\"},{\"Code\":\"CPT\",\"Description\":\"Cape Town\"},{\"Code\":\"DUR\",\"Description\":\"Durban\"},{\"Code\":\"EBB\",\"Description\":\"Entebbe\"},{\"Code\":\"GKP\",\"Description\":\"Greater Kruger National Park\"},{\"Code\":\"HDS\",\"Description\":\"Hoedspruit\"},{\"Code\":\"JNB\",\"Description\":\"Johannesburg\"},{\"Code\":\"JRO\",\"Description\":\"Kilimanjaro\"},{\"Code\":\"KGL\",\"Description\":\"Kigali\"},{\"Code\":\"KNY\",\"Description\":\"Knysna\"},{\"Code\":\"LVI\",\"Description\":\"Livingstone\"},{\"Code\":\"MMR\",\"Description\":\"Masai Mara National Reserve\"},{\"Code\":\"MOS\",\"Description\":\"Moshi\"},{\"Code\":\"MSW\",\"Description\":\"Mauritius South West Coast\"},{\"Code\":\"MUB\",\"Description\":\"Maun\"},{\"Code\":\"NBO\",\"Description\":\"Nairobi\"},{\"Code\":\"PLZ\",\"Description\":\"Port Elizabeth\"},{\"Code\":\"PRY\",\"Description\":\"Pretoria\"},{\"Code\":\"VFA\",\"Description\":\"Victoria Falls Zimbabwe\"},{\"Code\":\"WDH\",\"Description\":\"Windhoek\"},{\"Code\":\"ZNZ\",\"Description\":\"Zanzibar\"}]}},{\"CodeTableType\":\"LCL\",\"CodeTableEntries\":{\"CodeTableEntry\":[{\"Code\":\"ADA\",\"Description\":\"Addis Ababa Airport\"},{\"Code\":\"ADC\",\"Description\":\"Addis Ababa CBD\"},{\"Code\":\"AIS\",\"Description\":\"Ais Ais Springs\"},{\"Code\":\"ANA\",\"Description\":\"Mara-Angama Airfield\"},{\"Code\":\"AND\",\"Description\":\"Andersson's Gate\"},{\"Code\":\"ANT\",\"Description\":\"Antananarivo CBD\"},{\"Code\":\"ARC\",\"Description\":\"Arcadia\"},{\"Code\":\"ARK\",\"Description\":\"Arusha Airport\"},{\"Code\":\"ARS\",\"Description\":\"Arusha Town\"},{\"Code\":\"AUS\",\"Description\":\"Aus\"},{\"Code\":\"BAB\",\"Description\":\"Bantry Bay\"},{\"Code\":\"BAZ\",\"Description\":\"Bazaruto Archipelago\"},{\"Code\":\"BBG\",\"Description\":\"Bela Bela Game Reserve\"},{\"Code\":\"BBK\",\"Description\":\"Kasane Airport\"},{\"Code\":\"BEM\",\"Description\":\"Belle Mare\"},{\"Code\":\"BEN\",\"Description\":\"Benoni\"},{\"Code\":\"BFC\",\"Description\":\"Bloemfontein\"},{\"Code\":\"BFN\",\"Description\":\"Bloemfontein Airport\"},{\"Code\":\"BLB\",\"Description\":\"Blue Bay\"},{\"Code\":\"BLO\",\"Description\":\"Bloubergstrand\"},{\"Code\":\"BRC\",\"Description\":\"Blyde River Canyon\"},{\"Code\":\"BRO\",\"Description\":\"Brooklyn\"},{\"Code\":\"BRP\",\"Description\":\"Blue River Private Conservancy\"},{\"Code\":\"BSH\",\"Description\":\"Bushmanland\"},{\"Code\":\"BTW\",\"Description\":\"Botswana\"},{\"Code\":\"BWA\",\"Description\":\"Bwabata National Park\"},{\"Code\":\"CAB\",\"Description\":\"Camps Bay\"},{\"Code\":\"CAP\",\"Description\":\"Caprivi\"},{\"Code\":\"CCY\",\"Description\":\"Century City\"},{\"Code\":\"CHF\",\"Description\":\"Chiefs Island\"},{\"Code\":\"CHR\",\"Description\":\"Chobe River Waterfront\"},{\"Code\":\"CKD\",\"Description\":\"Central Kalahari Game Reserve\"},{\"Code\":\"CLF\",\"Description\":\"Clifton\"},{\"Code\":\"CLM\",\"Description\":\"Claremont\"},{\"Code\":\"CMN\",\"Description\":\"Cradle of Mankind\"},{\"Code\":\"CNP\",\"Description\":\"Chobe National Park\"},{\"Code\":\"CON\",\"Description\":\"Constantia\"},{\"Code\":\"CPG\",\"Description\":\"Caprivi Game Park\"},{\"Code\":\"CPR\",\"Description\":\"Cape Point Reserve\"},{\"Code\":\"CPT\",\"Description\":\"Cape Town Airport\"},{\"Code\":\"CPW\",\"Description\":\"Cape Winelands\"},{\"Code\":\"CRS\",\"Description\":\"Cape Town Rail Station\"},{\"Code\":\"CRV\",\"Description\":\"Chobe River\"},{\"Code\":\"CSE\",\"Description\":\"Central Serengeti\"},{\"Code\":\"CTC\",\"Description\":\"Cape Town City\"},{\"Code\":\"CTU\",\"Description\":\"Centurion\"},{\"Code\":\"CTY\",\"Description\":\"City Bowl\"},{\"Code\":\"DAF\",\"Description\":\"Dar es Salaam Ferry Terminal\"},{\"Code\":\"DAR\",\"Description\":\"Dar es Salaam Airport\"},{\"Code\":\"DAS\",\"Description\":\"Dar es Salaam CBD\"},{\"Code\":\"DCB\",\"Description\":\"Durban\"},{\"Code\":\"DEW\",\"Description\":\"De Waterkant\"},{\"Code\":\"DST\",\"Description\":\"Dullstrom\"},{\"Code\":\"DUR\",\"Description\":\"Durban Airport\"},{\"Code\":\"DUX\",\"Description\":\"Durban Exhibition Centre\"},{\"Code\":\"EBB\",\"Description\":\"Entebbe Airport\"},{\"Code\":\"EBT\",\"Description\":\"Entebbe Town\"},{\"Code\":\"ELE\",\"Description\":\"Lake Elementaita\"},{\"Code\":\"ELV\",\"Description\":\"Entebbe - Lake Victoria\"},{\"Code\":\"ENO\",\"Description\":\"Enonkishu\"},{\"Code\":\"ENP\",\"Description\":\"Etosha National Park Airfield\"},{\"Code\":\"ENT\",\"Description\":\"Entabeni Game Reserve\"},{\"Code\":\"EPU\",\"Description\":\"Epupa\"},{\"Code\":\"ERS\",\"Description\":\"Windhoek Eros Airport\"},{\"Code\":\"ETP\",\"Description\":\"Etosha National Park\"},{\"Code\":\"FFF\",\"Description\":\"Flic-en-Flac\"},{\"Code\":\"FHH\",\"Description\":\"Fish Hoek\"},{\"Code\":\"FRA\",\"Description\":\"Franschhoek\"},{\"Code\":\"FRC\",\"Description\":\"Fish River Canyon\"},{\"Code\":\"FUM\",\"Description\":\"Fumba\"},{\"Code\":\"GAR\",\"Description\":\"Gardens\"},{\"Code\":\"GFY\",\"Description\":\"Grootfontein\"},{\"Code\":\"GIG\",\"Description\":\"Gigiri\"},{\"Code\":\"GOL\",\"Description\":\"Golden Mile\"},{\"Code\":\"GRB\",\"Description\":\"Grande Baie\"},{\"Code\":\"GRG\",\"Description\":\"Grande Gaube\"},{\"Code\":\"GRN\",\"Description\":\"Green Point\"},{\"Code\":\"GRT\",\"Description\":\"Grootberg\"},{\"Code\":\"GRU\",\"Description\":\"Grumeti\"},{\"Code\":\"GSK\",\"Description\":\"Graskop\"},{\"Code\":\"HAR\",\"Description\":\"Haarlem\"},{\"Code\":\"HAT\",\"Description\":\"Hatfield\"},{\"Code\":\"HDS\",\"Description\":\"Hoedspruit Airport\"},{\"Code\":\"HDT\",\"Description\":\"Hoedspruit\"},{\"Code\":\"HHW\",\"Description\":\"Half Way House\"},{\"Code\":\"HKR\",\"Description\":\"Masai - Mara North Airfield\"},{\"Code\":\"HOB\",\"Description\":\"Hout Bay\"},{\"Code\":\"HRE\",\"Description\":\"Harare Airport\"},{\"Code\":\"HRR\",\"Description\":\"Harare CBD\"},{\"Code\":\"HUR\",\"Description\":\"Hurlingham\"},{\"Code\":\"HZV\",\"Description\":\"Hazyview\"},{\"Code\":\"IBB\",\"Description\":\"Inhambane Bay\"},{\"Code\":\"IKO\",\"Description\":\"Ikorongo\"},{\"Code\":\"INH\",\"Description\":\"Inhambane Airport\"},{\"Code\":\"ISA\",\"Description\":\"Isaaten\"},{\"Code\":\"JHB\",\"Description\":\"Johannesburg\"},{\"Code\":\"JNB\",\"Description\":\"Johannesburg Airport\"},{\"Code\":\"JNN\",\"Description\":\"Johannesburg North\"},{\"Code\":\"JRO\",\"Description\":\"Kilimanjaro Airport\"},{\"Code\":\"KAB\",\"Description\":\"Kazangula Border\"},{\"Code\":\"KAG\",\"Description\":\"Kazungula Border\"},{\"Code\":\"KAM\",\"Description\":\"Kamanjab\"},{\"Code\":\"KAP\",\"Description\":\"Kapama Game Reserve\"},{\"Code\":\"KAR\",\"Description\":\"Karen\"},{\"Code\":\"KAS\",\"Description\":\"Kasane\"},{\"Code\":\"KAZ\",\"Description\":\"Kazuma Pans\"},{\"Code\":\"KDT\",\"Description\":\"Kalahari Desert\"},{\"Code\":\"KEN\",\"Description\":\"Kendwa\"},{\"Code\":\"KEU\",\"Description\":\"Mara-Keekorok Airfield\"},{\"Code\":\"KFR\",\"Description\":\"Kasane Forest\"},{\"Code\":\"KGC\",\"Description\":\"Kigali CBD\"},{\"Code\":\"KGL\",\"Description\":\"Kigali Airport\"},{\"Code\":\"KGR\",\"Description\":\"Karongwe Game Reserve\"},{\"Code\":\"KHA\",\"Description\":\"Khaudum National Park\"},{\"Code\":\"KHW\",\"Description\":\"Khwai River\"},{\"Code\":\"KIC\",\"Description\":\"Kimberley CBD\"},{\"Code\":\"KIL\",\"Description\":\"Kileleschwa\"},{\"Code\":\"KIM\",\"Description\":\"Kimberley Airport\"},{\"Code\":\"KIN\",\"Description\":\"Kinigi\"},{\"Code\":\"KIS\",\"Description\":\"Kisumu\"},{\"Code\":\"KLG\",\"Description\":\"Klaserie Game Reserve\"},{\"Code\":\"KNP\",\"Description\":\"Kruger National Park\"},{\"Code\":\"KNY\",\"Description\":\"Knysna\"},{\"Code\":\"KPP\",\"Description\":\"Kempton Park\"},{\"Code\":\"KRA\",\"Description\":\"Kariobangi\"},{\"Code\":\"KRD\",\"Description\":\"Krugersdorp\"},{\"Code\":\"KRI\",\"Description\":\"Kariobangi\"},{\"Code\":\"KRT\",\"Description\":\"Karatu\"},{\"Code\":\"KWA\",\"Description\":\"Kwara Concession\"},{\"Code\":\"KWC\",\"Description\":\"Kalama Wildlife Conservancy\"},{\"Code\":\"LAA\",\"Description\":\"Lanseria Airport\"},{\"Code\":\"LAG\",\"Description\":\"La Gaulette\"},{\"Code\":\"LAM\",\"Description\":\"Lamu\"},{\"Code\":\"LAN\",\"Description\":\"Lanseria\"},{\"Code\":\"LAV\",\"Description\":\"Lavington\"},{\"Code\":\"LDQ\",\"Description\":\"Lindquist Gate\"},{\"Code\":\"LDV\",\"Description\":\"Luderitz\"},{\"Code\":\"LEM\",\"Description\":\"Le Morne\"},{\"Code\":\"LEW\",\"Description\":\"Lewa Downs Airfield\"},{\"Code\":\"LGT\",\"Description\":\"Langata\"},{\"Code\":\"LIN\",\"Description\":\"Linyanti\"},{\"Code\":\"LLG\",\"Description\":\"Londolozi Game Reserve\"},{\"Code\":\"LLL\",\"Description\":\"Lilongwe  CBD\"},{\"Code\":\"LLW\",\"Description\":\"Lilongwe Airport\"},{\"Code\":\"LMK\",\"Description\":\"Lemek\"},{\"Code\":\"LSR\",\"Description\":\"Lion Sands Private Game Reserve\"},{\"Code\":\"LST\",\"Description\":\"Livingstone\"},{\"Code\":\"LUA\",\"Description\":\"Lusaka\"},{\"Code\":\"LUD\",\"Description\":\"Luderitz Airport\"},{\"Code\":\"LUN\",\"Description\":\"Lusaka Airport\"},{\"Code\":\"LVI\",\"Description\":\"Livingstone Airport\"},{\"Code\":\"LYD\",\"Description\":\"Lydenburg\"},{\"Code\":\"MAA\",\"Description\":\"Madikwe Airfield\"},{\"Code\":\"MAB\",\"Description\":\"Mombasa\"},{\"Code\":\"MAF\",\"Description\":\"Magadikgadi Forest\"},{\"Code\":\"MAG\",\"Description\":\"Mahebourg\"},{\"Code\":\"MAH\",\"Description\":\"Mahangu\"},{\"Code\":\"MAK\",\"Description\":\"Makalali Game Reserve\"},{\"Code\":\"MAL\",\"Description\":\"Malindi\"},{\"Code\":\"MAP\",\"Description\":\"Magadikgadi Pans National Park\"},{\"Code\":\"MAR\",\"Description\":\"Marloth Park\"},{\"Code\":\"MAT\",\"Description\":\"Matemwe\"},{\"Code\":\"MAU\",\"Description\":\"Maun\"},{\"Code\":\"MAY\",\"Description\":\"Manyeleti Game Reserve\"},{\"Code\":\"MBA\",\"Description\":\"Mombasa Airport\"},{\"Code\":\"MBB\",\"Description\":\"Mbabane CBD\"},{\"Code\":\"MBG\",\"Description\":\"Mabula Private Game Reserve\"},{\"Code\":\"MBY\",\"Description\":\"Monkey Bay\"},{\"Code\":\"MCH\",\"Description\":\"Mont Choisy\"},{\"Code\":\"MDG\",\"Description\":\"Middleburg\"},{\"Code\":\"MIG\",\"Description\":\"Migori\"},{\"Code\":\"MIL\",\"Description\":\"Milnerton\"},{\"Code\":\"MKG\",\"Description\":\"Makutsi Game Reserve\"},{\"Code\":\"MKI\",\"Description\":\"Mara-Kichwa Airfield\"},{\"Code\":\"MLA\",\"Description\":\"Melrose Arch\"},{\"Code\":\"MMG\",\"Description\":\"Mala Mala Game Reserve\"},{\"Code\":\"MMI\",\"Description\":\"Mara-Olseki Airfield\"},{\"Code\":\"MML\",\"Description\":\"Mara-Olekieimbo Airfield\"},{\"Code\":\"MMM\",\"Description\":\"Mara-Musiara Airfield\"},{\"Code\":\"MMR\",\"Description\":\"Masai Mara National Reserve\"},{\"Code\":\"MNC\",\"Description\":\"Mara North Conservancy\"},{\"Code\":\"MNP\",\"Description\":\"Marikele National Park\"},{\"Code\":\"MOR\",\"Description\":\"Moremi Game Reserve\"},{\"Code\":\"MOT\",\"Description\":\"Motorogi\"},{\"Code\":\"MPM\",\"Description\":\"Maputo Airport\"},{\"Code\":\"MPT\",\"Description\":\"Maputo Town\"},{\"Code\":\"MPU\",\"Description\":\"Mpungu\"},{\"Code\":\"MQP\",\"Description\":\"Nelspruit Airport\"},{\"Code\":\"MRE\",\"Description\":\"Mara-Ngerende Airfield\"},{\"Code\":\"MRU\",\"Description\":\"Muritius Port Louis Airport\"},{\"Code\":\"MSA\",\"Description\":\"Mara-Serena Airfield\"},{\"Code\":\"MTC\",\"Description\":\"Montecassino\"},{\"Code\":\"MUB\",\"Description\":\"Maun Airport\"},{\"Code\":\"NAI\",\"Description\":\"Nairobi\"},{\"Code\":\"NAM\",\"Description\":\"Namutoni\"},{\"Code\":\"NAP\",\"Description\":\"Nairobi Airport\"},{\"Code\":\"NBO\",\"Description\":\"Nairobi JKI Airport\"},{\"Code\":\"NCB\",\"Description\":\"Nairobi CBD\"},{\"Code\":\"NDO\",\"Description\":\"Rundu Airport\"},{\"Code\":\"NDU\",\"Description\":\"Ndutu Plains\"},{\"Code\":\"NEW\",\"Description\":\"Newlands\"},{\"Code\":\"NGG\",\"Description\":\"Ngong\"},{\"Code\":\"NGO\",\"Description\":\"Ngotsaa Pans\"},{\"Code\":\"NGW\",\"Description\":\"Nungwi\"},{\"Code\":\"NKB\",\"Description\":\"Nkata Bay\"},{\"Code\":\"NPT\",\"Description\":\"Nelspruit\"},{\"Code\":\"NTS\",\"Description\":\"Northern Serengeti\"},{\"Code\":\"NTY\",\"Description\":\"Sun City Airport\"},{\"Code\":\"NUP\",\"Description\":\"Nairobi Upper Hill\"},{\"Code\":\"NXA\",\"Description\":\"Nxaragha Island\"},{\"Code\":\"NYK\",\"Description\":\"Nanyuki\"},{\"Code\":\"ODV\",\"Description\":\"Olduvai Gorge\"},{\"Code\":\"OKA\",\"Description\":\"Okaukuejo\"},{\"Code\":\"OKD\",\"Description\":\"Okavango Delta\"},{\"Code\":\"OKJ\",\"Description\":\"Okonjima\"},{\"Code\":\"OLC\",\"Description\":\"Ol Chorro\"},{\"Code\":\"OLD\",\"Description\":\"Ol Derikesi\"},{\"Code\":\"OLK\",\"Description\":\"Ol Kinyei\"},{\"Code\":\"OLX\",\"Description\":\"Mara-Olare Orak Airfield\"},{\"Code\":\"ONG\",\"Description\":\"Onguma Private Game Reserve\"},{\"Code\":\"OOK\",\"Description\":\"Olare Orok\"},{\"Code\":\"OPW\",\"Description\":\"Opuwo\"},{\"Code\":\"OSH\",\"Description\":\"Oshikati\"},{\"Code\":\"OSK\",\"Description\":\"Oshikango\"},{\"Code\":\"OTP\",\"Description\":\"Outapi\"},{\"Code\":\"OTV\",\"Description\":\"Otavi\"},{\"Code\":\"OUT\",\"Description\":\"Outjo\"},{\"Code\":\"PAA\",\"Description\":\"Paarl\"},{\"Code\":\"PAC\",\"Description\":\"Pointe aux Cannoniers\"},{\"Code\":\"PAJ\",\"Description\":\"Paje\"},{\"Code\":\"PAR\",\"Description\":\"Parfuri\"},{\"Code\":\"PBT\",\"Description\":\"Pretoria Rail Station\"},{\"Code\":\"PEW\",\"Description\":\"Port Elizabeth\"},{\"Code\":\"PGR\",\"Description\":\"Pilgrims Rest\"},{\"Code\":\"PHT\",\"Description\":\"Phalaborwa\"},{\"Code\":\"PHW\",\"Description\":\"Phalaborwa Airport\"},{\"Code\":\"PKG\",\"Description\":\"Paul Kruger Gate\"},{\"Code\":\"PLW\",\"Description\":\"Palmwag\"},{\"Code\":\"PLZ\",\"Description\":\"Port Elizabeth Airport\"},{\"Code\":\"PNC\",\"Description\":\"Ponta Chemucane\"},{\"Code\":\"PON\",\"Description\":\"Pongwe\"},{\"Code\":\"POP\",\"Description\":\"Popa Falls\"},{\"Code\":\"PRD\",\"Description\":\"Praia Del Belini\"},{\"Code\":\"PRE\",\"Description\":\"Pretoria\"},{\"Code\":\"PRR\",\"Description\":\"Pretoria Rail Station\"},{\"Code\":\"PRT\",\"Description\":\"Piet Retief\"},{\"Code\":\"PRY\",\"Description\":\"Pretoria Airport\"},{\"Code\":\"PSN\",\"Description\":\"Pretoria Rail Station\"},{\"Code\":\"PTG\",\"Description\":\"Polokwane Airport\"},{\"Code\":\"PTT\",\"Description\":\"Polokwane\"},{\"Code\":\"PYB\",\"Description\":\"Pereybere\"},{\"Code\":\"QNM\",\"Description\":\"Mbabane Airport\"},{\"Code\":\"RAG\",\"Description\":\"Randburg\"},{\"Code\":\"RBK\",\"Description\":\"Rosebank\"},{\"Code\":\"RIV\",\"Description\":\"Rivonia\"},{\"Code\":\"ROB\",\"Description\":\"Robben Island\"},{\"Code\":\"RTP\",\"Description\":\"Richtersveld Transfrontier Park\"},{\"Code\":\"RUN\",\"Description\":\"Rundu\"},{\"Code\":\"SAB\",\"Description\":\"Sabi Sand Game Reserve\"},{\"Code\":\"SAN\",\"Description\":\"Sandton\"},{\"Code\":\"SAT\",\"Description\":\"South Africa\"},{\"Code\":\"SAV\",\"Description\":\"Savute\"},{\"Code\":\"SBI\",\"Description\":\"Sabie\"},{\"Code\":\"SCP\",\"Description\":\"Skeleton Coast Park\"},{\"Code\":\"SCS\",\"Description\":\"South Central Serengeti\"},{\"Code\":\"SEA\",\"Description\":\"Sea Point\"},{\"Code\":\"SEL\",\"Description\":\"Selinda Game Reserve\"},{\"Code\":\"SER\",\"Description\":\"Seronera\"},{\"Code\":\"SES\",\"Description\":\"South East Serengeti\"},{\"Code\":\"SEZ\",\"Description\":\"Mahe Island\"},{\"Code\":\"SIT\",\"Description\":\"Simons Town\"},{\"Code\":\"SOL\",\"Description\":\"Solitaire\"},{\"Code\":\"SOS\",\"Description\":\"Sossusvlei\"},{\"Code\":\"SOW\",\"Description\":\"Somerset West\"},{\"Code\":\"SSC\",\"Description\":\"Sesriem Canyon\"},{\"Code\":\"STB\",\"Description\":\"Stellenbosch\"},{\"Code\":\"STF\",\"Description\":\"Stone Town Ferry Terminal\"},{\"Code\":\"STW\",\"Description\":\"Stone Town\"},{\"Code\":\"SUM\",\"Description\":\"Summerstrand\"},{\"Code\":\"SUN\",\"Description\":\"Sun City\"},{\"Code\":\"SWA\",\"Description\":\"Swakopmund Town\"},{\"Code\":\"SWP\",\"Description\":\"Swakopmund Airport\"},{\"Code\":\"SWW\",\"Description\":\"Swakopmund Waterfront\"},{\"Code\":\"SYO\",\"Description\":\"Syokimau\"},{\"Code\":\"SZK\",\"Description\":\"Skukuza Airport\"},{\"Code\":\"TAB\",\"Description\":\"Trou aux Biches\"},{\"Code\":\"TBG\",\"Description\":\"Thornybush Privae Game Reserve\"},{\"Code\":\"TIB\",\"Description\":\"Tiwi Beach\"},{\"Code\":\"TIM\",\"Description\":\"Timbavati Game Reserve\"},{\"Code\":\"TKF\",\"Description\":\"Tamboerskloof\"},{\"Code\":\"TLK\",\"Description\":\"Talek\"},{\"Code\":\"TNR\",\"Description\":\"Antananarivo Airport\"},{\"Code\":\"TOF\",\"Description\":\"Tofo Beach\"},{\"Code\":\"TSU\",\"Description\":\"Tsumeb\"},{\"Code\":\"UKA\",\"Description\":\"Diani Beach\"},{\"Code\":\"UMH\",\"Description\":\"Umhlanga Rocks\"},{\"Code\":\"VAW\",\"Description\":\"Victoria and Alfred Waterfront\"},{\"Code\":\"VFA\",\"Description\":\"Victoria Falls Airport\"},{\"Code\":\"VFT\",\"Description\":\"Victoria Falls Town\"},{\"Code\":\"VIL\",\"Description\":\"Vilanculous\"},{\"Code\":\"VNX\",\"Description\":\"Vilanculous Airport\"},{\"Code\":\"WBG\",\"Description\":\"Waterberg\"},{\"Code\":\"WCS\",\"Description\":\"Western Corridor Serengeti\"},{\"Code\":\"WDH\",\"Description\":\"WDH Hosea Kutako International Airport\"},{\"Code\":\"WDK\",\"Description\":\"Windhoek\"},{\"Code\":\"WES\",\"Description\":\"Westlands\"},{\"Code\":\"WHR\",\"Description\":\"White River\"},{\"Code\":\"WIL\",\"Description\":\"Nairobi Wilson Airport\"},{\"Code\":\"WIT\",\"Description\":\"Witbank\"},{\"Code\":\"WLB\",\"Description\":\"Walvis Bay\"},{\"Code\":\"WTB\",\"Description\":\"Waterberg Plateau\"},{\"Code\":\"WTL\",\"Description\":\"Westlands\"},{\"Code\":\"WVB\",\"Description\":\"Walvis Bay Airport\"},{\"Code\":\"XAK\",\"Description\":\"Xakanaxa Lagoon\"},{\"Code\":\"XUG\",\"Description\":\"Xugana Island\"},{\"Code\":\"ZAM\",\"Description\":\"Zambezi River\"},{\"Code\":\"ZEC\",\"Description\":\"Zanzibar East Coast\"},{\"Code\":\"ZNC\",\"Description\":\"Zanzibar North Coast\"},{\"Code\":\"ZNE\",\"Description\":\"Zanzibar North East Coast\"},{\"Code\":\"ZNP\",\"Description\":\"Zambezi National Park\"},{\"Code\":\"ZNZ\",\"Description\":\"Zanzibar Airport\"},{\"Code\":\"ZSE\",\"Description\":\"Zanzibar South East Coast\"},{\"Code\":\"ZSW\",\"Description\":\"Zanzibar South West Coast\"},{\"Code\":\"ZWC\",\"Description\":\"Zanzibar West Coast\"},{\"Code\":\"ZZZ\",\"Description\":\"test 2\"}]}},{\"CodeTableType\":\"CLS\",\"CodeTableEntries\":{\"CodeTableEntry\":[{\"Code\":\"1S\",\"Description\":\"1 Star\"},{\"Code\":\"2S\",\"Description\":\"2 Star\"},{\"Code\":\"3S\",\"Description\":\"3 Star\"},{\"Code\":\"4S\",\"Description\":\"4 Star\"},{\"Code\":\"5S\",\"Description\":\"5 Star\"},{\"Code\":\"6S\",\"Description\":\"Something Special\"},{\"Code\":\"BA\",\"Description\":\"Basic\"},{\"Code\":\"DE\",\"Description\":\"Deluxe\"},{\"Code\":\"DE+\",\"Description\":\"Deluxe plus\"},{\"Code\":\"LU\",\"Description\":\"Luxury\"},{\"Code\":\"OL\",\"Description\":\"Overland camping\"},{\"Code\":\"PTF\",\"Description\":\"Private transfer\"},{\"Code\":\"ST\",\"Description\":\"Standard\"},{\"Code\":\"STF\",\"Description\":\"Shared transfer\"},{\"Code\":\"SUP\",\"Description\":\"Superior\"},{\"Code\":\"TE\",\"Description\":\"Basic tented camping\"}]}},{\"CodeTableType\":\"CTR\",\"CodeTableEntries\":{\"CodeTableEntry\":[{\"Code\":\"\",\"Description\":\"Worldwide\"},{\"Code\":\"BW\",\"Description\":\"Botswana\"},{\"Code\":\"ET\",\"Description\":\"Ethiopia\"},{\"Code\":\"KE\",\"Description\":\"Kenya\"},{\"Code\":\"LS\",\"Description\":\"Lesotho\"},{\"Code\":\"MG\",\"Description\":\"Madagascar\"},{\"Code\":\"MU\",\"Description\":\"Mauritius\"},{\"Code\":\"MW\",\"Description\":\"Malawi\"},{\"Code\":\"MZ\",\"Description\":\"Mozambique\"},{\"Code\":\"NA\",\"Description\":\"Namibia\"},{\"Code\":\"RE\",\"Description\":\"Reunion\"},{\"Code\":\"RW\",\"Description\":\"Rwanda\"},{\"Code\":\"SC\",\"Description\":\"Seychelles\"},{\"Code\":\"SZ\",\"Description\":\"Swaziland\"},{\"Code\":\"TZ\",\"Description\":\"Tanzania\"},{\"Code\":\"UG\",\"Description\":\"Uganda\"},{\"Code\":\"ZA\",\"Description\":\"South Africa\"},{\"Code\":\"ZM\",\"Description\":\"Zambia\"},{\"Code\":\"ZW\",\"Description\":\"Zimbabwe\"}]}},{\"CodeTableType\":\"DST\",\"CodeTableEntries\":{\"CodeTableEntry\":[{\"Code\":\"\",\"Description\":\"Worldwide\"},{\"Code\":\"ADD\",\"Description\":\"Addis Ababa\"},{\"Code\":\"BW\",\"Description\":\"Botswana\"},{\"Code\":\"CHB\",\"Description\":\"Chobe\"},{\"Code\":\"ECP\",\"Description\":\"Eastern Cape\"},{\"Code\":\"FST\",\"Description\":\"Free State\"},{\"Code\":\"GAU\",\"Description\":\"Gauteng\"},{\"Code\":\"KE\",\"Description\":\"Kenya\"},{\"Code\":\"KWN\",\"Description\":\"Kwa Zulu Natal\"},{\"Code\":\"LE\",\"Description\":\"Lesotho\"},{\"Code\":\"LIM\",\"Description\":\"Limpopo Province\"},{\"Code\":\"LVI\",\"Description\":\"Livingstone\"},{\"Code\":\"MEC\",\"Description\":\"Mauritius East Coast\"},{\"Code\":\"MG\",\"Description\":\"Madagascar\"},{\"Code\":\"MQP\",\"Description\":\"Mpumulanga\"},{\"Code\":\"MRU\",\"Description\":\"Mauritius\"},{\"Code\":\"MW\",\"Description\":\"Malawi\"},{\"Code\":\"MWC\",\"Description\":\"Mauritius West Coast\"},{\"Code\":\"MZ\",\"Description\":\"Mozambique\"},{\"Code\":\"NA\",\"Description\":\"Namibia\"},{\"Code\":\"NCP\",\"Description\":\"Northern Cape\"},{\"Code\":\"NWP\",\"Description\":\"North West Province\"},{\"Code\":\"REU\",\"Description\":\"Reunion\"},{\"Code\":\"RW\",\"Description\":\"Rwanda\"},{\"Code\":\"SA\",\"Description\":\"South Africa\"},{\"Code\":\"SEY\",\"Description\":\"Seychelles\"},{\"Code\":\"SZ\",\"Description\":\"Swaziland\"},{\"Code\":\"TZ\",\"Description\":\"Tanzania\"},{\"Code\":\"UG\",\"Description\":\"Uganda\"},{\"Code\":\"WCP\",\"Description\":\"Western Cape\"},{\"Code\":\"ZM\",\"Description\":\"Zambia\"},{\"Code\":\"ZW\",\"Description\":\"Zimbabwe\"}]}}]},\"CountryList\":{\"CountryInfo\":[{\"CountryCode\":\"BW\",\"DestinationCode\":\"BW\"},{\"CountryCode\":\"KE\",\"DestinationCode\":\"KE\"},{\"CountryCode\":\"MU\",\"DestinationCode\":\"MWC\"},{\"CountryCode\":\"NA\",\"DestinationCode\":\"NA\"},{\"CountryCode\":\"RW\",\"DestinationCode\":\"RW\"},{\"CountryCode\":\"TZ\",\"DestinationCode\":\"TZ\"},{\"CountryCode\":\"UG\",\"DestinationCode\":\"UG\"},{\"CountryCode\":\"ZA\",\"DestinationCode\":[\"SA\",\"WCP\"]},{\"CountryCode\":\"ZM\",\"DestinationCode\":\"ZM\"},{\"CountryCode\":\"ZW\",\"DestinationCode\":\"ZW\"}]},\"ServiceButtons\":{\"ServiceButton\":[{\"ButtonName\":\"Accommodation\",\"ScuPrompt\":\"Nights\",\"RoomBased\":\"Y\",\"ClassLabel\":\"\",\"LocalityLabel\":\"\",\"RemarksDetails\":{\"PickupLabel\":\"\",\"PickupTimeAllowed\":\"N\",\"PickupRemarksAllowed\":\"N\",\"DropoffLabel\":\"\",\"DropoffTimeAllowed\":\"N\",\"DropoffRemarksAllowed\":\"N\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"N\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":[{\"CountryCode\":\"BW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"BW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"BBK\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"4S\",\"ST\"]}]}}}},{\"CountryCode\":\"KE\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"KE\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"\",\"KAR\",\"NBO\",\"NCB\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"3S\",\"4S\",\"6S\"]}]}}}},{\"CountryCode\":\"MU\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"MWC\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"LEM\"},{\"CodeTableType\":\"CLS\",\"Code\":\"5S\"}]}}}},{\"CountryCode\":\"TZ\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"TZ\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"\",\"ZSE\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"\",\"4S\"]}]}}}},{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":[{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"\",\"HDT\",\"KAP\",\"KGR\",\"SAB\",\"VAW\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"\",\"3S\",\"4S\",\"5S\",\"6S\"]}]}},{\"DestinationCode\":\"WCP\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"\"},{\"CodeTableType\":\"CLS\",\"Code\":\"4S\"}]}}]}}]}},{\"ButtonName\":\"Packages\",\"ScuPrompt\":\"Tour\",\"RoomBased\":\"Y\",\"ClassLabel\":\"\",\"LocalityLabel\":\"\",\"RemarksDetails\":{\"PickupLabel\":\"\",\"PickupTimeAllowed\":\"N\",\"PickupRemarksAllowed\":\"N\",\"DropoffLabel\":\"\",\"DropoffTimeAllowed\":\"N\",\"DropoffRemarksAllowed\":\"N\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"N\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":[{\"CountryCode\":\"BW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"BW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"BBK\",\"CNP\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"DE\",\"LU\",\"ST\"]}]}}}},{\"CountryCode\":\"KE\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"KE\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"NBO\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"DE\",\"LU\"]}]}}}},{\"CountryCode\":\"RW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"RW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"KGL\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"DE\",\"ST\"]}]}}}},{\"CountryCode\":\"UG\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"UG\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"EBB\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"DE\",\"ST\"]}]}}}},{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"\",\"CPT\",\"HDS\",\"JNB\",\"SAB\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"DE\",\"LU\",\"ST\"]}]}}}},{\"CountryCode\":\"ZM\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZM\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"LVI\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"LU\",\"ST\"]}]}}}},{\"CountryCode\":\"ZW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"VFA\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"DE\",\"LU\",\"ST\"]}]}}}}]}},{\"ButtonName\":\"Group Tours\",\"ScuPrompt\":\"\",\"RoomBased\":\"Y\",\"ClassLabel\":\"Class\",\"LocalityLabel\":\"Locality\",\"RemarksDetails\":{\"PickupLabel\":\"Pick Up\",\"PickupTimeAllowed\":\"Y\",\"PickupRemarksAllowed\":\"Y\",\"DropoffLabel\":\"Drop Off\",\"DropoffTimeAllowed\":\"Y\",\"DropoffRemarksAllowed\":\"Y\",\"RemarksLabel\":\"Remarks\",\"RemarksAllowed\":\"Y\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":[{\"CountryCode\":\"BW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"BW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"MAU\",\"MUB\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"DE\",\"OL\"]}]}}}},{\"CountryCode\":\"KE\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"KE\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"NBO\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"DE\",\"DE+\",\"ST\"]}]}}}},{\"CountryCode\":\"NA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"NA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"WDK\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"DE\",\"DE+\",\"ST\"]}]}}}},{\"CountryCode\":\"TZ\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"TZ\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"\",\"JRO\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"DE\",\"LU\",\"ST\"]}]}}}},{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"CTC\",\"DUR\",\"JHB\",\"JNB\",\"PLZ\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"OL\",\"ST\"]}]}}}},{\"CountryCode\":\"ZM\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZM\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"LST\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"OL\"]}]}}}},{\"CountryCode\":\"ZW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"VFA\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"BA\",\"ST\"]}]}}}}]}},{\"ButtonName\":\"Rail\",\"ScuPrompt\":\"\",\"RoomBased\":\"Y\",\"ClassLabel\":\"\",\"LocalityLabel\":\"\",\"RemarksDetails\":{\"PickupLabel\":\"\",\"PickupTimeAllowed\":\"Y\",\"PickupRemarksAllowed\":\"Y\",\"DropoffLabel\":\"\",\"DropoffTimeAllowed\":\"Y\",\"DropoffRemarksAllowed\":\"Y\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"Y\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":[{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"CRS\",\"PRR\"]},{\"CodeTableType\":\"CLS\",\"Code\":\"LU\"}]}}}},{\"CountryCode\":\"ZW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"VFT\"},{\"CodeTableType\":\"CLS\",\"Code\":\"LU\"}]}}}}]}},{\"ButtonName\":\"Special Deals\",\"ScuPrompt\":\"\",\"RoomBased\":\"Y\",\"ClassLabel\":\"\",\"LocalityLabel\":\"\",\"RemarksDetails\":{\"PickupLabel\":\"\",\"PickupTimeAllowed\":\"N\",\"PickupRemarksAllowed\":\"N\",\"DropoffLabel\":\"\",\"DropoffTimeAllowed\":\"N\",\"DropoffRemarksAllowed\":\"N\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"N\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"HDS\",\"SAB\"]},{\"CodeTableType\":\"CLS\",\"Code\":[\"5S\",\"LU\",\"ST\"]}]}}}}}},{\"ButtonName\":\"Cruise\",\"ScuPrompt\":\"\",\"RoomBased\":\"N\",\"ClassLabel\":\"Class\",\"LocalityLabel\":\"Locality\",\"RemarksDetails\":{\"PickupLabel\":\"Pick Up\",\"PickupTimeAllowed\":\"Y\",\"PickupRemarksAllowed\":\"Y\",\"DropoffLabel\":\"Drop Off\",\"DropoffTimeAllowed\":\"Y\",\"DropoffRemarksAllowed\":\"Y\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"Y\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":{\"CountryCode\":\"BW\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"BW\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"BBK\"},{\"CodeTableType\":\"CLS\",\"Code\":[\"LU\",\"ST\",\"SUP\"]}]}}}}}},{\"ButtonName\":\"Day tours\",\"ScuPrompt\":\"\",\"RoomBased\":\"N\",\"ClassLabel\":\"\",\"LocalityLabel\":\"\",\"RemarksDetails\":{\"PickupLabel\":\"\",\"PickupTimeAllowed\":\"N\",\"PickupRemarksAllowed\":\"N\",\"DropoffLabel\":\"\",\"DropoffTimeAllowed\":\"N\",\"DropoffRemarksAllowed\":\"N\",\"RemarksLabel\":\"\",\"RemarksAllowed\":\"N\"},\"DisplayOptionsWithZeroRates\":\"N\",\"ButtonCountries\":{\"ButtonCountry\":[{\"CountryCode\":\"ZA\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"SA\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":[\"CTC\",\"KNP\"]},{\"CodeTableType\":\"CLS\",\"Code\":\"\"}]}}}},{\"CountryCode\":\"ZM\",\"DestinationList\":{\"DestinationInfo\":{\"DestinationCode\":\"ZM\",\"CodeLists\":{\"CodeList\":[{\"CodeTableType\":\"LCL\",\"Code\":\"LVI\"},{\"CodeTableType\":\"CLS\",\"Code\":\"\"}]}}}}]}}]}}}}"
+      }
+    },
+    "productSearches": {
+      "Day Tours": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      },
+      "Group Tours": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      },
+      "Cruises": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      },
+      "Rail": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      },
+      "Packages": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      },
+      "Special Offers": {
+        "success": false,
+        "productCount": 0,
+        "error": "Missing required booking information",
+        "sampleProducts": []
+      }
+    },
+    "individualProducts": {
+      "Group Tours": {
+        "NBOGTARP001CKEKEE": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "NBOGTARP001THRKE3": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "NBOGTARP001CKFSKE": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "NBOGTARP001CKENSE": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "NBOGTARP001CKTSKE": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        }
+      },
+      "Cruises": {
+        "BBKCRCHO018TIACP2": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "BBKCRCHO018TIACP3": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "BBKCRTVT001ZAM2NS": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "BBKCRTVT001ZAM2NM": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "BBKCRTVT001ZAM3NS": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "BBKCRTVT001ZAM3NM": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        }
+      },
+      "Rail": {
+        "VFARLROV001VFPRDX": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "VFARLROV001VFPRRY": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "VFARLROV001VFPYPM": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "CPTRLROV001RRCTPR": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "CPTRLROV001CTPPUL": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        }
+      },
+      "Special Offers": {
+        "GKPSPSABBLDSABBLS": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "GKPSPSAV002SAVLHM": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        },
+        "HDSSPMAKUTSMSSCLS": {
+          "success": false,
+          "hasAvailability": false,
+          "error": "Unexpected end of JSON input",
+          "sampleDates": []
+        }
+      }
+    },
+    "bookingResults": {
+      "NBOGTARP001CKEKEE": {
+        "success": true,
+        "reference": null,
+        "status": null,
+        "isManualProcessing": false,
+        "isTourPlanBooking": false,
+        "testDate": "2025-08-22"
+      },
+      "BBKCRCHO018TIACP3": {
+        "success": true,
+        "reference": null,
+        "status": null,
+        "isManualProcessing": false,
+        "isTourPlanBooking": false,
+        "testDate": "2025-08-22"
+      },
+      "VFARLROV001VFPRDX": {
+        "success": true,
+        "reference": null,
+        "status": null,
+        "isManualProcessing": false,
+        "isTourPlanBooking": false,
+        "testDate": "2025-08-22"
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "issue": "Day Tours search returns no results",
+      "solution": "Check ButtonName mapping for Day Tours products in TourPlan. Products must have ButtonName=\"Day Tours\" exactly."
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Group Tours search returns no results",
+      "solution": "Check ButtonName mapping for Group Tours products in TourPlan. Products must have ButtonName=\"Group Tours\" exactly."
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Cruises search returns no results",
+      "solution": "Check ButtonName mapping for Cruises products in TourPlan. Products must have ButtonName=\"Cruises\" exactly."
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Rail search returns no results",
+      "solution": "Check ButtonName mapping for Rail products in TourPlan. Products must have ButtonName=\"Rail\" exactly."
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Packages search returns no results",
+      "solution": "Check ButtonName mapping for Packages products in TourPlan. Products must have ButtonName=\"Packages\" exactly."
+    },
+    {
+      "priority": "HIGH",
+      "issue": "Special Offers search returns no results",
+      "solution": "Check ButtonName mapping for Special Offers products in TourPlan. Products must have ButtonName=\"Special Offers\" exactly."
+    },
+    {
+      "priority": "MEDIUM",
+      "issue": "19 individual products not loading",
+      "solution": "Check product codes, rate configurations, and date ranges in TourPlan"
+    }
+  ]
+}

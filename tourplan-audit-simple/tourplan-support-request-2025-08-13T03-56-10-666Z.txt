@@ -1,0 +1,38 @@
+
+TO: TourPlan Support
+FROM: This is Africa - Agent SAMAGT
+RE: Product Configuration Issues Preventing Automated Bookings
+
+Dear TourPlan Support,
+
+We are experiencing configuration issues that prevent certain products from accepting automated bookings via the XML API. Our technical audit has identified specific products and configuration gaps.
+
+WORKING EXAMPLES:
+- Group Tours: All working correctly (21 products return for Kenya search)
+- Some Cruise Products: BBKCRCHO018TIACP3, BBKCRTVT001ZAM2NS work correctly
+- Some Rail Products: VFARLROV001VFPRDX, VFARLROV001VFPRRY work correctly
+
+CONFIGURATION ISSUES REQUIRING ASSISTANCE:
+
+1. CRUISE PRODUCTS - Day Restrictions Not Working:
+   - BBKCRCHO018TIACP2: Should operate Mon/Wed only but shows all days available
+   - BBKCRTVT001ZAM3NS: Shows correct Friday availability but bookings fail with Status="NO"
+   
+   Request: Please configure AppliesDaysOfWeek attributes correctly for these products
+
+2. RAIL PRODUCTS - Service Status Issues:
+   Products failing with Status="NO": [list of failing rail products]
+   
+   Request: Please enable WR (Web Request) service status for these products
+
+3. ACCOMMODATION SEARCH - ButtonName Issues:
+   ButtonName="Accommodation" searches return empty results
+   
+   Request: Please confirm correct XML structure for accommodation searches
+
+Please advise on the correct configuration steps to resolve these issues.
+We have attached detailed XML request/response examples for your review.
+
+Best regards,
+[Your Name]
+This is Africa

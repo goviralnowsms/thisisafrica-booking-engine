@@ -1,0 +1,25 @@
+
+TOURPLAN CONFIGURATION AUDIT REPORT
+Generated: 8/13/2025, 1:50:32 PM
+
+SUMMARY:
+✅ Working Product Types: None
+❌ Failing Product Types: Day Tours, Group Tours, Cruises, Rail, Packages, Special Offers
+✅ Products Loading: 0/19
+✅ Auto-Booking Capable: 0 products
+⚠️  Manual Processing: 0 products
+
+CRITICAL RECOMMENDATIONS:
+• Day Tours search returns no results: Check ButtonName mapping for Day Tours products in TourPlan. Products must have ButtonName="Day Tours" exactly.
+• Group Tours search returns no results: Check ButtonName mapping for Group Tours products in TourPlan. Products must have ButtonName="Group Tours" exactly.
+• Cruises search returns no results: Check ButtonName mapping for Cruises products in TourPlan. Products must have ButtonName="Cruises" exactly.
+• Rail search returns no results: Check ButtonName mapping for Rail products in TourPlan. Products must have ButtonName="Rail" exactly.
+• Packages search returns no results: Check ButtonName mapping for Packages products in TourPlan. Products must have ButtonName="Packages" exactly.
+• Special Offers search returns no results: Check ButtonName mapping for Special Offers products in TourPlan. Products must have ButtonName="Special Offers" exactly.
+
+DETAILED RESULTS:
+- Service Buttons Configured: Yes
+- Working Product Types: 
+- Failing Product Types: Day Tours, Group Tours, Cruises, Rail, Packages, Special Offers
+
+See JSON files for detailed technical data.

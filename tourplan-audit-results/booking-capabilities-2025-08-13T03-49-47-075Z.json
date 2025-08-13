@@ -1,0 +1,26 @@
+{
+  "NBOGTARP001CKEKEE": {
+    "success": true,
+    "reference": null,
+    "status": null,
+    "isManualProcessing": false,
+    "isTourPlanBooking": false,
+    "testDate": "2025-08-22"
+  },
+  "BBKCRCHO018TIACP3": {
+    "success": true,
+    "reference": null,
+    "status": null,
+    "isManualProcessing": false,
+    "isTourPlanBooking": false,
+    "testDate": "2025-08-22"
+  },
+  "VFARLROV001VFPRDX": {
+    "success": true,
+    "reference": null,
+    "status": null,
+    "isManualProcessing": false,
+    "isTourPlanBooking": false,
+    "testDate": "2025-08-22"
+  }
+}

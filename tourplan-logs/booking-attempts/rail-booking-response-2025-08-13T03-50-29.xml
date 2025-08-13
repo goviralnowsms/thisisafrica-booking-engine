@@ -1,0 +1,97 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1540,
+      "Ref": "TAWB100535",
+      "ServiceLineId": 6430,
+      "SequenceNumber": 10,
+      "Status": "RQ",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6430,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "VFARLROV001VFPRDX",
+          "OptionNumber": 103527,
+          "Date": "2025-08-22",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2314,
+                    "Forename": "Adult 1",
+                    "Surname": "Test Customer Audit",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  },
+                  {
+                    "PersonId": 2315,
+                    "Forename": "Adult 2",
+                    "Surname": "Test Customer Audit",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 1274336,
+          "SCU": "Trip",
+          "SCUqty": 1,
+          "Pickup_Date": "2025-08-22",
+          "puTime": 0,
+          "puRemark": "+61 400 000 000",
+          "Dropoff_Date": "2025-08-25",
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Rovos Rail",
+          "Description": "Rovos Rail Victoria Falls to Pretoria",
+          "Description2": "",
+          "Comment": "Deluxe Suite",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "PriceCode": "ST",
+          "TourplanServiceStatus": "WR",
+          "ServiceCategory": "S",
+          "LocationCode": "VFA",
+          "Voucher_Status": "L",
+          "ServiceLineExpiryDate": "2025-08-22",
+          "SupplierConfirmation": ""
+        }
+      }
+    },
+    "BookingUpdateCount": 2,
+    "ServiceLineUpdateCount": 1
+  }
+}

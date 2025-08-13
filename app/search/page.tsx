@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Search, Loader2, Star, ArrowLeft, Filter } from "lucide-react"
 import { getAvailableCountriesFromAPI, getAvailableDestinationsFromAPI, getTourPlanDestinationNameFromValue } from "@/lib/dynamic-destination-mapping"
 import { hasRailAvailability, getRailAvailability } from "@/lib/rail-availability"
+import { hasCruiseAvailability, getCruiseAvailability } from "@/lib/cruise-availability"
 import { shouldShowDepartureDay, getDepartureDayMessage } from "@/lib/group-tours-availability"
 
 export default function SearchResultsPage() {
@@ -247,8 +248,11 @@ export default function SearchResultsPage() {
 
   const renderProductCard = (tour: any, productType: string) => {
     const isRail = productType === 'Rail'
-    const hasAvailability = isRail ? hasRailAvailability(tour.code) : true
-    const availabilityInfo = isRail ? getRailAvailability(tour.code) : null
+    const isCruise = productType === 'Cruises'
+    const hasAvailability = isRail ? hasRailAvailability(tour.code) : 
+                           isCruise ? hasCruiseAvailability(tour.code) : true
+    const availabilityInfo = isRail ? getRailAvailability(tour.code) : 
+                            isCruise ? getCruiseAvailability(tour.code) : null
     
     return (
       <div key={`${productType}-${tour.id}`} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
@@ -290,7 +294,7 @@ export default function SearchResultsPage() {
               </div>
             </div>
             <div className="text-right">
-              {isRail && !hasAvailability ? (
+              {(isRail && !hasAvailability) || (isCruise && !hasAvailability) ? (
                 <>
                   <p className="text-sm text-gray-500">Availability</p>
                   <p className="text-lg font-bold text-orange-600">Quote Required</p>
@@ -320,7 +324,7 @@ export default function SearchResultsPage() {
             <Link href={`/products/${tour.code}`} className="flex-1">
               <Button variant="outline" className="w-full">View details</Button>
             </Link>
-            {(isRail && !hasAvailability) || tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
+            {(isRail && !hasAvailability) || (isCruise && !hasAvailability) || tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
               <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=${productType.toLowerCase()}`} className="flex-1">
                 <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
               </Link>

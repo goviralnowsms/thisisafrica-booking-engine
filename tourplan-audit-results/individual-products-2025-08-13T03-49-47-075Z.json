@@ -1,0 +1,124 @@
+{
+  "Group Tours": {
+    "NBOGTARP001CKEKEE": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "NBOGTARP001THRKE3": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "NBOGTARP001CKFSKE": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "NBOGTARP001CKENSE": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "NBOGTARP001CKTSKE": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    }
+  },
+  "Cruises": {
+    "BBKCRCHO018TIACP2": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "BBKCRCHO018TIACP3": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "BBKCRTVT001ZAM2NS": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "BBKCRTVT001ZAM2NM": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "BBKCRTVT001ZAM3NS": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "BBKCRTVT001ZAM3NM": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    }
+  },
+  "Rail": {
+    "VFARLROV001VFPRDX": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "VFARLROV001VFPRRY": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "VFARLROV001VFPYPM": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "CPTRLROV001RRCTPR": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "CPTRLROV001CTPPUL": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    }
+  },
+  "Special Offers": {
+    "GKPSPSABBLDSABBLS": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "GKPSPSAV002SAVLHM": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    },
+    "HDSSPMAKUTSMSSCLS": {
+      "success": false,
+      "hasAvailability": false,
+      "error": "Unexpected end of JSON input",
+      "sampleDates": []
+    }
+  }
+}

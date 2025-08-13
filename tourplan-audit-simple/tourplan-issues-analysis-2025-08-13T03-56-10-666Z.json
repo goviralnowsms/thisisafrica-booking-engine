@@ -1,0 +1,118 @@
+{
+  "auditDate": "2025-08-13T03:56:10.683Z",
+  "infrastructure": {
+    "status": "WORKING",
+    "details": [
+      "✅ EC2 proxy routing correctly (13.210.224.119)",
+      "✅ TourPlan API responding to requests",
+      "✅ Group Tours: Kenya search returns 21 results",
+      "✅ Product details: NBOGTARP001CKEKEE loads successfully",
+      "✅ Pricing calendar: Available with date restrictions"
+    ]
+  },
+  "workingExamples": {
+    "Group Tours - Kenya": {
+      "status": "WORKING",
+      "resultCount": 21,
+      "testUrl": "https://book.thisisafrica.com.au/api/tourplan?productType=Group%20Tours&destination=Kenya",
+      "findings": "Returns 21 tour products from Alpha Travel and Sense of Africa East Africa"
+    },
+    "Product Details": {
+      "status": "WORKING",
+      "example": "NBOGTARP001CKEKEE",
+      "testUrl": "https://book.thisisafrica.com.au/api/tourplan/pricing/NBOGTARP001CKEKEE",
+      "findings": "Returns pricing calendar with availability dates and restrictions"
+    }
+  },
+  "identifiedIssues": {
+    "Cruise Products": {
+      "priority": "HIGH",
+      "issue": "Mixed booking success - some get TAWB, others get TIA references",
+      "workingProducts": [
+        "BBKCRCHO018TIACP3 (Chobe Princess 3-night - Fridays only)",
+        "BBKCRTVT001ZAM2NS (Zambezi Queen 2-night standard)",
+        "BBKCRTVT001ZAM2NM (Zambezi Queen 2-night master)"
+      ],
+      "problematicProducts": [
+        "BBKCRTVT001ZAM3NS (Zambezi Queen 3-night - shows Fridays but bookings fail)",
+        "BBKCRCHO018TIACP2 (Chobe Princess 2-night - should be Mon/Wed only but shows all days)"
+      ],
+      "rootCause": "TourPlan product configuration - missing AppliesDaysOfWeek or incorrect service status",
+      "solution": "Configure products in TourPlan with correct day restrictions and service status for API bookings"
+    },
+    "Rail Products": {
+      "priority": "HIGH",
+      "issue": "Only 4 out of 9 rail products accept bookings",
+      "workingProducts": [
+        "VFARLROV001VFPRDX (Victoria Falls to Pretoria)",
+        "VFARLROV001VFPRRY (Victoria Falls to Pretoria return)",
+        "VFARLROV001VFPYPM (Victoria Falls route)",
+        "CPTRLROV001RRCTPR (Return Cape Town to Pretoria)"
+      ],
+      "failingProducts": [
+        "Other Cape Town and Pretoria routes return Status=\"NO\" (declined)"
+      ],
+      "rootCause": "TourPlan service status configuration - some products not enabled for web bookings",
+      "solution": "Enable WR (Web Request) service status in TourPlan for non-working rail products"
+    },
+    "Accommodation Search": {
+      "priority": "HIGH",
+      "issue": "ButtonName=\"Accommodation\" search returns empty results",
+      "findings": "TourPlan requires ButtonDestinations structure instead of simple DestinationName",
+      "solution": "Use Info=\"S\" and ButtonDestinations XML structure for accommodation searches"
+    },
+    "Day-of-Week Restrictions": {
+      "priority": "MEDIUM",
+      "issue": "Products showing availability on wrong days",
+      "examples": [
+        "Chobe Princess 2-night should only show Mon/Wed but shows all days",
+        "Some Zambezi Queen products show all days but should have restrictions"
+      ],
+      "solution": "Configure AppliesDaysOfWeek attributes correctly in TourPlan rate settings"
+    }
+  },
+  "clientExpectations": {
+    "current": "Wants 100% automated TourPlan bookings with no manual processing",
+    "reality": "TourPlan product configuration limits which products can auto-book",
+    "recommendation": "Focus on fixing the highest-impact products first, then expand coverage"
+  },
+  "nextSteps": [
+    {
+      "step": 1,
+      "action": "Send this audit to TourPlan support",
+      "details": "Request specific configuration fixes for cruise and rail products"
+    },
+    {
+      "step": 2,
+      "action": "Fix day-of-week restrictions",
+      "details": "Update AppliesDaysOfWeek settings for cruise products"
+    },
+    {
+      "step": 3,
+      "action": "Enable web booking service status",
+      "details": "Configure WR status for failing rail products"
+    },
+    {
+      "step": 4,
+      "action": "Test accommodation search fixes",
+      "details": "Implement ButtonDestinations structure for hotel searches"
+    },
+    {
+      "step": 5,
+      "action": "Run systematic booking tests",
+      "details": "Once configurations are fixed, test all products for TAWB vs TIA results"
+    }
+  ],
+  "tourplanConfigurationChecklist": [
+    "□ Service Buttons configured (Day Tours, Group Tours, Cruises, Rail, Packages, Special Offers)",
+    "□ Products have correct ButtonName mapping",
+    "□ Location codes (3 chars) exist and are valid",
+    "□ Service Type codes (2 chars) exist and are valid",
+    "□ Supplier codes (6 chars) exist and are active",
+    "□ Products have active rates for search date ranges",
+    "□ AppliesDaysOfWeek attributes set correctly for day restrictions",
+    "□ Service status configured for web bookings (WR status)",
+    "□ Products not flagged as deleted or cancelled (XX status)",
+    "□ Rate configurations include confirmed rates (not zero rates for Info=\"S\")"
+  ]
+}
