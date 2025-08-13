@@ -283,22 +283,76 @@ async function searchAccommodationFromCatalog(criteria: {
  */
 export async function getDestinations(countryName: string, reqType: string = 'Day Tours') {
   try {
-    const xml = buildServiceButtonDetailsRequest(reqType, countryName);
-    const response = await wpXmlRequest(xml);
+    // Try both Group Tours and Day Tours to get comprehensive country/destination list
+    const requests = [reqType];
     
-    // Extract localities and classes from response
-    const buttonDetails = extractResponseData(response, 'GetServiceButtonDetailsReply');
+    // For Group Tours, also try Day Tours as fallback since WordPress might be using Day Tours API
+    if (reqType === 'Group Tours') {
+      requests.push('Day Tours');
+    }
     
-    const localities = extractArray(buttonDetails?.LocalityDescriptions?.LocalityDescription);
-    const classes = extractArray(buttonDetails?.ClassDescriptions?.ClassDescription);
+    let bestResult = null;
+    let maxLocalities = 0;
     
+    for (const buttonName of requests) {
+      try {
+        console.log(`🔍 Trying ButtonName="${buttonName}" for ${countryName || 'countries list'}`);
+        const xml = buildServiceButtonDetailsRequest(buttonName, countryName);
+        const response = await wpXmlRequest(xml);
+        
+        // Extract localities and classes from response
+        const buttonDetails = extractResponseData(response, 'GetServiceButtonDetailsReply');
+        
+        // Handle different response structures:
+        // For countries list: check Countries.Country.CountryName
+        // For destinations list: check LocalityDescriptions.LocalityDescription
+        let localities = [];
+        
+        if (buttonDetails?.Countries?.Country && !countryName) {
+          // Getting countries list - extract CountryName from Countries.Country array
+          const countries = extractArray(buttonDetails.Countries.Country);
+          localities = countries.map((country: any) => country.CountryName).filter(Boolean);
+          console.log(`📍 Extracted ${localities.length} countries:`, localities);
+        } else if (buttonDetails?.LocalityDescriptions?.LocalityDescription) {
+          // Getting destinations list - extract from LocalityDescriptions
+          localities = extractArray(buttonDetails.LocalityDescriptions.LocalityDescription);
+          console.log(`📍 Extracted ${localities.length} destinations:`, localities);
+        }
+        
+        const classes = extractArray(buttonDetails?.ClassDescriptions?.ClassDescription);
+        
+        console.log(`✅ ButtonName="${buttonName}" returned ${localities.length} localities, ${classes.length} classes`);
+        
+        // Use the result with the most localities (countries or destinations)
+        if (localities.length > maxLocalities) {
+          maxLocalities = localities.length;
+          bestResult = {
+            reqType: buttonName,
+            countryName,
+            LocalityDescription: localities,
+            ClassDescription: classes,
+            localityCount: localities.length,
+            classesCount: classes.length,
+          };
+        }
+      } catch (error) {
+        console.warn(`⚠️ ButtonName="${buttonName}" failed:`, error);
+      }
+    }
+    
+    if (bestResult) {
+      console.log(`🎯 Using best result from ButtonName="${bestResult.reqType}" with ${bestResult.localityCount} localities`);
+      return bestResult;
+    }
+    
+    // Fallback if all requests failed
     return {
       reqType,
       countryName,
-      LocalityDescription: localities,
-      ClassDescription: classes,
-      localityCount: localities.length,
-      classesCount: classes.length,
+      LocalityDescription: [],
+      ClassDescription: [],
+      localityCount: 0,
+      classesCount: 0,
     };
   } catch (error) {
     console.error('Error getting destinations:', error);
@@ -394,7 +448,153 @@ async function searchRailFromCatalog(criteria: {
 }
 
 /**
- * Search cruises using curated catalog
+ * Search Rail using TourPlan API (works for South Africa and Zimbabwe)
+ * Falls back to catalog if API returns no results
+ */
+async function searchRailFromTourPlanAPI(criteria: {
+  productType: string;
+  destination?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  adults?: number;
+  children?: number;
+  class?: string;
+}): Promise<{products: any[], totalResults: number, searchCriteria?: any}> {
+  try {
+    // Map destination names to TourPlan API format
+    const destinationMapping: Record<string, string> = {
+      'south-africa': 'South Africa',
+      'south africa': 'South Africa',
+      'southafrica': 'South Africa',
+      'zimbabwe': 'Zimbabwe',
+      'victoria-falls': 'Zimbabwe',
+      'victoria falls': 'Zimbabwe',
+      'victoriafalls': 'Zimbabwe'
+    };
+
+    const destination = criteria.destination?.toLowerCase();
+    const tourPlanDestination = destination ? destinationMapping[destination] : null;
+
+    if (!tourPlanDestination) {
+      console.log(`🚂 TourPlan API: No mapping for destination "${criteria.destination}", returning empty`);
+      return {
+        products: [],
+        totalResults: 0,
+        searchCriteria: criteria
+      };
+    }
+
+    console.log(`🚂 TourPlan API: Searching Rail for "${tourPlanDestination}"`);
+    
+    // Build Rail search request
+    const xml = buildRailSearchRequest(tourPlanDestination, criteria.dateFrom, criteria.dateTo);
+    const response = await wpXmlRequest(xml);
+    const optionInfo = extractResponseData(response, 'OptionInfoReply');
+
+    if (!optionInfo.Option) {
+      console.log(`🚂 TourPlan API: No rail products found for ${tourPlanDestination}`);
+      return {
+        products: [],
+        totalResults: 0,
+        searchCriteria: criteria
+      };
+    }
+
+    // Convert response to products array
+    const options = Array.isArray(optionInfo.Option) ? optionInfo.Option : [optionInfo.Option];
+    const railProducts = [];
+
+    for (const option of options) {
+      try {
+        const productCode = option.Opt;
+        console.log(`🚂 TourPlan API: Processing rail product ${productCode}`);
+        
+        // Get detailed product information
+        const productDetails = await getProductDetails(productCode);
+        
+        if (productDetails) {
+          railProducts.push({
+            id: productCode,
+            code: productCode,
+            name: productDetails.name || `Rail Journey ${productCode}`,
+            description: productDetails.description || '',
+            supplier: productDetails.supplierName || 'Railway Operator',
+            destination: tourPlanDestination,
+            duration: productDetails.duration || 'Multi-day',
+            rates: productDetails.rates || [],
+            images: getLocalAssets('rail').images || [],
+            level: 'luxury',
+            productType: 'Rail',
+            source: 'tourplan-api'
+          });
+        }
+      } catch (error) {
+        console.error(`🚂 Error processing rail product ${option.Opt}:`, error);
+      }
+    }
+
+    console.log(`🚂 TourPlan API: Successfully found ${railProducts.length} rail products`);
+    
+    return {
+      products: railProducts,
+      totalResults: railProducts.length,
+      searchCriteria: criteria
+    };
+    
+  } catch (error) {
+    console.error('❌ TourPlan API rail search failed:', error);
+    return {
+      products: [],
+      totalResults: 0,
+      searchCriteria: criteria
+    };
+  }
+}
+
+/**
+ * Helper function to add delay between API calls
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Helper function to retry API calls with exponential backoff
+ */
+async function retryApiCall<T>(
+  fn: () => Promise<T>, 
+  maxRetries: number = 3, 
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Add delay before each attempt (except the first)
+      if (attempt > 0) {
+        const delayMs = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+        console.log(`⏳ Retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await delay(delayMs);
+      }
+      
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`🔄 Attempt ${attempt + 1}/${maxRetries} failed:`, lastError.message);
+      
+      // If it's a rate limiting error, wait longer
+      if (lastError.message.includes('2050') || lastError.message.includes('Request denied')) {
+        console.log('🚫 Rate limiting detected, using longer delay');
+        await delay(3000); // 3 second delay for rate limiting
+      }
+    }
+  }
+  
+  throw lastError || new Error('All retry attempts failed');
+}
+
+/**
+ * Search cruises using curated catalog with rate limiting protection
  * Since TourPlan returns empty results for cruise searches
  */
 async function searchCruisesFromCatalog(criteria: {
@@ -411,13 +611,24 @@ async function searchCruisesFromCatalog(criteria: {
   let productCodes: string[] = ALL_CRUISES;
   
   console.log('🚢 Using all cruise product codes:', productCodes);
+  console.log('🚢 Implementing rate limiting protection with delays between calls');
   
-  // Fetch details for each cruise
+  // Fetch details for each cruise with rate limiting protection
   const cruiseProducts = [];
-  for (const productCode of productCodes) {
+  const errors = [];
+  
+  for (let i = 0; i < productCodes.length; i++) {
+    const productCode = productCodes[i];
+    
     try {
-      console.log(`🚢 Fetching details for cruise: ${productCode}`);
-      const productDetails = await getProductDetails(productCode);
+      console.log(`🚢 Fetching details for cruise ${i + 1}/${productCodes.length}: ${productCode}`);
+      
+      // Use retry logic with exponential backoff
+      const productDetails = await retryApiCall(
+        () => getProductDetails(productCode),
+        3, // max 3 retries
+        2000 // start with 2 second delay
+      );
       
       if (productDetails && productDetails.name) {
         cruiseProducts.push({
@@ -434,26 +645,38 @@ async function searchCruisesFromCatalog(criteria: {
           inclusions: [],
           exclusions: []
         });
+        console.log(`✅ Successfully loaded: ${productDetails.name}`);
+      } else {
+        console.warn(`⚠️ Product ${productCode} returned no data`);
       }
+      
+      // Add delay between successful calls to respect rate limits
+      if (i < productCodes.length - 1) {
+        console.log('⏳ Waiting 1.5s before next API call...');
+        await delay(1500);
+      }
+      
     } catch (error) {
-      console.warn(`🚢 Failed to fetch details for ${productCode}:`, error);
-      // Add a fallback entry
-      cruiseProducts.push({
-        id: productCode,
-        code: productCode,
-        name: `Cruise ${productCode}`,
-        description: 'River cruise in Southern Africa',
-        supplier: 'River Cruise Operator',
-        duration: 'Multi-day cruise',
-        rates: [],
-        images: [],
-        inclusions: [],
-        exclusions: []
-      });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Failed to fetch details for ${productCode} after retries:`, errorMsg);
+      errors.push({ productCode, error: errorMsg });
+      
+      // Don't add fallback entries that cause UI confusion
+      // Instead, continue with successful products only
+      console.log('🚫 Skipping fallback entry to avoid UI confusion');
+      
+      // Add longer delay after errors to let rate limits reset
+      if (i < productCodes.length - 1) {
+        console.log('⏳ Waiting 3s after error before next attempt...');
+        await delay(3000);
+      }
     }
   }
   
-  console.log(`🚢 Successfully loaded ${cruiseProducts.length} cruise products`);
+  console.log(`🚢 Successfully loaded ${cruiseProducts.length}/${productCodes.length} cruise products`);
+  if (errors.length > 0) {
+    console.log(`❌ Failed to load ${errors.length} products:`, errors);
+  }
   
   // Filter out test products
   const cruisesBeforeTestFilter = cruiseProducts.length;
@@ -468,7 +691,8 @@ async function searchCruisesFromCatalog(criteria: {
   return {
     products: filteredCruiseProducts,
     totalResults: filteredCruiseProducts.length,
-    searchCriteria: criteria
+    searchCriteria: criteria,
+    errors: errors // Include error info for debugging
   };
 }
 
@@ -530,25 +754,29 @@ export async function searchProducts(criteria: {
         break;
 
       case 'Cruises':
-        // Use curated cruise catalog since TourPlan returns empty results
-        console.log('🚢 Using curated cruise catalog');
-        const cruiseResults = await searchCruisesFromCatalog(criteria);
-        return {
-          products: cruiseResults.products || [],
-          totalResults: cruiseResults.totalResults || 0,
-          searchCriteria: criteria
-        };
+        // Try TourPlan API first with corrected ButtonName="Cruise" and Botswana destination
+        console.log('🚢 Attempting TourPlan API cruise search with ButtonName="Cruise" and Botswana');
+        xml = buildCruiseSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo);
+        console.log('🚢 Cruise search XML built with corrected parameters');
+        break;
         
       case 'Rail':
       case 'Rail journeys':
-        // Use curated rail catalog since TourPlan Rail search returns empty results
-        console.log('🚂 Using curated rail catalog');
-        const railResults = await searchRailFromCatalog(criteria);
-        return {
-          products: railResults.tours || [],
-          totalResults: railResults.totalResults || 0,
-          searchCriteria: criteria
-        };
+        // Try TourPlan API first for destinations that work, fallback to catalog
+        console.log('🚂 Attempting TourPlan API rail search first');
+        const railApiResults = await searchRailFromTourPlanAPI(criteria);
+        if (railApiResults.totalResults > 0) {
+          console.log(`🚂 ✅ TourPlan API returned ${railApiResults.totalResults} rail products`);
+          return railApiResults;
+        } else {
+          console.log('🚂 ⚠️ TourPlan API returned no results, falling back to curated catalog');
+          const railResults = await searchRailFromCatalog(criteria);
+          return {
+            products: railResults.tours || [],
+            totalResults: railResults.totalResults || 0,
+            searchCriteria: criteria
+          };
+        }
         
       case 'Packages':
       case 'Pre-designed packages':
@@ -606,7 +834,13 @@ export async function searchProducts(criteria: {
     }
     
     console.log('Sending TourPlan search XML:', xml);
-    const response = await wpXmlRequest(xml);
+    
+    // Use retry logic for search requests to handle rate limiting
+    const response = await retryApiCall(
+      () => wpXmlRequest(xml),
+      3, // max 3 retries
+      2000 // start with 2 second delay
+    );
     const optionInfo = extractResponseData(response, 'OptionInfoReply');
     
     // Enhanced debug logging for accommodation
@@ -832,7 +1066,13 @@ export async function getProductDetails(productCode: string) {
 </Request>`;
     
     console.log('Getting product details for:', productCode);
-    const response = await wpXmlRequest(xml);
+    
+    // Use retry logic for product detail requests to handle rate limiting
+    const response = await retryApiCall(
+      () => wpXmlRequest(xml),
+      3, // max 3 retries
+      2000 // start with 2 second delay
+    );
     const optionInfo = extractResponseData(response, 'OptionInfoReply');
     
     if (!optionInfo?.Option) {
