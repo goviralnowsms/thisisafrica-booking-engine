@@ -573,6 +573,10 @@ export default function BookingCreatePage() {
       }
 
       
+      console.log('🚨 BOOKING FORM - About to call API with data:', bookingData);
+      console.log('🚨 BOOKING FORM - tourId from URL:', tourId);
+      console.log('🚨 BOOKING FORM - productCode being sent:', bookingData.productCode);
+      
       const response = await fetch('/api/tourplan/booking', {
         method: 'POST',
         headers: {
