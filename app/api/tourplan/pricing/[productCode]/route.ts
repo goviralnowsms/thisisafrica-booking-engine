@@ -414,12 +414,19 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
             // Check if this is a Group Tour product
             const isGroupTour = productCode.includes('NBOGTARP') || productCode.includes('GROUPTOUR');
             
+            // Check if this is a Cruise product
+            const isCruiseProduct = productCode.includes('CRCHO') || productCode.includes('CRTVT') || productCode.includes('CRUISE');
+            
             if (isGroupTour) {
               // For Group Tours, WordPress productdetails.php only shows days with Status "Available"
               // This means only positive availability codes (>0), not "On request" (-3) days
               validDay = parseInt(availCode) > 0;  // Only show positive availability for Group Tours
+            } else if (isCruiseProduct) {
+              // For Cruise products, match WordPress behavior - only show truly available days, not "On request"
+              // WordPress only shows days with positive availability codes for cruises
+              validDay = parseInt(availCode) > 0;  // Only show positive availability for Cruises
             } else {
-              // For other products (Cruise, Rail, etc.), use the general logic
+              // For other products (Rail, etc.), use the general logic
               validDay = availCode !== '-1';  // Everything except -1 is considered available
             }
             
