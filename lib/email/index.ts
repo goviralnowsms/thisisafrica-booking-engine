@@ -71,15 +71,27 @@ export async function sendBookingConfirmation(booking: {
   status: string;
   requiresManualConfirmation?: boolean;
 }) {
-  const template = getBookingConfirmationTemplate(booking);
-  
-  return sendEmail({
-    to: booking.customerEmail,
-    subject: `Booking Confirmation - ${booking.reference}`,
-    html: template.html,
-    text: template.text,
-    replyTo: 'sales@thisisafrica.com.au'
-  });
+  try {
+    console.log('🔄 Generating booking confirmation email template for:', booking.reference);
+    const template = getBookingConfirmationTemplate(booking);
+    
+    console.log('📧 Sending booking confirmation to:', booking.customerEmail);
+    console.log('📧 Email subject:', `Booking Confirmation - ${booking.reference}`);
+    
+    const result = await sendEmail({
+      to: booking.customerEmail,
+      subject: `Booking Confirmation - ${booking.reference}`,
+      html: template.html,
+      text: template.text,
+      replyTo: 'sales@thisisafrica.com.au'
+    });
+    
+    console.log('📧 Email send result:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Error in sendBookingConfirmation:', error);
+    throw error;
+  }
 }
 
 // Helper function to send quote email
@@ -206,12 +218,10 @@ function getBookingConfirmationTemplate(booking: any) {
             </div>
             ` : ''}
             
-            ${booking.totalCost && booking.totalCost > 0 ? `
             <div class="detail-row">
               <span class="label">Total Cost:</span>
-              <span class="value">${booking.currency} ${(booking.totalCost / 100).toFixed(2)}</span>
+              <span class="value">${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}</span>
             </div>
-            ` : ''}
             
             <div class="detail-row">
               <span class="label">Status:</span>
@@ -271,8 +281,8 @@ BOOKING DETAILS
 Reference Number: ${booking.reference}
 Product: ${booking.productName}
 Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
-${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}${booking.totalCost && booking.totalCost > 0 ? `
-Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
+${booking.dateTo ? `Return Date: ${new Date(booking.dateTo).toLocaleDateString('en-AU')}` : ''}
+Total Cost: ${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}
 Status: ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}
 
 NEXT STEPS
@@ -507,12 +517,10 @@ function getAdminNotificationTemplate(booking: any) {
               <span class="value">${new Date(booking.dateFrom).toLocaleDateString('en-AU')}</span>
             </div>
             
-            ${booking.totalCost && booking.totalCost > 0 ? `
             <div class="detail-row">
               <span class="label">Total Cost:</span>
-              <span class="value">${booking.currency} ${(booking.totalCost / 100).toFixed(2)}</span>
+              <span class="value">${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}</span>
             </div>
-            ` : ''}
             
             <div class="detail-row">
               <span class="label">TourPlan Status:</span>
@@ -563,8 +571,8 @@ BOOKING DETAILS
 Reference: ${booking.reference}
 Product Code: ${booking.productCode}
 Product Name: ${booking.productName}
-Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}${booking.totalCost && booking.totalCost > 0 ? `
-Total Cost: ${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : ''}
+Travel Date: ${new Date(booking.dateFrom).toLocaleDateString('en-AU')}
+Total Cost: ${booking.totalCost && booking.totalCost > 0 ? `${booking.currency} ${(booking.totalCost / 100).toFixed(2)}` : 'TBC'}
 TourPlan Status: ${booking.tourplanStatus || 'N/A'}
 
 ${booking.requiresManualConfirmation ? 
