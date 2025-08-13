@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createBooking } from '@/lib/tourplan';
+import { createBooking, getProductDetails } from '@/lib/tourplan';
 import { 
   validateRequestBody, 
   successResponse, 
@@ -84,12 +84,36 @@ export async function POST(request: NextRequest) {
     console.log('📅 Booking dates:', data.dateFrom, 'to', data.dateTo);
     console.log('👥 Passengers:', data.adults, 'adults,', data.children || 0, 'children');
     
+    // Get product details to calculate return date from duration
+    let calculatedDateTo = data.dateTo;
+    let productName = data.productCode; // fallback to product code
+    try {
+      const productDetails = await getProductDetails(data.productCode);
+      if (productDetails) {
+        // Use actual product name if available
+        if (productDetails.name) {
+          productName = productDetails.name;
+        }
+        
+        // Calculate return date based on product duration
+        if (productDetails.periods) {
+          const startDate = new Date(data.dateFrom);
+          const returnDate = new Date(startDate);
+          returnDate.setDate(startDate.getDate() + (productDetails.periods - 1)); // periods includes start day
+          calculatedDateTo = returnDate.toISOString().split('T')[0];
+          console.log(`📅 Calculated return date for ${data.productCode}: ${data.dateFrom} + ${productDetails.periods} days = ${calculatedDateTo}`);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not get product details for return date calculation:', error);
+    }
+    
     const result = await createBooking({
       customerName: data.customerName,
       productCode: data.productCode,
       rateId: data.rateId || '',
       dateFrom: data.dateFrom,
-      dateTo: data.dateTo,
+      dateTo: calculatedDateTo,
       isQuote: data.bookingType === 'quote',
       email: data.email,
       mobile: data.mobile,
@@ -209,7 +233,7 @@ export async function POST(request: NextRequest) {
         productDetails: {
           code: data.productCode,
           dateFrom: data.dateFrom,
-          dateTo: data.dateTo,
+          dateTo: calculatedDateTo,
           adults: data.adults,
           children: data.children,
           infants: data.infants
@@ -231,9 +255,9 @@ export async function POST(request: NextRequest) {
           reference: bookingRef,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           customerName: data.customerName,
-          productName: data.productCode,
+          productName: productName,
           dateFrom: data.dateFrom,
-          dateTo: data.dateTo,
+          dateTo: calculatedDateTo,
           totalCost: result.totalCost || 0,
           currency: result.currency || 'AUD',
           status: quotedBooking.status,
@@ -246,7 +270,7 @@ export async function POST(request: NextRequest) {
           customerName: data.customerName,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           productCode: data.productCode,
-          productName: data.productCode,
+          productName: productName,
           dateFrom: data.dateFrom,
           totalCost: result.totalCost || 0,
           currency: result.currency || 'AUD',
@@ -271,9 +295,9 @@ export async function POST(request: NextRequest) {
           reference: result.reference || result.bookingRef || result.bookingId,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           customerName: data.customerName,
-          productName: data.productCode,
+          productName: productName,
           dateFrom: data.dateFrom,
-          dateTo: data.dateTo,
+          dateTo: calculatedDateTo,
           totalCost: result.totalCost || 0,
           currency: result.currency || 'AUD',
           status: result.status || 'CONFIRMED',
@@ -286,7 +310,7 @@ export async function POST(request: NextRequest) {
           customerName: data.customerName,
           customerEmail: data.email || 'noreply@thisisafrica.com.au',
           productCode: data.productCode,
-          productName: data.productCode,
+          productName: productName,
           dateFrom: data.dateFrom,
           totalCost: result.totalCost || 0,
           currency: result.currency || 'AUD',
