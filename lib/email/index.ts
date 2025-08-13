@@ -142,7 +142,7 @@ export async function sendAdminNotification(booking: {
 }
 
 // Email template functions
-function getBookingConfirmationTemplate(booking: any) {
+function getBookingConfirmationTemplate_BROKEN(booking: any) {
   const html = `
     <!DOCTYPE html>
     <html>
@@ -296,6 +296,37 @@ Website: www.thisisafrica.com.au
 Thank you for choosing This is Africa!
   `;
   
+  return { html, text };
+}
+
+// SIMPLE WORKING EMAIL TEMPLATE
+function getBookingConfirmationTemplate(booking: any) {
+  const html = `
+    <html>
+    <body>
+      <h1>BOOKING CONFIRMATION</h1>
+      <p><strong>Reference:</strong> ${booking.reference}</p>
+      <p><strong>Customer:</strong> ${booking.customerName}</p>
+      <p><strong>Product:</strong> ${booking.productName}</p>
+      <p><strong>Travel Date:</strong> ${booking.dateFrom}</p>
+      <p><strong>Return Date:</strong> ${booking.dateTo || 'N/A'}</p>
+      <p><strong>Status:</strong> ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}</p>
+      <p>Contact: sales@thisisafrica.com.au | +61 2 9664 9187</p>
+    </body>
+    </html>
+  `;
+
+  const text = `
+BOOKING CONFIRMATION
+Reference: ${booking.reference}
+Customer: ${booking.customerName}
+Product: ${booking.productName}
+Travel Date: ${booking.dateFrom}
+Return Date: ${booking.dateTo || 'N/A'}
+Status: ${booking.requiresManualConfirmation ? 'Pending Confirmation' : 'Confirmed'}
+Contact: sales@thisisafrica.com.au | +61 2 9664 9187
+  `;
+
   return { html, text };
 }
 
