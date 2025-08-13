@@ -1275,11 +1275,15 @@ export default function BookingCreatePage() {
                     <StripePaymentForm
                       amount={total * 0.3} // 30% deposit
                       onSuccess={async (paymentIntentId) => {
+                        console.log('🚨🚨🚨 PAYMENT SUCCESS HANDLER TRIGGERED 🚨🚨🚨');
+                        console.log('Payment Intent ID:', paymentIntentId);
                         
                         // Check if this is a manual confirmation booking that already exists
                         const manualBookingData = sessionStorage.getItem('manualConfirmationBooking')
+                        console.log('Manual booking data exists:', !!manualBookingData);
                         if (manualBookingData) {
                           const bookingData = JSON.parse(manualBookingData)
+                          console.log('Booking data:', bookingData)
                           
                           // Create Supabase record for rail booking so it appears in My Bookings
                           try {
