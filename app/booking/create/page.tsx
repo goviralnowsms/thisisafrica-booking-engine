@@ -1312,6 +1312,29 @@ export default function BookingCreatePage() {
                             // Don't fail the flow - payment was successful
                           }
                           
+                          // Send confirmation email after successful payment
+                          try {
+                            console.log('📧 Sending confirmation email after payment success');
+                            const emailResponse = await fetch('/api/test-email', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                to: leadTraveler?.email || bookingData.customerEmail,
+                                reference: bookingData.reference,
+                                customerName: bookingData.customerName,
+                                productName: product.name || bookingData.productName,
+                                dateFrom: bookingData.dateFrom,
+                                totalCost: Math.round((total * 0.3) * 100), // Deposit amount in cents
+                                currency: 'AUD',
+                                requiresManualConfirmation: true
+                              })
+                            });
+                            const emailResult = await emailResponse.json();
+                            console.log('📧 Email result:', emailResult);
+                          } catch (emailError) {
+                            console.error('❌ Failed to send email:', emailError);
+                          }
+
                           // Go directly to confirmation with payment success
                           const bookingRef = bookingData.reference || bookingData.bookingReference || bookingData.bookingRef || bookingData.id
                           router.push(`/booking-confirmation?reference=${bookingRef}&manual=true&paid=true`)
