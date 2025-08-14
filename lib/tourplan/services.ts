@@ -1743,7 +1743,12 @@ export async function createBooking(bookingData: {
           bookingRef: railBookingRef,
           bookingId: railBookingRef,
           id: railBookingRef,
-          fallbackReason: bookingError.message
+          fallbackReason: bookingError.message,
+          debugXml: {
+            request: xml,
+            response: bookingError.message,
+            error: true
+          }
         };
       } else if (isCruise) {
         console.warn('🚢 Cruise booking failed in TourPlan, falling back to manual processing:', bookingError);
@@ -1760,7 +1765,12 @@ export async function createBooking(bookingData: {
           bookingRef: cruiseBookingRef,
           bookingId: cruiseBookingRef,
           id: cruiseBookingRef,
-          fallbackReason: bookingError.message
+          fallbackReason: bookingError.message,
+          debugXml: {
+            request: xml,
+            response: bookingError.message,
+            error: true
+          }
         };
       } else {
         // For other products, re-throw the error
@@ -1784,6 +1794,10 @@ export async function createBooking(bookingData: {
         currency: 'AUD',
         rateId: bookingData.rateId,
         rawResponse: response,
+        debugXml: {
+          request: xml,
+          response: JSON.stringify(response, null, 2)
+        }
       };
     } else {
       console.warn('⚠️ TourPlan booking returned non-OK status:', addServiceReply.Status);
@@ -1799,6 +1813,10 @@ export async function createBooking(bookingData: {
         currency: 'AUD',
         rateId: bookingData.rateId,
         rawResponse: response,
+        debugXml: {
+          request: xml,
+          response: JSON.stringify(response, null, 2)
+        }
       };
     }
   } catch (error) {

@@ -247,7 +247,8 @@ export async function POST(request: NextRequest) {
         message: result.status === 'WQ' 
           ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
           : 'Your booking has been received. Our team will contact you within 48 hours to confirm availability.',
-        rawResponse: result.rawResponse
+        rawResponse: result.rawResponse,
+        debugXml: result.debugXml // Include XML debug info for failed bookings
       };
       
       console.log('📝 Manual confirmation booking created:', bookingRef);
