@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
           ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
           : 'Your booking has been received. Our team will contact you within 48 hours to confirm availability.',
         rawResponse: result.rawResponse,
-        debugXml: result.debugXml, // Include XML debug info for failed bookings
+        // debugXml: result.debugXml, // Removed - causing 500 errors on Vercel
         configurationAnalysis: {
           productCode: data.productCode,
           status: result.status,
