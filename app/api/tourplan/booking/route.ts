@@ -135,6 +135,23 @@ export async function POST(request: NextRequest) {
       totalCost: result.totalCost
     });
     
+    // Extract configuration for analysis
+    if (result.debugXml && result.status) {
+      console.log('📊 BOOKING RESULT SUMMARY:');
+      console.log('=====================================');
+      console.log(`Product: ${data.productCode}`);
+      console.log(`Status: ${result.status} ${result.status === 'NO' ? '❌ DECLINED' : result.status === 'OK' || result.status === 'RQ' || result.status === 'WQ' ? '✅ ACCEPTED' : '⚠️ UNKNOWN'}`);
+      console.log(`Reference: ${result.reference || result.bookingRef || 'NONE'}`);
+      console.log('=====================================');
+      
+      // If this is a known working product that failed, flag it
+      const WORKING_PRODUCTS = ['NBOGTARP001CKEKEE', 'NBOGTARP001THRKE3'];
+      if (WORKING_PRODUCTS.includes(data.productCode) && result.status === 'NO') {
+        console.error('🚨 CRITICAL: A normally working product was declined!');
+        console.error('This may indicate: wrong departure day, invalid dates, or TourPlan configuration change');
+      }
+    }
+    
     // Define products that successfully book into TourPlan (based on testing)
     // IMPORTANT: Cruise products require specific departure days (Mon/Wed/Fri)
     const WORKING_PRODUCTS = {
@@ -248,7 +265,21 @@ export async function POST(request: NextRequest) {
           ? 'Quote created in TourPlan. Staff will confirm availability and finalize your booking within 48 hours.'
           : 'Your booking has been received. Our team will contact you within 48 hours to confirm availability.',
         rawResponse: result.rawResponse,
-        debugXml: result.debugXml // Include XML debug info for failed bookings
+        debugXml: result.debugXml, // Include XML debug info for failed bookings
+        configurationAnalysis: {
+          productCode: data.productCode,
+          status: result.status,
+          expectedToWork: isWorkingProduct,
+          statusMeaning: result.status === 'NO' ? 'Declined by TourPlan' : 
+                         result.status === 'RQ' ? 'On Request' :
+                         result.status === 'WQ' ? 'Website Quote' :
+                         result.status === 'OK' ? 'Confirmed' : 'Unknown',
+          requiresConfiguration: result.status === 'NO' && !isWorkingProduct ? 
+            'Product needs TourPlan configuration for online booking' : 
+            result.status === 'NO' && isWorkingProduct ?
+            'Check departure day/dates - product normally works' : 
+            'Manual confirmation required'
+        }
       };
       
       console.log('📝 Manual confirmation booking created:', bookingRef);

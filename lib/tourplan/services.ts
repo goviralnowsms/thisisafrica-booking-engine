@@ -1712,6 +1712,48 @@ export async function createBooking(bookingData: {
         fullReply: addServiceReply
       });
       
+      // Extract and highlight key configuration fields that determine if booking works
+      const serviceConfig = addServiceReply?.ServiceLines?.ServiceLine || addServiceReply?.ServiceLine || {};
+      const configAnalysis = {
+        '🔑 KEY CONFIGURATION FIELDS': '====================',
+        'Product Code': bookingData.productCode,
+        'Status': addServiceReply?.Status,
+        'CostedInBooking': serviceConfig.CostedInBooking || 'NOT SET',
+        'TourplanServiceStatus': serviceConfig.TourplanServiceStatus || 'NOT SET',
+        'CancelDeleteStatus': serviceConfig.CancelDeleteStatus || 'NOT SET',
+        'ServiceCategory': serviceConfig.ServiceCategory || 'NOT SET',
+        'Voucher_Status': serviceConfig.Voucher_Status || 'NOT SET',
+        'CanUpdate': serviceConfig.CanUpdate || 'NOT SET',
+        'CanAccept': serviceConfig.CanAccept || 'NOT SET',
+        '====================': '===================='
+      };
+      
+      console.log('🔍 TOURPLAN PRODUCT CONFIGURATION ANALYSIS:');
+      console.table(configAnalysis);
+      
+      // Highlight potential issues
+      const issues = [];
+      if (serviceConfig.CostedInBooking !== 'Y') {
+        issues.push('❌ CostedInBooking is not "Y" - product may not be configured for online booking');
+      }
+      if (serviceConfig.TourplanServiceStatus !== 'WR') {
+        issues.push('❌ TourplanServiceStatus is not "WR" (Web Request) - product needs TourPlan configuration');
+      }
+      if (!serviceConfig.CancelDeleteStatus || serviceConfig.CancelDeleteStatus === '') {
+        issues.push('⚠️ CancelDeleteStatus is blank - may have read-only restrictions');
+      }
+      if (addServiceReply?.Status === 'NO') {
+        issues.push('❌ Status is "NO" - booking was declined by TourPlan');
+      }
+      
+      if (issues.length > 0) {
+        console.log('⚠️ POTENTIAL CONFIGURATION ISSUES DETECTED:');
+        issues.forEach(issue => console.log(issue));
+        console.log('📞 These issues need to be fixed in TourPlan\'s product configuration');
+      } else if (addServiceReply?.Status === 'OK' || addServiceReply?.Status === 'RQ' || addServiceReply?.Status === 'WQ') {
+        console.log('✅ Product appears correctly configured for online booking');
+      }
+      
       // Check for error responses
       if (response?.Reply?.Error) {
         const error = response.Reply.Error;
