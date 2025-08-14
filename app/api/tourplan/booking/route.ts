@@ -92,39 +92,19 @@ export async function POST(request: NextRequest) {
     const calculatedDateTo = data.dateTo;
     const productName = data.productCode; // Use product code as fallback name
     
-    // Check if this is a rail product that's failing on Vercel
-    const isRailProduct = data.productCode.includes('RLROV') || 
-                         data.productCode.includes('RAIL') || 
-                         data.productCode.toLowerCase().includes('rail');
-    
-    let result;
-    
-    if (isRailProduct) {
-      // TEMPORARY: Skip TourPlan for rail products due to Vercel 500 errors
-      console.log('🚂 TEMPORARY: Creating direct TIA booking for rail product due to Vercel issues');
-      result = {
-        status: 'NO',
-        reference: `TIA-RAIL-${Date.now()}`,
-        message: 'Rail booking created for manual processing (Vercel workaround)',
-        totalCost: 0,
-        currency: 'AUD',
-        rawResponse: 'Skipped TourPlan due to Vercel timeout issues'
-      };
-    } else {
-      result = await createBooking({
-        customerName: data.customerName,
-        productCode: data.productCode,
-        rateId: data.rateId || '',
-        dateFrom: data.dateFrom,
-        dateTo: calculatedDateTo,
-        isQuote: data.bookingType === 'quote',
-        email: data.email,
-        mobile: data.mobile,
-        adults: data.adults,
-        children: data.children,
-        infants: data.infants,
-      });
-    }
+    const result = await createBooking({
+      customerName: data.customerName,
+      productCode: data.productCode,
+      rateId: data.rateId || '',
+      dateFrom: data.dateFrom,
+      dateTo: calculatedDateTo,
+      isQuote: data.bookingType === 'quote',
+      email: data.email,
+      mobile: data.mobile,
+      adults: data.adults,
+      children: data.children,
+      infants: data.infants,
+    });
     
     // Log the full TourPlan response for debugging
     console.log('📥 TourPlan booking response:', {
