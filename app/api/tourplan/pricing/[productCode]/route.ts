@@ -421,6 +421,9 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
             // Check if this is a Cruise product
             const isCruiseProduct = productCode.includes('CRCHO') || productCode.includes('CRTVT') || productCode.includes('CRUISE');
             
+            // Check if this is a Package product
+            const isPackageProduct = productCode.includes('PK') || productCode.includes('PACKAGE');
+            
             if (isGroupTour) {
               // For Group Tours, WordPress productdetails.php only shows days with Status "Available"
               // This means only positive availability codes (>0), not "On request" (-3) days
@@ -434,6 +437,15 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
               // For Cruise products, match WordPress behavior - only show truly available days, not "On request"
               // WordPress only shows days with positive availability codes for cruises
               validDay = parseInt(availCode) > 0;  // Only show positive availability for Cruises
+            } else if (isPackageProduct) {
+              // For Package products, match WordPress behavior - only show truly available days, not "On request"
+              // WordPress only shows days with positive availability codes for packages
+              validDay = parseInt(availCode) > 0;  // Only show positive availability for Packages
+              
+              if (productCode === 'HDSPKMAKUTSMSSWLK') {
+                // Log availability for debugging this specific product
+                console.log(`📦 HDSPKMAKUTSMSSWLK availability check for ${dateKey}: availCode=${availCode}, validDay=${validDay}`);
+              }
             } else {
               // For other products (Rail, etc.), use the general logic
               validDay = availCode !== '-1';  // Everything except -1 is considered available
@@ -454,7 +466,9 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
               validDay,
               dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
               isDSTTransitionMonth: dateKey.includes('2025-10'), // October 2025 has DST transition
-              productCode: productCode.includes('NBOGTARP') ? '(Group Tour)' : '(Other)'
+              productType: isGroupTour ? '(Group Tour)' : 
+                          isCruiseProduct ? '(Cruise)' : 
+                          isPackageProduct ? '(Package)' : '(Other)'
             });
           } else {
             console.log('⚠️ Day index out of range for OptAvail:', { daysSinceStart, optAvailLength: pricing.optAvail.length });
