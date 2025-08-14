@@ -51,25 +51,92 @@ export default function PackagesPage() {
       }
     }
     
-    loadImageIndex()
+    const loadCountriesFromAPI = async () => {
+      try {
+        console.log('📦 Fetching available countries for Packages from TourPlan API...')
+        
+        // Fetch countries from TourPlan API (empty country param returns available countries)
+        const response = await fetch('/api/tourplan/destinations?productType=Packages&country=')
+        const result = await response.json()
+        
+        console.log('📦 TourPlan countries response:', result)
+        
+        if (result.success && result.countries) {
+          // Convert TourPlan country names to our format
+          const apiCountries = result.countries.map((country: string) => ({
+            value: country.toLowerCase().replace(/\s+/g, '-'),
+            label: country
+          }))
+          
+          console.log('📦 Setting available countries from API:', apiCountries)
+          setAvailableCountries(apiCountries)
+        } else {
+          console.warn('📦 Failed to get countries from API, falling back to hardcoded list')
+          // Fallback to hardcoded list if API fails
+          const countries = getAvailableCountries('Packages')
+          setAvailableCountries(countries)
+        }
+      } catch (error) {
+        console.error('📦 Error fetching countries from API:', error)
+        // Fallback to hardcoded list
+        const countries = getAvailableCountries('Packages')
+        setAvailableCountries(countries)
+      }
+    }
     
-    // Initialize available countries for Packages
-    const countries = getAvailableCountries('Packages')
-    setAvailableCountries(countries)
+    loadImageIndex()
+    loadCountriesFromAPI()
   }, [])
 
   // Update available destinations when country changes
   useEffect(() => {
-    if (selectedCountry) {
-      const destinations = getAvailableDestinations('Packages', selectedCountry)
-      setAvailableDestinations(destinations)
-      // Reset destination selection when country changes
-      setSelectedDestination("")
-    } else {
-      setAvailableDestinations([])
-      setSelectedDestination("")
+    const loadDestinationsFromAPI = async () => {
+      if (selectedCountry) {
+        try {
+          console.log('📦 Fetching destinations for country:', selectedCountry)
+          
+          // Convert country value back to display name for API call
+          const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
+          
+          // Fetch destinations from TourPlan API
+          const response = await fetch(`/api/tourplan/destinations?productType=Packages&country=${encodeURIComponent(countryLabel)}`)
+          const result = await response.json()
+          
+          console.log('📦 TourPlan destinations response:', result)
+          
+          if (result.success && result.destinations) {
+            // Convert TourPlan destination names to our format
+            const apiDestinations = result.destinations.map((destination: string) => ({
+              value: destination.toLowerCase().replace(/\s+/g, '-'),
+              label: destination,
+              tourPlanName: destination // Use actual TourPlan name
+            }))
+            
+            console.log('📦 Setting available destinations from API:', apiDestinations)
+            setAvailableDestinations(apiDestinations)
+          } else {
+            console.warn('📦 Failed to get destinations from API, falling back to hardcoded list')
+            // Fallback to hardcoded list if API fails
+            const destinations = getAvailableDestinations('Packages', selectedCountry)
+            setAvailableDestinations(destinations)
+          }
+        } catch (error) {
+          console.error('📦 Error fetching destinations from API:', error)
+          // Fallback to hardcoded list
+          const destinations = getAvailableDestinations('Packages', selectedCountry)
+          setAvailableDestinations(destinations)
+        }
+        
+        // Reset destination selection when country changes
+        setSelectedDestination("")
+      } else {
+        setAvailableDestinations([])
+        setSelectedDestination("")
+      }
     }
-  }, [selectedCountry])
+    
+    loadDestinationsFromAPI()
+  }, [selectedCountry, availableCountries])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -122,8 +189,19 @@ export default function PackagesPage() {
       const params = new URLSearchParams()
       params.set('productType', 'Packages')
       
-      // Use the correct TourPlan destination name
-      const tourPlanDestination = getTourPlanDestinationName('Packages', selectedCountry, selectedDestination || selectedCountry)
+      // Use the correct TourPlan destination name from API data
+      let tourPlanDestination = selectedCountry
+      if (selectedDestination && availableDestinations.length > 0) {
+        // Find the selected destination and use its TourPlan name
+        const destination = availableDestinations.find(d => d.value === selectedDestination)
+        tourPlanDestination = destination?.tourPlanName || selectedDestination
+      } else {
+        // Use the country's TourPlan name
+        const country = availableCountries.find(c => c.value === selectedCountry)
+        tourPlanDestination = country?.label || selectedCountry
+      }
+      
+      console.log('📦 Using TourPlan destination name:', tourPlanDestination)
       params.set('destination', tourPlanDestination)
       
       if (selectedClass) params.set('class', selectedClass)
