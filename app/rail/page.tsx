@@ -383,14 +383,8 @@ export default function RailPage() {
                                 return (
                                   <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
                                     <Button className="w-full bg-amber-500 hover:bg-amber-600">
-                                      {availabilityInfo?.departureDay ? (
-                                        <>
-                                          <Calendar className="mr-2 h-4 w-4" />
-                                          Book now ({availabilityInfo.departureDay}s)
-                                        </>
-                                      ) : (
-                                        'Book now'
-                                      )}
+                                      <Calendar className="mr-2 h-4 w-4" />
+                                      Book now
                                     </Button>
                                   </Link>
                                 );
