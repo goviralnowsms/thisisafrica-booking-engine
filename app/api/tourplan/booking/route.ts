@@ -88,29 +88,9 @@ export async function POST(request: NextRequest) {
     console.log('📞 Customer mobile received:', data.mobile);
     console.log('👤 Customer name received:', data.customerName);
     
-    // Get product details to calculate return date from duration
-    let calculatedDateTo = data.dateTo;
-    let productName = data.productCode; // fallback to product code
-    try {
-      const productDetails = await getProductDetails(data.productCode);
-      if (productDetails) {
-        // Use actual product name if available
-        if (productDetails.name) {
-          productName = productDetails.name;
-        }
-        
-        // Calculate return date based on product duration
-        if (productDetails.periods) {
-          const startDate = new Date(data.dateFrom);
-          const returnDate = new Date(startDate);
-          returnDate.setDate(startDate.getDate() + (productDetails.periods - 1)); // periods includes start day
-          calculatedDateTo = returnDate.toISOString().split('T')[0];
-          console.log(`📅 Calculated return date for ${data.productCode}: ${data.dateFrom} + ${productDetails.periods} days = ${calculatedDateTo}`);
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Could not get product details for return date calculation:', error);
-    }
+    // Use provided dates without complex product lookup (was causing Vercel timeouts)
+    const calculatedDateTo = data.dateTo;
+    const productName = data.productCode; // Use product code as fallback name
     
     const result = await createBooking({
       customerName: data.customerName,
