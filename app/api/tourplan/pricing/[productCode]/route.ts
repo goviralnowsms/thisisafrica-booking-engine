@@ -94,6 +94,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                      productCode.includes('CRUISE') ||  // General cruise codes
                      productCode.toLowerCase().includes('cruise') ||
                      isFromCruisePage  // Any product accessed from cruise page should be treated as cruise
+    
+    // Check if this is a Group Tour product that needs Friday-only availability
+    const isGroupTour = productCode.includes('GT') || productCode.includes('NBOGT')
+    const isFridayOnlyTour = productCode === 'NBOGTSOAEASSNM061' // This specific tour only departs Fridays
 
     // Check if request is for rail products
     const isFromRailPage = referer.includes('/rail') || referer.includes('/products/') // Product details page for rail codes
@@ -250,7 +254,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log('OptAvail data available:', !!optAvailData, optAvailData?.length || 0, 'codes')
     // Pass the API's actual dateFrom for OptAvail indexing
     const apiDateFrom = pricingData.length > 0 ? pricingData[0].dateFrom : dateFrom
-    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom, forceNoAvailability)
+    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom, forceNoAvailability, isFridayOnlyTour)
     console.log('Generated calendar data:', calendarData.length, 'days')
     
     const response = NextResponse.json({ 
@@ -286,7 +290,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Process date ranges into calendar-friendly format
  * Fixed to handle timezone consistently and avoid UTC date shifts
  */
-function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string, forceNoAvailability?: boolean) {
+function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string, forceNoAvailability?: boolean, isFridayOnlyTour?: boolean) {
   const calendar: any[] = []
   
   // Helper function to create local date from YYYY-MM-DD string
@@ -411,8 +415,8 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
             // WordPress availability logic from tourplan-api-classes.php line 382-387
             // -1 = Not available, -2 = On free sell, -3 = On request, >0 = Available (number of units)
             
-            // Check if this is a Group Tour product
-            const isGroupTour = productCode.includes('NBOGTARP') || productCode.includes('GROUPTOUR');
+            // Check if this is a Group Tour product (including NBOGTSOAEASSNM061)
+            const isGroupTour = productCode.includes('NBOGTARP') || productCode.includes('NBOGTSO') || productCode.includes('NBOGT') || productCode.includes('GROUPTOUR');
             
             // Check if this is a Cruise product
             const isCruiseProduct = productCode.includes('CRCHO') || productCode.includes('CRTVT') || productCode.includes('CRUISE');
@@ -421,6 +425,11 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
               // For Group Tours, WordPress productdetails.php only shows days with Status "Available"
               // This means only positive availability codes (>0), not "On request" (-3) days
               validDay = parseInt(availCode) > 0;  // Only show positive availability for Group Tours
+              
+              if (productCode === 'NBOGTSOAEASSNM061') {
+                // Log availability for debugging this specific product
+                console.log(`📊 NBOGTSOAEASSNM061 availability check for ${dateKey}: availCode=${availCode}, validDay=${validDay}`);
+              }
             } else if (isCruiseProduct) {
               // For Cruise products, match WordPress behavior - only show truly available days, not "On request"
               // WordPress only shows days with positive availability codes for cruises

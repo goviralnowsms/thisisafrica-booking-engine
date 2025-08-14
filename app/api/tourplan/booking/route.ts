@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     // Define products that successfully book into TourPlan (based on testing)
     // IMPORTANT: Cruise products require specific departure days (Mon/Wed/Fri)
     const WORKING_PRODUCTS = {
-      GROUP_TOURS: ['NBOGTARP001CKEKEE', 'NBOGTARP001THRKE3'],
+      GROUP_TOURS: ['NBOGTARP001CKEKEE'], // Only CKEKEE confirmed working, THRKE3 returns NO
       RAIL: ['VFARLROV001VFPRDX', 'VFARLROV001VFPRRY', 'VFARLROV001VFPYPM'],
       CRUISE: [
         'BBKCRCHO018TIACP2',  // Chobe Princess 2 night (Mon/Wed only)
