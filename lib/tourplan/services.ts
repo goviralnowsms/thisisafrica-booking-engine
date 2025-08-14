@@ -1667,20 +1667,25 @@ export async function createBooking(bookingData: {
     // Save cruise/rail booking attempts to files for TourPlan support
     if (isCruiseBooking || isRailBooking) {
       const fs = require('fs');
-      const path = require('path');
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      const productType = isCruiseBooking ? 'cruise' : 'rail';
-      const logDir = path.join(process.cwd(), 'tourplan-logs', 'booking-attempts');
-      
-      // Create directory if it doesn't exist
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
+      // Skip file logging on Vercel (read-only filesystem)
+      if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+        const path = require('path');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const productType = isCruiseBooking ? 'cruise' : 'rail';
+        const logDir = path.join(process.cwd(), 'tourplan-logs', 'booking-attempts');
+        
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(logDir)) {
+          fs.mkdirSync(logDir, { recursive: true });
+        }
+        
+        // Save request XML
+        const requestFile = path.join(logDir, `${productType}-booking-request-${timestamp}.xml`);
+        fs.writeFileSync(requestFile, xml);
+        console.log(`📁 Saved ${productType} booking request to: ${requestFile}`);
+      } else {
+        console.log(`📁 Skipped XML logging (production/Vercel environment)`);
       }
-      
-      // Save request XML
-      const requestFile = path.join(logDir, `${productType}-booking-request-${timestamp}.xml`);
-      fs.writeFileSync(requestFile, xml);
-      console.log(`📁 Saved ${productType} booking request to: ${requestFile}`);
     }
     
     let response, addServiceReply;
@@ -1689,8 +1694,8 @@ export async function createBooking(bookingData: {
       response = await wpXmlRequest(xml);
       console.log('📥 Raw TourPlan response:', JSON.stringify(response, null, 2));
       
-      // Save cruise/rail booking response for TourPlan support
-      if (isCruiseBooking || isRailBooking) {
+      // Save cruise/rail booking response for TourPlan support (skip on Vercel)
+      if ((isCruiseBooking || isRailBooking) && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
         const fs = require('fs');
         const path = require('path');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
