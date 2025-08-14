@@ -216,9 +216,39 @@ export default function PackagesPage() {
       if (result.success) {
         console.log('📦 Found', result.tours?.length || 0, 'packages')
         console.log('📦 Setting tours and filteredTours...')
-        setTours(result.tours || [])
-        setFilteredTours(result.tours || [])
-        console.log('📦 Tours state updated')
+        
+        // Check availability for each tour to determine button type
+        const toursWithAvailability = await Promise.all(
+          (result.tours || []).map(async (tour: any) => {
+            try {
+              // Make a quick availability check by calling the pricing API
+              const availResponse = await fetch(`/api/tourplan/pricing/${tour.code}?dateFrom=${new Date().toISOString().split('T')[0]}&dateTo=${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}`)
+              const availResult = await availResponse.json()
+              
+              // Check if there are any available dates in the calendar
+              const hasAvailableDates = availResult.success && 
+                availResult.data?.calendar?.some((day: any) => day.validDay && day.available)
+              
+              console.log(`📦 Availability check for ${tour.code}: ${hasAvailableDates ? 'HAS' : 'NO'} available dates`)
+              
+              return {
+                ...tour,
+                hasAvailableDates
+              }
+            } catch (error) {
+              console.warn(`📦 Failed to check availability for ${tour.code}:`, error)
+              // If availability check fails, default to showing "Get quote" (safer)
+              return {
+                ...tour,
+                hasAvailableDates: false
+              }
+            }
+          })
+        )
+        
+        setTours(toursWithAvailability)
+        setFilteredTours(toursWithAvailability)
+        console.log('📦 Tours state updated with availability data')
       } else {
         console.error("📦 Packages search failed:", result.error)
         setTours([])
@@ -410,7 +440,7 @@ export default function PackagesPage() {
                                 View details
                               </Button>
                             </Link>
-                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
+                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 || !tour.hasAvailableDates ? (
                               <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
                                 <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
                               </Link>
