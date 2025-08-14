@@ -11,52 +11,65 @@ export interface CruiseProductAvailability {
 }
 
 // Configuration for cruise product availability
+// NOTE: This configuration is now ONLY used for metadata (like departure days).
+// Actual availability is checked dynamically from calendar data.
+// Products will automatically switch between "Book Now" and "Get Quote" based on real availability.
 export const CRUISE_PRODUCT_AVAILABILITY: CruiseProductAvailability[] = [
-  // Products with NO availability - require quotes
+  // Metadata for cruise products (departure day info)
   {
     productCode: 'BBKCRTVT001ZAM2NS',
-    hasAvailability: false,  // No availability shown, needs quote
-    notes: 'Zambezi Queen 2-night standard - No availability, contact for quote'
+    hasAvailability: true, // Will be overridden by actual calendar check
+    departureDay: 'TBD',
+    notes: 'Zambezi Queen 2-night standard - availability checked dynamically'
   },
   {
-    productCode: 'BBKCRTVT001ZAM2NM', 
-    hasAvailability: false,  // No availability shown, needs quote
-    notes: 'Zambezi Queen 2-night master - No availability, contact for quote'
+    productCode: 'BBKCRTVT001ZAM2NM',
+    hasAvailability: true, // Will be overridden by actual calendar check
+    departureDay: 'TBD',
+    notes: 'Zambezi Queen 2-night master - availability checked dynamically'
   },
-  
-  // Products WITH availability - can be booked
   {
     productCode: 'BBKCRTVT001ZAM3NS',
-    hasAvailability: true,
+    hasAvailability: true, // Will be overridden by actual calendar check
     departureDay: 'Friday',
-    notes: 'Zambezi Queen 3-night standard - available Fridays'
+    notes: 'Zambezi Queen 3-night standard - Fridays (when available)'
   },
   {
     productCode: 'BBKCRTVT001ZAM3NM',
-    hasAvailability: true,
+    hasAvailability: true, // Will be overridden by actual calendar check
     departureDay: 'Friday', 
-    notes: 'Zambezi Queen 3-night master - available Fridays'
+    notes: 'Zambezi Queen 3-night master - Fridays (when available)'
   },
   {
     productCode: 'BBKCRCHO018TIACP2',
-    hasAvailability: true,
+    hasAvailability: true, // Will be overridden by actual calendar check
     departureDay: 'Monday/Wednesday',
-    notes: 'Chobe Princess 2-night - available Mondays and Wednesdays'
+    notes: 'Chobe Princess 2-night - Mon/Wed (when available)'
   },
   {
     productCode: 'BBKCRCHO018TIACP3',
-    hasAvailability: true,
+    hasAvailability: true, // Will be overridden by actual calendar check
     departureDay: 'Friday',
-    notes: 'Chobe Princess 3-night - available Fridays'
+    notes: 'Chobe Princess 3-night - Fridays (when available)'
   }
 ];
 
 /**
  * Check if a cruise product has availability for booking
+ * This is a temporary override - the actual availability should be checked from calendar data
+ * Only products explicitly set to false will show "Get Quote"
  */
 export function hasCruiseAvailability(productCode: string): boolean {
   const product = CRUISE_PRODUCT_AVAILABILITY.find(p => p.productCode === productCode);
-  return product?.hasAvailability ?? true; // Default to availability if not configured (conservative approach)
+  
+  // If explicitly configured as no availability, return false
+  if (product && product.hasAvailability === false) {
+    return false;
+  }
+  
+  // For all other products (including unconfigured ones), default to true
+  // The actual availability check happens in the product details page
+  return true;
 }
 
 /**

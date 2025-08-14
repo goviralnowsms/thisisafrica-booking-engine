@@ -7,8 +7,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Clock, MapPin, Users, Search, Loader2, Star, Ship } from "lucide-react"
+import { Clock, MapPin, Users, Search, Loader2, Star, Ship, Calendar } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
+import { hasCruiseAvailability, getCruiseAvailability } from "@/lib/cruise-availability"
 
 
 export default function CruisesPage() {
@@ -23,6 +24,7 @@ export default function CruisesPage() {
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
+  const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -84,6 +86,41 @@ export default function CruisesPage() {
     return "/images/cruise-ship.jpg"
   }
 
+  // Check if a product has available dates
+  const checkProductAvailability = async (productCode: string) => {
+    try {
+      // Get next 3 months of pricing data to check for available dates
+      const currentDate = new Date()
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, currentDate.getDate())
+      
+      const params = new URLSearchParams({
+        dateFrom: currentDate.toISOString().split('T')[0],
+        dateTo: endDate.toISOString().split('T')[0],
+        adults: '2',
+        children: '0',
+        roomType: 'DB'
+      })
+
+      const response = await fetch(`/api/tourplan/pricing/${productCode}?${params}`, {
+        cache: 'no-store'
+      })
+      const result = await response.json()
+
+      if (result.success && result.data?.calendar) {
+        // Check if there are any valid/available days in the calendar
+        const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available)
+        setProductAvailability(prev => ({ ...prev, [productCode]: hasValidDays }))
+      } else {
+        // If we can't get calendar data, default to false (show Get Quote)
+        setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+      }
+    } catch (error) {
+      console.warn('Error checking availability for', productCode, ':', error)
+      // On error, default to false (show Get Quote)
+      setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+    }
+  }
+
   const handleSearch = async () => {
     if (!selectedCountry) {
       alert('Please select a country to search for Cruises')
@@ -114,9 +151,15 @@ export default function CruisesPage() {
       if (result.success) {
         console.log('🚢 Found', result.tours?.length || 0, 'cruises')
         console.log('🚢 Setting tours and filteredTours...')
-        setTours(result.tours || [])
-        setFilteredTours(result.tours || [])
+        const toursData = result.tours || []
+        setTours(toursData)
+        setFilteredTours(toursData)
         console.log('🚢 Tours state updated')
+        
+        // Check availability for each product
+        toursData.forEach((tour: any) => {
+          checkProductAvailability(tour.code)
+        })
       } else {
         console.error("🚢 Cruise search failed:", result.error)
         setTours([])
@@ -316,15 +359,47 @@ export default function CruisesPage() {
                                 View details
                               </Button>
                             </Link>
-                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
-                              <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`} className="flex-1">
-                                <Button className="w-full bg-blue-500 hover:bg-blue-600">Get quote</Button>
-                              </Link>
-                            ) : (
-                              <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
-                                <Button className="w-full bg-amber-500 hover:bg-amber-600">Book now</Button>
-                              </Link>
-                            )}
+                            {(() => {
+                              // Check actual availability from calendar data
+                              const hasCalendarAvailability = productAvailability[tour.code];
+                              const availabilityInfo = getCruiseAvailability(tour.code);
+                              
+                              // Show Get Quote if:
+                              // 1. No calendar availability (checked dynamically)
+                              // 2. No rates or "Price on Application"
+                              // 3. Still checking availability (undefined)
+                              if (hasCalendarAvailability === false || 
+                                  hasCalendarAvailability === undefined ||
+                                  tour.rates?.[0]?.rateName === 'Price on Application' || 
+                                  tour.rates?.[0]?.singleRate === 0) {
+                                return (
+                                  <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=cruise`} className="flex-1">
+                                    <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                                      {hasCalendarAvailability === undefined ? (
+                                        <>⏳ Checking...</>
+                                      ) : availabilityInfo?.departureDay ? (
+                                        <>
+                                          <Calendar className="mr-2 h-4 w-4" />
+                                          Get quote
+                                        </>
+                                      ) : (
+                                        'Get quote'
+                                      )}
+                                    </Button>
+                                  </Link>
+                                );
+                              } else {
+                                // Has calendar availability - show Book Now
+                                return (
+                                  <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
+                                    <Button className="w-full bg-amber-500 hover:bg-amber-600">
+                                      <Calendar className="mr-2 h-4 w-4" />
+                                      Book now
+                                    </Button>
+                                  </Link>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>
