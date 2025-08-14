@@ -47,7 +47,7 @@ export const RAIL_PRODUCT_AVAILABILITY: RailProductAvailability[] = [
     hasAvailability: true,
     departureDay: 'Friday',
     notes: 'Available Fridays - can be booked online'
-  }
+  },
 ];
 
 /**

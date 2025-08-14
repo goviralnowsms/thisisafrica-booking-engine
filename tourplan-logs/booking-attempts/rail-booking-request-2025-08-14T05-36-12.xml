@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <Name>testlocal1 rob </Name>
+      <QB>Q</QB>
+    </NewBookingInfo>
+    <Opt>PRYRLROV001PRCPRY</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-31</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <Email>tess@goviralnow.net</Email>
+    <puRemark>0411123456</puRemark>
+  </AddServiceRequest>
+</Request>

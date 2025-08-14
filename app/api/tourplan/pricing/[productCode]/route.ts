@@ -105,11 +105,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Determine the correct departure day for different product types
     let correctDepartureDay = null
     
-    // TEMPORARY FIX: Handle 2-night Zambezi Queen products that show no availability in WordPress
+    // Handle 2-night Zambezi Queen products based on actual TourPlan behavior
+    // These products can be booked but may show no calendar availability
     let forceNoAvailability = false
     if (productCode === 'BBKCRTVT001ZAM2NS' || productCode === 'BBKCRTVT001ZAM2NM') {
-      forceNoAvailability = true
-      console.log('🚢 TEMPORARY FIX: Forcing no availability for 2-night Zambezi Queen product:', productCode)
+      // Let TourPlan data flow through naturally
+      // The calendar will show whatever TourPlan returns (currently no availability)
+      // But the booking buttons will still work based on cruise-availability.ts config
+      console.log('🚢 Zambezi Queen 2-night product detected:', {
+        productCode,
+        note: 'Calendar will show TourPlan availability data as-is'
+      })
     }
     
     if (isCruise) {

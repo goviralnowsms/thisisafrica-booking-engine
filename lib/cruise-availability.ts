@@ -12,16 +12,16 @@ export interface CruiseProductAvailability {
 
 // Configuration for cruise product availability
 export const CRUISE_PRODUCT_AVAILABILITY: CruiseProductAvailability[] = [
-  // Products with NO availability - require quotes (2-night Zambezi Queen)
+  // Products with NO availability - require quotes
   {
     productCode: 'BBKCRTVT001ZAM2NS',
-    hasAvailability: false,
-    notes: 'Zambezi Queen 2-night standard - no availability, contact for quote'
+    hasAvailability: false,  // No availability shown, needs quote
+    notes: 'Zambezi Queen 2-night standard - No availability, contact for quote'
   },
   {
     productCode: 'BBKCRTVT001ZAM2NM', 
-    hasAvailability: false,
-    notes: 'Zambezi Queen 2-night master - no availability, contact for quote'
+    hasAvailability: false,  // No availability shown, needs quote
+    notes: 'Zambezi Queen 2-night master - No availability, contact for quote'
   },
   
   // Products WITH availability - can be booked
