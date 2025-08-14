@@ -421,8 +421,10 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
             // Check if this is a Cruise product
             const isCruiseProduct = productCode.includes('CRCHO') || productCode.includes('CRTVT') || productCode.includes('CRUISE');
             
-            // Check if this is a Package product
-            const isPackageProduct = productCode.includes('PK') || productCode.includes('PACKAGE');
+            // Check if this is a Package product (but not rail products that contain PK)
+            const isPackageProduct = (productCode.includes('PK') || productCode.includes('PACKAGE')) && 
+                                    !productCode.includes('RLROV') && // Not Rovos Rail
+                                    !productCode.includes('RAIL');
             
             if (isGroupTour) {
               // For Group Tours, WordPress productdetails.php only shows days with Status "Available"
