@@ -152,10 +152,17 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Define products that successfully book into TourPlan (based on testing)
+    // Define products that successfully book into TourPlan (based on testing - Aug 2025)
     // IMPORTANT: Cruise products require specific departure days (Mon/Wed/Fri)
     const WORKING_PRODUCTS = {
-      GROUP_TOURS: ['NBOGTARP001CKEKEE'], // Only CKEKEE confirmed working, THRKE3 returns NO
+      GROUP_TOURS: [
+        'NBOGTARP001CKSE',      // Classic Kenya - Serena lodges (WORKS)
+        'NBOGTARP001CKEKEE',    // Classic Kenya - Keekorok lodges (WORKS)
+        'NBOGTARP001CKSM',      // Classic Kenya - Mixed lodges (WORKS)
+        'NBOGTSOAEASSNM061',    // East Africa tour (WORKS)
+        'NBOGTSOAEASSNM131'     // East Africa tour variant (WORKS)
+        // NOT WORKING: NBOGTARP001THRKE3, NBOGTARP001THRSE3 (return Status="NO")
+      ],
       RAIL: ['VFARLROV001VFPRDX', 'VFARLROV001VFPRRY', 'VFARLROV001VFPYPM'],
       CRUISE: [
         'BBKCRCHO018TIACP2',  // Chobe Princess 2 night (Mon/Wed only)

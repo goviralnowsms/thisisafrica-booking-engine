@@ -240,10 +240,14 @@ TourPlan returns XML responses with this structure:
 #### Products That Accept API Bookings (Return TAWB References)
 Based on comprehensive testing (August 2025), only these specific products work:
 
-**Group Tours (2 of 9 work):**
-- ✅ `NBOGTARP001CKEKEE` - Classic Kenya - Keekorok lodges (Sundays only)
-- ✅ `NBOGTARP001THRKE3` - Three Kings Kenya (Sundays only)
-- ❌ All other Group Tour variants return Status="NO" (declined)
+**Group Tours (5 of 7 tested work):**
+- ✅ `NBOGTARP001CKSE` - Classic Kenya - Serena lodges (returns RQ/WQ)
+- ✅ `NBOGTARP001CKEKEE` - Classic Kenya - Keekorok lodges (returns RQ/WQ)
+- ✅ `NBOGTARP001CKSM` - Classic Kenya - Mixed lodges (returns RQ/WQ)
+- ✅ `NBOGTSOAEASSNM061` - East Africa tour (returns RQ/WQ)
+- ✅ `NBOGTSOAEASSNM131` - East Africa tour variant (returns RQ/WQ)
+- ❌ `NBOGTARP001THRKE3` - Three Kings Kenya - returns Status="NO" (declined)
+- ❌ `NBOGTARP001THRSE3` - Three Kings Serena - returns Status="NO" (declined)
 
 **Rail (4 of 9 work):**
 - ✅ `VFARLROV001VFPRDX` - Victoria Falls to Pretoria
