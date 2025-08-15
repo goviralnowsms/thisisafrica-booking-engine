@@ -321,7 +321,7 @@ export default function SearchResultsPage() {
           </div>
           
           <div className="flex gap-3">
-            <Link href={`/products/${tour.code}`} className="flex-1">
+            <Link href={`/products/${tour.code}`} target="_blank" rel="noopener noreferrer" className="flex-1">
               <Button variant="outline" className="w-full">View details</Button>
             </Link>
             {(isRail && !hasAvailability) || (isCruise && !hasAvailability) || tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (

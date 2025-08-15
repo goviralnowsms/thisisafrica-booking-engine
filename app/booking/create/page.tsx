@@ -87,6 +87,7 @@ export default function BookingCreatePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tourId = searchParams.get("tourId")
+  const preSelectedDate = searchParams.get("date")
   
   // State for product data
   const [product, setProduct] = useState<ProductDetails | null>(null)
@@ -231,7 +232,20 @@ export default function BookingCreatePage() {
         if (result.success && result.data) {
           const productData = result.data.data || result.data
           setProduct(productData)
-          setFormData(prev => ({ ...prev, tourId }))
+          
+          // Pre-fill date if provided in URL
+          let initialFormData = { ...formData, tourId }
+          if (preSelectedDate) {
+            try {
+              const dateObj = new Date(preSelectedDate)
+              if (!isNaN(dateObj.getTime())) {
+                initialFormData.departureDate = dateObj
+              }
+            } catch (err) {
+              console.warn('Invalid pre-selected date:', preSelectedDate)
+            }
+          }
+          setFormData(initialFormData)
           
           // Fetch available dates after product is loaded
           fetchAvailableDates()
@@ -246,7 +260,7 @@ export default function BookingCreatePage() {
     }
     
     fetchProductDetails()
-  }, [tourId])
+  }, [tourId, preSelectedDate])
 
   // Initialize travelers array when number of travelers changes
   const initializeTravelers = (adults: number, children: Array<{age: number, dateOfBirth: string}>) => {

@@ -292,7 +292,7 @@ export default function FeaturedSpecials() {
                   onClick={() => {
                     // Navigate to product page if we have a real product code
                     if (offer.code && offer.code.length > 6) {
-                      router.push(`/products/${offer.code}`)
+                      window.open(`/products/${offer.code}`, '_blank', 'noopener,noreferrer')
                     } else {
                       // Navigate to special offers search page
                       router.push('/booking?productType=Special Offers')

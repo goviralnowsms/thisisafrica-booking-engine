@@ -44,17 +44,26 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
                productCode?.includes('BLUE') ||      // Blue Train codes
                productCode?.includes('PREMIER')      // Premier Classe codes
 
-  // Check if this is an accommodation product (disable calendar view for these)
+  // Check if this is a cruise product
+  const isCruise = productCode?.includes('CRCHO') ||    // Chobe Princess codes like BBKCRCHO018TIACP3
+                   productCode?.includes('CRTVT') ||    // Zambezi Queen codes like BBKCRTVT001ZAM3NS
+                   productCode?.includes('CRUISE') ||
+                   productCode?.toLowerCase().includes('cruise')
+
+  // Check if this is an accommodation product
   const isAccommodation = productCode?.includes('GKPSPSABBLDSABBLS') || // Sabi Sabi Bush Lodge
                           productCode?.includes('GKPSPSAV002SAVLHM') ||   // Savanna Lodge
                           productCode?.includes('ACCOMMODATION') ||
                           productCode?.includes('LODGE') ||
                           productCode?.includes('HOTEL')
 
-  // Check if this is a group tour (allow calendar view for these)
+  // Check if this is a group tour
   const isGroupTour = productCode?.includes('GTARP') ||     // Group tour codes like NBOGTARP001CKSE
                      productCode?.includes('GROUP') ||      // General group codes
                      productCode?.toLowerCase().includes('group')
+
+  // Allow calendar view for all product types except pure accommodation
+  const allowCalendarView = !isAccommodation
 
   useEffect(() => {
     fetchPricingData()
@@ -353,7 +362,7 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
           <span className="text-sm text-gray-600">Room</span>
         </div>
 
-        {isGroupTour && (
+        {allowCalendarView && (
           <div className="flex items-center gap-2 ml-auto">
             <Button
               variant={viewMode === 'table' ? 'default' : 'outline'}
@@ -384,7 +393,7 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
       {/* Content */}
       {!loading && calendarData && (
         <div>
-          {(viewMode === 'table' || isAccommodation || isRail || !isGroupTour) ? renderTableView() : renderCalendarView()}
+          {(viewMode === 'table' || !allowCalendarView) ? renderTableView() : renderCalendarView()}
         </div>
       )}
 

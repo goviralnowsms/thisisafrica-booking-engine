@@ -163,7 +163,7 @@ export default function SpecialOffersPage() {
       {/* Hero Section */}
       <section className="relative h-[60vh] md:h-[70vh]">
         <Image
-          src="/images/products/victoria-falls-crop.jpeg"
+          src="/images/products/vic-falls2-crop.jpeg"
           alt="Special offers and deals for African adventures"
           fill
           priority
@@ -171,7 +171,7 @@ export default function SpecialOffersPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60">
           <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Special Offers</h1>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Special offers</h1>
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mb-6">
               Exclusive deals and limited-time offers for your African adventure
             </p>
@@ -186,7 +186,7 @@ export default function SpecialOffersPage() {
       <section className="bg-white py-8 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">Search Special Offers</h2>
+            <h2 className="text-2xl font-bold text-center mb-6">Search special offers</h2>
             <div className="relative">
               <Input
                 type="text"
@@ -221,7 +221,7 @@ export default function SpecialOffersPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4">Current Special Offers</h2>
+            <h2 className="text-3xl font-bold mb-4">Current special offers</h2>
             <p className="text-gray-600 max-w-3xl mx-auto">
               Take advantage of these limited-time deals and exclusive offers. Perfect for travelers looking for exceptional value on authentic African experiences.
             </p>
@@ -316,7 +316,7 @@ export default function SpecialOffersPage() {
                     </div>
                     
                     <div className="flex gap-3">
-                      <Link href={`/products/${offer.code}`} className="flex-1">
+                      <Link href={`/products/${offer.code}`} target="_blank" rel="noopener noreferrer" className="flex-1">
                         <Button variant="outline" className="w-full">
                           View details
                         </Button>

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react"
 
 // Disable static generation for this dynamic page
 export const dynamic = 'force-dynamic'
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 // Temporary fix for lucide-react module resolution issue
@@ -81,6 +81,7 @@ interface ProductDetails {
 
 export default function ProductDetailsPage() {
   const params = useParams()
+  const router = useRouter()
   const productCode = params.code as string
   
   const [product, setProduct] = useState<ProductDetails | null>(null)
@@ -686,7 +687,9 @@ export default function ProductDetailsPage() {
                           productCode={product.code}
                           onDateSelect={(date, pricing) => {
                             console.log('Selected date:', date, 'with pricing:', pricing)
-                            // Could navigate to booking page with selected date
+                            // Navigate to booking page with pre-selected date
+                            const bookingUrl = `/booking/create?tourId=${product.code}&date=${date}`
+                            router.push(bookingUrl)
                           }}
                         />
                         
@@ -767,6 +770,8 @@ export default function ProductDetailsPage() {
                       return (
                         <Link 
                           href={`/booking/create?tourId=${product.code}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="block w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 text-center rounded-lg"
                         >
                           🚀 Book Now

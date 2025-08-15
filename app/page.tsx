@@ -376,7 +376,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-2">
                   <Button 
-                    onClick={() => router.push('/products/NBOGTARP001CKEKEE')}
+                    onClick={() => window.open('/products/NBOGTARP001CKEKEE', '_blank', 'noopener,noreferrer')}
                     variant="outline"
                     className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
                   >
@@ -414,7 +414,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-2">
                   <Button 
-                    onClick={() => router.push('/products/NBOGTARP001CKSE')}
+                    onClick={() => window.open('/products/NBOGTARP001CKSE', '_blank', 'noopener,noreferrer')}
                     variant="outline"
                     className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
                   >
