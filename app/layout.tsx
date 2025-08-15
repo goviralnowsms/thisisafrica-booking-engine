@@ -2,7 +2,7 @@ import type React from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Toaster } from "@/components/ui/toaster"
-import { RecommendationAssistant } from "@/components/recommendation-assistant"
+import { EnhancedRecommendationAssistant } from "@/components/enhanced-recommendation-assistant"
 import "./globals.css"
 
 export const metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
-        <RecommendationAssistant />
+        <EnhancedRecommendationAssistant />
         <Toaster />
       </body>
     </html>
