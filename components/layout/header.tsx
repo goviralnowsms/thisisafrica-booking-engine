@@ -21,13 +21,15 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false)
   const [isMobileAboutOpen, setIsMobileAboutOpen] = useState(false)
+  const [isToursDropdownOpen, setIsToursDropdownOpen] = useState(false)
+  const [isMobileToursOpen, setIsMobileToursOpen] = useState(false)
   const pathname = usePathname()
 
   // Check if current page has a hero section that might need transparent header
   const hasHeroSection = pathname === "/" || pathname.startsWith("/group-tours") || 
                         pathname.startsWith("/packages") || pathname.startsWith("/accommodation") ||
                         pathname.startsWith("/rail") || pathname.startsWith("/cruise") ||
-                        pathname.startsWith("/tailor-made")
+                        pathname.startsWith("/special-offers") || pathname.startsWith("/tailor-made")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,6 +73,63 @@ export function Header() {
             >
               Home
             </Link>
+            
+            {/* Tours Dropdown */}
+            <div className="relative group">
+              <button
+                className={`font-medium transition-colors flex items-center gap-1 ${
+                  isScrolled || !hasHeroSection 
+                    ? "text-gray-700 hover:text-amber-500" 
+                    : "text-white hover:text-amber-300"
+                }`}
+                onMouseEnter={() => setIsToursDropdownOpen(true)}
+                onMouseLeave={() => setIsToursDropdownOpen(false)}
+              >
+                Tours
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              
+              {/* Tours Dropdown Menu */}
+              <div 
+                className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 transition-all duration-200 ${
+                  isToursDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+                }`}
+                onMouseEnter={() => setIsToursDropdownOpen(true)}
+                onMouseLeave={() => setIsToursDropdownOpen(false)}
+              >
+                <Link
+                  href="/cruise"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Cruises
+                </Link>
+                <Link
+                  href="/group-tours"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Group Tours
+                </Link>
+                <Link
+                  href="/packages"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Packages
+                </Link>
+                <Link
+                  href="/rail"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Rail
+                </Link>
+                <Link
+                  href="/special-offers"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Special Offers
+                </Link>
+              </div>
+            </div>
+            
             {/* About Dropdown */}
             <div className="relative group">
               <button
@@ -206,6 +265,56 @@ export function Header() {
                 >
                   Home
                 </Link>
+                
+                {/* Tours Dropdown */}
+                <div>
+                  <button
+                    className="text-lg font-medium text-gray-900 hover:text-amber-500 transition-colors flex items-center justify-between w-full"
+                    onClick={() => setIsMobileToursOpen(!isMobileToursOpen)}
+                  >
+                    Tours
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isMobileToursOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {/* Tours Dropdown Items */}
+                  <div className={`ml-4 mt-2 space-y-2 ${isMobileToursOpen ? 'block' : 'hidden'}`}>
+                    <Link
+                      href="/cruise"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Cruises
+                    </Link>
+                    <Link
+                      href="/group-tours"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Group Tours
+                    </Link>
+                    <Link
+                      href="/packages"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Packages
+                    </Link>
+                    <Link
+                      href="/rail"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Rail
+                    </Link>
+                    <Link
+                      href="/special-offers"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Special Offers
+                    </Link>
+                  </div>
+                </div>
                 
                 {/* About Dropdown */}
                 <div>

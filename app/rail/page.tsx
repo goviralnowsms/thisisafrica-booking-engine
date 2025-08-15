@@ -24,6 +24,7 @@ export default function RailPage() {
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
+  const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -85,6 +86,41 @@ export default function RailPage() {
     return "/images/rail-journey.jpg"
   }
 
+  // Check if a product has available dates
+  const checkProductAvailability = async (productCode: string) => {
+    try {
+      // Get next 3 months of pricing data to check for available dates
+      const currentDate = new Date()
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, currentDate.getDate())
+      
+      const params = new URLSearchParams({
+        dateFrom: currentDate.toISOString().split('T')[0],
+        dateTo: endDate.toISOString().split('T')[0],
+        adults: '2',
+        children: '0',
+        roomType: 'DB'
+      })
+
+      const response = await fetch(`/api/tourplan/pricing/${productCode}?${params}`, {
+        cache: 'no-store'
+      })
+      const result = await response.json()
+
+      if (result.success && result.data?.calendar) {
+        // Check if there are any valid/available days in the calendar
+        const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available)
+        setProductAvailability(prev => ({ ...prev, [productCode]: hasValidDays }))
+      } else {
+        // If we can't get calendar data, default to false (show Get Quote)
+        setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+      }
+    } catch (error) {
+      console.warn('Error checking availability for', productCode, ':', error)
+      // On error, default to false (show Get Quote)
+      setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+    }
+  }
+
   const handleSearch = async () => {
     if (!selectedCountry) {
       alert('Please select a country to search for Rail journeys')
@@ -116,9 +152,15 @@ export default function RailPage() {
       if (result.success) {
         console.log('🚂 Found', result.tours?.length || 0, 'rail journeys')
         console.log('🚂 Setting tours and filteredTours...')
-        setTours(result.tours || [])
-        setFilteredTours(result.tours || [])
+        const toursData = result.tours || []
+        setTours(toursData)
+        setFilteredTours(toursData)
         console.log('🚂 Tours state updated')
+        
+        // Check availability for each product
+        toursData.forEach((tour: any) => {
+          checkProductAvailability(tour.code)
+        })
       } else {
         console.error("🚂 Rail search failed:", result.error)
         setTours([])
@@ -359,16 +401,24 @@ export default function RailPage() {
                               </Button>
                             </Link>
                             {(() => {
-                              // Check rail availability configuration first
-                              const hasAvailability = hasRailAvailability(tour.code);
+                              // Check actual availability from calendar data
+                              const hasCalendarAvailability = productAvailability[tour.code];
                               const availabilityInfo = getRailAvailability(tour.code);
                               
-                              // If no availability or rates indicate quote needed
-                              if (!hasAvailability || tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0) {
+                              // Show Get Quote if:
+                              // 1. No calendar availability (checked dynamically)
+                              // 2. No rates or "Price on Application"
+                              // 3. Still checking availability (undefined)
+                              if (hasCalendarAvailability === false || 
+                                  hasCalendarAvailability === undefined ||
+                                  tour.rates?.[0]?.rateName === 'Price on Application' || 
+                                  tour.rates?.[0]?.singleRate === 0) {
                                 return (
                                   <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=rail`} className="flex-1">
                                     <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                                      {availabilityInfo?.departureDay ? (
+                                      {hasCalendarAvailability === undefined ? (
+                                        <>⏳ Checking...</>
+                                      ) : availabilityInfo?.departureDay ? (
                                         <>
                                           <Calendar className="mr-2 h-4 w-4" />
                                           Get quote
@@ -380,6 +430,7 @@ export default function RailPage() {
                                   </Link>
                                 );
                               } else {
+                                // Has calendar availability - show Book Now
                                 return (
                                   <Link href={`/booking/create?tourId=${tour.id}`} className="flex-1">
                                     <Button className="w-full bg-amber-500 hover:bg-amber-600">

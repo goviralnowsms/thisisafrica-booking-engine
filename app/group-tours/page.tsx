@@ -24,6 +24,7 @@ export default function GroupToursPage() {
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
+  const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -114,6 +115,41 @@ export default function GroupToursPage() {
     return "/images/safari-lion.png"
   }
 
+  // Check if a product has available dates
+  const checkProductAvailability = async (productCode: string) => {
+    try {
+      // Get next 3 months of pricing data to check for available dates
+      const currentDate = new Date()
+      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, currentDate.getDate())
+      
+      const params = new URLSearchParams({
+        dateFrom: currentDate.toISOString().split('T')[0],
+        dateTo: endDate.toISOString().split('T')[0],
+        adults: '2',
+        children: '0',
+        roomType: 'DB'
+      })
+
+      const response = await fetch(`/api/tourplan/pricing/${productCode}?${params}`, {
+        cache: 'no-store'
+      })
+      const result = await response.json()
+
+      if (result.success && result.data?.calendar) {
+        // Check if there are any valid/available days in the calendar
+        const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available)
+        setProductAvailability(prev => ({ ...prev, [productCode]: hasValidDays }))
+      } else {
+        // If we can't get calendar data, default to false (show Get Quote)
+        setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+      }
+    } catch (error) {
+      console.warn('Error checking availability for', productCode, ':', error)
+      // On error, default to false (show Get Quote)
+      setProductAvailability(prev => ({ ...prev, [productCode]: false }))
+    }
+  }
+
   const handleSearch = async () => {
     if (!selectedCountry) {
       alert('Please select a country to search for Group Tours')
@@ -149,6 +185,11 @@ export default function GroupToursPage() {
         setTours(tourList)
         setFilteredTours(tourList)
         console.log('🦁 Tours state updated')
+        
+        // Check availability for each product
+        tourList.forEach((tour: any) => {
+          checkProductAvailability(tour.code)
+        })
       } else {
         console.error("🦁 Group tours search failed:", result.error)
         setTours([])
@@ -343,21 +384,42 @@ export default function GroupToursPage() {
                                 View details
                               </Button>
                             </Link>
-                            {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
-                              <Button 
-                                className="flex-1 bg-blue-500 hover:bg-blue-600"
-                                onClick={() => router.push(`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}`)}
-                              >
-                                Get quote
-                              </Button>
-                            ) : (
-                              <Button 
-                                className="flex-1 bg-amber-500 hover:bg-amber-600"
-                                onClick={() => router.push(`/booking/create?tourId=${tour.code}`)}
-                              >
-                                Book now
-                              </Button>
-                            )}
+                            {(() => {
+                              // Check actual availability from calendar data
+                              const hasCalendarAvailability = productAvailability[tour.code];
+                              
+                              // Show Get Quote if:
+                              // 1. No calendar availability (checked dynamically)
+                              // 2. No rates or "Price on Application"
+                              // 3. Still checking availability (undefined)
+                              if (hasCalendarAvailability === false || 
+                                  hasCalendarAvailability === undefined ||
+                                  tour.rates?.[0]?.rateName === 'Price on Application' || 
+                                  tour.rates?.[0]?.singleRate === 0) {
+                                return (
+                                  <Button 
+                                    className="flex-1 bg-blue-500 hover:bg-blue-600"
+                                    onClick={() => router.push(`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=group-tour`)}
+                                  >
+                                    {hasCalendarAvailability === undefined ? (
+                                      <>⏳ Checking...</>
+                                    ) : (
+                                      'Get quote'
+                                    )}
+                                  </Button>
+                                );
+                              } else {
+                                // Has calendar availability - show Book Now
+                                return (
+                                  <Button 
+                                    className="flex-1 bg-amber-500 hover:bg-amber-600"
+                                    onClick={() => router.push(`/booking/create?tourId=${tour.code}`)}
+                                  >
+                                    Book now
+                                  </Button>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>
