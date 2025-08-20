@@ -142,6 +142,7 @@ export default function BookingCreatePage() {
     // Tour options
     selectedActivities: [] as string[],
     specialRequests: "",
+    agreeToTerms: false,
 
     // Payment
     paymentMethod: "credit-card",
@@ -515,6 +516,11 @@ export default function BookingCreatePage() {
     }
 
     if (currentStep === 3) {
+      // Validate terms agreement before payment
+      if (!formData.agreeToTerms) {
+        alert("Please agree to the Terms & Conditions and Privacy Policy to continue.")
+        return
+      }
       // Payment is handled by Stripe component, no manual validation needed
       return
     }
@@ -1248,6 +1254,30 @@ export default function BookingCreatePage() {
                     rows={4}
                     placeholder="Please let us know if you have any special requests or requirements for your tour"
                   />
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onCheckedChange={(checked) => 
+                        setFormData((prev) => ({ ...prev, agreeToTerms: checked as boolean }))
+                      }
+                      required
+                    />
+                    <Label htmlFor="agreeToTerms" className="text-sm text-gray-600 cursor-pointer">
+                      * I agree with{' '}
+                      <a href="/terms-conditions" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">
+                        Terms & Conditions
+                      </a>{' '}
+                      and{' '}
+                      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">
+                        Privacy Policy
+                      </a>
+                      .
+                    </Label>
+                  </div>
                 </div>
               </div>
             )}

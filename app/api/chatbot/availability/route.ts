@@ -15,9 +15,12 @@ export async function GET(request: NextRequest) {
     console.log('🤖 Checking availability for:', { productCode, dateFrom, dateTo })
 
     // Get full product details including pricing and availability
-    const productResult = await getProductDetails(productCode)
-    
-    if (!productResult.success || !productResult.data) {
+    // Note: getProductDetails returns the data directly, not wrapped in { success, data }
+    let product
+    try {
+      product = await getProductDetails(productCode)
+    } catch (error) {
+      console.error('🤖 Failed to get product details:', error)
       return NextResponse.json({
         success: false,
         available: false,
@@ -25,8 +28,15 @@ export async function GET(request: NextRequest) {
         productCode
       })
     }
-
-    const product = productResult.data
+    
+    if (!product) {
+      return NextResponse.json({
+        success: false,
+        available: false,
+        message: 'Product not found or unavailable',
+        productCode
+      })
+    }
 
     // Process availability data
     const availability = processAvailabilityData(product, dateFrom, dateTo)
@@ -184,13 +194,13 @@ export async function POST(request: NextRequest) {
 
     for (const productCode of productCodes.slice(0, 5)) { // Limit to 5 products
       try {
-        const productResult = await getProductDetails(productCode)
+        const product = await getProductDetails(productCode)
         
-        if (productResult.success && productResult.data) {
-          const availability = processAvailabilityData(productResult.data)
+        if (product) {
+          const availability = processAvailabilityData(product)
           results.push({
             productCode,
-            productName: productResult.data.name,
+            productName: product.name,
             available: availability.hasAvailability,
             bestPrice: availability.bestRate?.twinRate ? formatPrice(availability.bestRate.twinRate) : 'POA',
             summary: availability.hasAvailability ? 'Available' : 'On request'

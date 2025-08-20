@@ -26,7 +26,7 @@ export function Header() {
   const pathname = usePathname()
 
   // Check if current page has a hero section that might need transparent header
-  const hasHeroSection = pathname === "/" || pathname.startsWith("/group-tours") || 
+  const hasHeroSection = pathname === "/" || pathname.startsWith("/group-tours-list") || 
                         pathname.startsWith("/packages") || pathname.startsWith("/accommodation") ||
                         pathname.startsWith("/rail") || pathname.startsWith("/cruise") ||
                         pathname.startsWith("/special-offers") || pathname.startsWith("/tailor-made")
@@ -104,7 +104,7 @@ export function Header() {
                   Cruises
                 </Link>
                 <Link
-                  href="/group-tours"
+                  href="/group-tours-list"
                   className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                 >
                   Group Tours
@@ -230,14 +230,14 @@ export function Header() {
               <Phone className="h-4 w-4" />
               <span>+61 2 9664 9187</span>
             </a>
-            <Link href="/booking">
+            <Link href="/group-tours-list">
               <Button className="bg-amber-500 hover:bg-amber-600 text-white">Book now</Button>
             </Link>
           </div>
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
-            <Link href="/booking">
+            <Link href="/group-tours-list">
               <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3">
                 Book now
               </Button>
@@ -286,7 +286,7 @@ export function Header() {
                       Cruises
                     </Link>
                     <Link
-                      href="/group-tours"
+                      href="/group-tours-list"
                       className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -382,7 +382,7 @@ export function Header() {
                 >
                   My Bookings
                 </Link>
-                <Link href="/booking" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/group-tours-list" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="bg-amber-500 hover:bg-amber-600 text-white mt-4 w-full">Book now</Button>
                 </Link>
               </div>

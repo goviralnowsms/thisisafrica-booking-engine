@@ -8,7 +8,7 @@ export default function TermsConditionsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-[40vh] flex items-center justify-center">
+      <section className="relative h-[80vh] flex items-center justify-center">
         <Image
           src="/images/products/terms-conditions-hero.jpg"
           alt="Terms and Conditions"

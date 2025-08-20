@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Users, Search, Loader2, Star, Ship, Calendar } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 import { hasCruiseAvailability, getCruiseAvailability } from "@/lib/cruise-availability"
+import { getCruiseProductsForRegion, shouldShowDestinationAndClass } from "@/lib/cruise-region-mapping"
 
 
 export default function CruisesPage() {
@@ -127,44 +128,68 @@ export default function CruisesPage() {
       return
     }
 
-    console.log('🚢 Starting cruise search...')
+    console.log('🚢 Starting cruise search using region mapping...')
     setLoading(true)
     setSearchPerformed(false)
 
     try {
-      // Build search URL with parameters
-      const params = new URLSearchParams()
-      params.set('productType', 'Cruises')
-      
-      // Use the correct TourPlan destination name
-      const tourPlanDestination = getTourPlanDestinationName('Cruises', selectedCountry, selectedDestination || selectedCountry)
-      params.set('destination', tourPlanDestination)
-      
-      if (selectedClass) params.set('class', selectedClass)
-      
-      console.log('🚢 Cruise search params:', params.toString())
-      const response = await fetch(`/api/tourplan?${params.toString()}`)
-      const result = await response.json()
+      // Get cruise products for the selected region
+      const regionProducts = getCruiseProductsForRegion(selectedCountry)
+      console.log(`🚢 Found ${regionProducts.length} products for region: ${selectedCountry}`)
 
-      console.log('🚢 Cruise search response:', result)
-
-      if (result.success) {
-        console.log('🚢 Found', result.tours?.length || 0, 'cruises')
-        console.log('🚢 Setting tours and filteredTours...')
-        const toursData = result.tours || []
-        setTours(toursData)
-        setFilteredTours(toursData)
-        console.log('🚢 Tours state updated')
-        
-        // Check availability for each product
-        toursData.forEach((tour: any) => {
-          checkProductAvailability(tour.code)
-        })
-      } else {
-        console.error("🚢 Cruise search failed:", result.error)
+      if (regionProducts.length === 0) {
         setTours([])
         setFilteredTours([])
+        setLoading(false)
+        setSearchPerformed(true)
+        return
       }
+
+      // Fetch detailed information for each product
+      const productPromises = regionProducts.map(async (product) => {
+        try {
+          const response = await fetch(`/api/tourplan/product/${product.productCode}`)
+          const result = await response.json()
+          
+          if (result.success && result.data) {
+            console.log(`🚢 Product ${product.productCode} loaded:`, {
+              name: result.data.name,
+              hasRates: !!result.data.rates,
+              ratesCount: result.data.rates?.length || 0
+            })
+            
+            // Check availability for this product
+            checkProductAvailability(product.productCode)
+            
+            // Add the product code to the returned data
+            return { 
+              ...result.data, 
+              code: product.productCode,
+              id: product.productCode // Also add id for compatibility
+            }
+          }
+          return null
+        } catch (error) {
+          console.warn(`Failed to fetch product ${product.productCode}:`, error)
+          return null
+        }
+      })
+
+      const productResults = await Promise.all(productPromises)
+      const validProducts = productResults.filter(product => product !== null)
+      
+      console.log('🚢 Successfully loaded', validProducts.length, 'cruise products')
+      // Log product structure for debugging
+      if (validProducts.length > 0) {
+        console.log('🚢 Sample product structure:', {
+          name: validProducts[0].name,
+          code: validProducts[0].code,
+          hasRates: !!validProducts[0].rates,
+          ratesLength: validProducts[0].rates?.length
+        })
+      }
+      setTours(validProducts)
+      setFilteredTours(validProducts)
     } catch (error) {
       console.error("🚢 Search error:", error)
       setTours([])
@@ -173,12 +198,6 @@ export default function CruisesPage() {
       console.log('🚢 Setting loading=false, searchPerformed=true')
       setLoading(false)
       setSearchPerformed(true)
-      console.log('🚢 Search complete. Final state:', { 
-        loading: false, 
-        searchPerformed: true, 
-        toursLength: tours.length,
-        filteredToursLength: filteredTours.length 
-      })
     }
   }
 
@@ -224,7 +243,7 @@ export default function CruisesPage() {
               Short cruises on Botswana's Chobe River and Zimbabwe's Lake Kariba provide exceptional water-based game viewing and offer a different perspective to vehicle-based game viewing. In Egypt, riverboat cruises and sailboats along the Nile River offer a relaxing and scenic way to see the sights around Luxor and Aswan.
             </p>
             <div className="bg-gray-100 rounded-lg p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className={`grid grid-cols-1 gap-4 ${shouldShowDestinationAndClass(selectedCountry) ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
                     <SelectValue placeholder="Select Country" />
@@ -238,33 +257,37 @@ export default function CruisesPage() {
                   </SelectContent>
                 </Select>
 
-                <Select 
-                  value={selectedDestination} 
-                  onValueChange={(value) => setSelectedDestination(value)}
-                  disabled={!selectedCountry || availableDestinations.length === 0}
-                >
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableDestinations.map((destination) => (
-                      <SelectItem key={destination.value} value={destination.value}>
-                        {destination.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {shouldShowDestinationAndClass(selectedCountry) && (
+                  <Select 
+                    value={selectedDestination} 
+                    onValueChange={(value) => setSelectedDestination(value)}
+                    disabled={!selectedCountry || availableDestinations.length === 0}
+                  >
+                    <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                      <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableDestinations.map((destination) => (
+                        <SelectItem key={destination.value} value={destination.value}>
+                          {destination.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
 
-                <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value)}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="luxury">Luxury</SelectItem>
-                  </SelectContent>
-                </Select>
+                {shouldShowDestinationAndClass(selectedCountry) && (
+                  <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value)}>
+                    <SelectTrigger className="bg-amber-500 text-white border-amber-500">
+                      <SelectValue placeholder="Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="luxury">Luxury</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="superior">Superior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
 
                 <Button 
                   onClick={handleSearch} 
@@ -343,11 +366,11 @@ export default function CruisesPage() {
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">From</p>
-                              {tour.rates?.[0]?.rateName === 'Price on Application' || tour.rates?.[0]?.singleRate === 0 ? (
+                              {!tour.rates || tour.rates.length === 0 || tour.rates[0]?.rateName === 'Price on Application' || tour.rates[0]?.singleRate === 0 ? (
                                 <p className="text-lg font-bold text-blue-600">On Request</p>
                               ) : (
                                 <p className="text-xl font-bold text-green-600">
-                                  ${tour.rates[0]?.singleRate ? Math.round(tour.rates[0].singleRate / 100).toLocaleString() : 'POA'}
+                                  ${tour.rates[0].singleRate ? Math.round(tour.rates[0].singleRate / 100).toLocaleString() : 'POA'}
                                 </p>
                               )}
                             </div>
@@ -370,8 +393,10 @@ export default function CruisesPage() {
                               // 3. Still checking availability (undefined)
                               if (hasCalendarAvailability === false || 
                                   hasCalendarAvailability === undefined ||
-                                  tour.rates?.[0]?.rateName === 'Price on Application' || 
-                                  tour.rates?.[0]?.singleRate === 0) {
+                                  !tour.rates || 
+                                  tour.rates.length === 0 ||
+                                  tour.rates[0]?.rateName === 'Price on Application' || 
+                                  tour.rates[0]?.singleRate === 0) {
                                 return (
                                   <Link href={`/contact?tour=${tour.code}&name=${encodeURIComponent(tour.name)}&type=cruise`} className="flex-1">
                                     <Button className="w-full bg-blue-500 hover:bg-blue-600">

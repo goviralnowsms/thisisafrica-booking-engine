@@ -106,8 +106,8 @@ export default function FeaturedSpecials() {
     }
   ]
 
-  // Use static fallback if loading failed or no offers returned
-  const displayOffers = (!loading && offers.length === 0) ? staticOffers : offers
+  // Use API offers if available, otherwise use static fallback
+  const displayOffers = (offers.length > 0) ? offers : staticOffers
 
   const formatPrice = (rate: any) => {
     if (!rate) return 'POA'

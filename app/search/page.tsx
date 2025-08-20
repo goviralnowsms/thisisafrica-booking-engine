@@ -468,7 +468,7 @@ export default function SearchResultsPage() {
                       {searchResults.groupTours.map((tour) => renderProductCard(tour, 'Group Tours'))}
                     </div>
                     <div className="text-center">
-                      <Link href={`/group-tours?country=${searchCriteria.country}&destination=${searchCriteria.destination}&class=${searchCriteria.class}`}>
+                      <Link href={`/group-tours-list?country=${searchCriteria.country}&destination=${searchCriteria.destination}&class=${searchCriteria.class}`}>
                         <Button variant="outline">View all Group Tours</Button>
                       </Link>
                     </div>

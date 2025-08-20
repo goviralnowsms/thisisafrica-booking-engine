@@ -7,79 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from "lucide-react"
 import FeaturedSpecials from "@/components/homepage/FeaturedSpecials"
-import { getAvailableCountries, getAvailableDestinations } from "@/lib/destination-mapping"
 
 export default function Home() {
   const router = useRouter()
-  const [searchCriteria, setSearchCriteria] = useState({
-    country: "",
-    destination: "",
-    class: ""
-  })
-  const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
-  const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
-
-  // Initialize available countries from all product types
-  useEffect(() => {
-    // Get unique countries from all product types
-    const allCountries = new Map<string, string>()
-    
-    // Add countries from each product type
-    ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
-      const countries = getAvailableCountries(productType)
-      countries.forEach(country => {
-        allCountries.set(country.value, country.label)
-      })
-    })
-    
-    // Convert to array and sort
-    const uniqueCountries = Array.from(allCountries.entries()).map(([value, label]) => ({ value, label }))
-    uniqueCountries.sort((a, b) => a.label.localeCompare(b.label))
-    
-    setAvailableCountries(uniqueCountries)
-  }, [])
-
-  // Update available destinations when country changes
-  useEffect(() => {
-    if (searchCriteria.country) {
-      // Get destinations from all product types for this country
-      const allDestinations = new Map<string, {value: string, label: string, tourPlanName: string}>()
-      
-      ;['Group Tours', 'Rail', 'Cruises', 'Packages'].forEach(productType => {
-        const destinations = getAvailableDestinations(productType, searchCriteria.country)
-        destinations.forEach(dest => {
-          allDestinations.set(dest.value, dest)
-        })
-      })
-      
-      const uniqueDestinations = Array.from(allDestinations.values())
-      uniqueDestinations.sort((a, b) => a.label.localeCompare(b.label))
-      
-      setAvailableDestinations(uniqueDestinations)
-      
-      // Reset destination when country changes
-      setSearchCriteria(prev => ({...prev, destination: ""}))
-    } else {
-      setAvailableDestinations([])
-    }
-  }, [searchCriteria.country])
-
-  const handleSearch = () => {
-    // Require country to be selected
-    if (!searchCriteria.country) {
-      alert('Please select a country to search for tours and experiences')
-      return
-    }
-    
-    // Build search URL with parameters
-    const params = new URLSearchParams()
-    if (searchCriteria.country) params.set('country', searchCriteria.country)
-    if (searchCriteria.destination) params.set('destination', searchCriteria.destination)
-    if (searchCriteria.class) params.set('class', searchCriteria.class)
-    
-    // Navigate to unified search results page
-    router.push(`/search?${params.toString()}`)
-  }
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section with Lion Image - Made Taller */}
@@ -117,57 +47,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Enhanced Search Form */}
+      {/* Product-specific Navigation */}
       <section id="search-section" className="bg-white py-8">
         <div className="container mx-auto px-4">
-          <div className="bg-gray-100 rounded-lg p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Select value={searchCriteria.country} onValueChange={(value) => setSearchCriteria(prev => ({...prev, country: value}))}>
-                <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Select Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCountries.map((country) => (
-                    <SelectItem key={country.value} value={country.value}>
-                      {country.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select 
-                value={searchCriteria.destination} 
-                onValueChange={(value) => setSearchCriteria(prev => ({...prev, destination: value}))}
-                disabled={!searchCriteria.country || availableDestinations.length === 0}
-              >
-                <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                  <SelectValue placeholder={searchCriteria.country ? "Select Destination" : "Select Country First"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableDestinations.map((destination) => (
-                    <SelectItem key={destination.value} value={destination.value}>
-                      {destination.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={searchCriteria.class} onValueChange={(value) => setSearchCriteria(prev => ({...prev, class: value}))}>
-                <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                  <SelectValue placeholder="Class" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="luxury">Luxury</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button onClick={handleSearch} className="bg-amber-500 hover:bg-amber-600 text-white">
-                <Search className="mr-2 h-4 w-4" />
-                Search
-              </Button>
-            </div>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-4">Explore Our Tours by Category</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Choose the type of African adventure that speaks to you. Each category offers specialized tours with expert guidance and authentic experiences.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Button 
+              onClick={() => router.push('/group-tours-list')}
+              className="bg-amber-500 hover:bg-amber-600 text-white h-16 text-lg font-semibold"
+            >
+              Group Tours
+            </Button>
+            <Button 
+              onClick={() => router.push('/cruise')}
+              className="bg-blue-500 hover:bg-blue-600 text-white h-16 text-lg font-semibold"
+            >
+              River Cruises
+            </Button>
+            <Button 
+              onClick={() => router.push('/rail')}
+              className="bg-green-500 hover:bg-green-600 text-white h-16 text-lg font-semibold"
+            >
+              Rail Journeys
+            </Button>
+            <Button 
+              onClick={() => router.push('/packages')}
+              className="bg-purple-500 hover:bg-purple-600 text-white h-16 text-lg font-semibold"
+            >
+              Packages
+            </Button>
           </div>
         </div>
       </section>
@@ -195,7 +108,7 @@ export default function Home() {
                   Specially selected tours. Great group accommodation and transport. Ideal for solo travellers.
                 </p>
                 <Button 
-                  onClick={() => window.open('/group-tours', '_blank')}
+                  onClick={() => window.open('/group-tours-list', '_blank')}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                 >
                   Book now
@@ -383,7 +296,7 @@ export default function Home() {
                     📋 View Details
                   </Button>
                   <Button 
-                    onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKEKEE')}
+                    onClick={() => router.push('/contact?tour=NBOGTARP001CKEKEE&name=Classic Kenya - Keekorok&type=group-tour')}
                     className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
                   >
                     🚀 Book Now
@@ -421,7 +334,7 @@ export default function Home() {
                     📋 View Details
                   </Button>
                   <Button 
-                    onClick={() => router.push('/booking/create?tourId=NBOGTARP001CKSE')}
+                    onClick={() => router.push('/contact?tour=NBOGTARP001CKSE&name=Classic Kenya - Serena&type=group-tour')}
                     className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold"
                   >
                     🚀 Book Now
@@ -441,7 +354,7 @@ export default function Home() {
                   </p>
                 </div>
                 <Button 
-                  onClick={() => router.push('/booking')}
+                  onClick={() => router.push('/group-tours-list')}
                   variant="outline"
                   className="bg-white text-amber-600 border-white hover:bg-amber-50 font-bold"
                 >

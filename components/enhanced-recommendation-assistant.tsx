@@ -42,6 +42,8 @@ type RecommendationState = {
   travelers?: string
   duration?: string
   interests?: string[]
+  currentProduct?: Product // Track the product user is asking about
+  lastProducts?: Product[] // Remember last shown products
   stage:
     | "greeting"
     | "asking_destination"
@@ -52,6 +54,8 @@ type RecommendationState = {
     | "recommending"
     | "follow_up"
     | "product_details"
+    | "checking_availability" // New stage for availability checks
+    | "showing_dates" // New stage for showing dates
 }
 
 export function EnhancedRecommendationAssistant() {
@@ -137,6 +141,37 @@ export function EnhancedRecommendationAssistant() {
     }
   }
 
+  // Check availability for a specific product
+  const checkProductAvailability = async (productCode: string) => {
+    try {
+      const response = await fetch(`/api/chatbot/availability?productCode=${productCode}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        return {
+          available: data.available,
+          message: data.response,
+          dates: data.dates,
+          pricing: data.pricing
+        }
+      }
+      return {
+        available: false,
+        message: 'Unable to check availability at this time. Please contact us for current availability.',
+        dates: [],
+        pricing: null
+      }
+    } catch (error) {
+      console.error('Failed to check availability:', error)
+      return {
+        available: false,
+        message: 'Error checking availability. Please try again or contact us directly.',
+        dates: [],
+        pricing: null
+      }
+    }
+  }
+
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return
 
@@ -186,41 +221,54 @@ export function EnhancedRecommendationAssistant() {
     // Wait a moment before responding (simulates API processing)
     setTimeout(async () => {
       try {
-        switch (recommendationState.stage) {
-          case "asking_destination":
-            await handleDestinationSelection(input)
-            break
+        // Check if user is asking for dates regardless of stage
+        const lowerInput = input.toLowerCase()
+        if (lowerInput.includes("see dates for") || lowerInput.includes("check availability for") || lowerInput.includes("see available dates")) {
+          await handleFollowUpQuestion(input)
+        } else if (lowerInput.includes("continue with preferences")) {
+          // User wants to continue with budget/traveler questions
+          setRecommendationState({ ...recommendationState, stage: "asking_budget" })
+          await handleBudgetSelection("Show me all options")
+        } else {
+          // Normal flow based on current stage
+          switch (recommendationState.stage) {
+            case "asking_destination":
+              await handleDestinationSelection(input)
+              break
 
-          case "asking_budget":
-            await handleBudgetSelection(input)
-            break
+            case "asking_budget":
+              await handleBudgetSelection(input)
+              break
 
-          case "asking_travelers":
-            await handleTravelersSelection(input)
-            break
+            case "asking_travelers":
+              await handleTravelersSelection(input)
+              break
 
-          case "asking_duration":
-            await handleDurationSelection(input)
-            break
+            case "asking_duration":
+              await handleDurationSelection(input)
+              break
 
-          case "asking_interests":
-            await handleInterestsSelection(input)
-            break
+            case "asking_interests":
+              await handleInterestsSelection(input)
+              break
 
-          case "recommending":
-          case "follow_up":
-          case "product_details":
-            await handleFollowUpQuestion(input)
-            break
+            case "recommending":
+            case "follow_up":
+            case "product_details":
+            case "checking_availability":
+            case "showing_dates":
+              await handleFollowUpQuestion(input)
+              break
 
-          default:
-            const fallbackMessage: Message = {
-              id: generateMessageId(),
-              content: "I'm not sure I understand. Could you please rephrase that or choose from the available options?",
-              sender: "bot",
-              timestamp: new Date(),
-            }
-            setMessages((prev) => prev.filter(m => !m.isLoading).concat([fallbackMessage]))
+            default:
+              const fallbackMessage: Message = {
+                id: generateMessageId(),
+                content: "I'm not sure I understand. Could you please rephrase that or choose from the available options?",
+                sender: "bot",
+                timestamp: new Date(),
+              }
+              setMessages((prev) => prev.filter(m => !m.isLoading).concat([fallbackMessage]))
+          }
         }
       } catch (error) {
         console.error('Error processing user input:', error)
@@ -260,10 +308,12 @@ export function EnhancedRecommendationAssistant() {
     // Fetch relevant products
     const products = await fetchProducts(input, undefined, productType)
 
+    // Store products in state for later reference
     setRecommendationState({
       ...recommendationState,
       destination: input,
       stage: "asking_budget",
+      lastProducts: products.length > 0 ? products : undefined
     })
 
     const responseContent = products.length > 0 
@@ -278,12 +328,19 @@ export function EnhancedRecommendationAssistant() {
       products: products.length > 0 ? products : undefined
     }
 
+    // If we have products, offer immediate actions
+    const followUpOptions = products.length > 0 
+      ? products.slice(0, 2).map(p => `See dates for ${p.name}`).concat(["Continue with preferences", "Contact specialist"])
+      : ["$1,000-$3,000", "$3,000-$5,000", "$5,000-$10,000", "$10,000+", "Show me all options"]
+
     const followUpMessage: Message = {
       id: generateMessageId(),
-      content: "What's your approximate budget per person for this trip?",
+      content: products.length > 0 
+        ? "Would you like to check availability for any of these tours, or shall we continue refining your preferences?"
+        : "What's your approximate budget per person for this trip?",
       sender: "bot",
       timestamp: new Date(),
-      options: ["$1,000-$3,000", "$3,000-$5,000", "$5,000-$10,000", "$10,000+", "Show me all options"],
+      options: followUpOptions,
     }
 
     setMessages((prev) => prev.filter(m => !m.isLoading).concat([budgetMessage, followUpMessage]))
@@ -358,6 +415,13 @@ export function EnhancedRecommendationAssistant() {
     const products = await fetchProducts(destination, undefined, undefined)
 
     if (products.length > 0) {
+      // Store products in state for later reference
+      setRecommendationState({ 
+        ...recommendationState, 
+        stage: "follow_up",
+        lastProducts: products 
+      })
+
       const recommendationMessage: Message = {
         id: generateMessageId(),
         content: `Based on your preferences for ${destination} with a ${budget} budget for ${travelers}, here are my top live recommendations from our current inventory:`,
@@ -368,18 +432,17 @@ export function EnhancedRecommendationAssistant() {
 
       const followUpMessage: Message = {
         id: generateMessageId(),
-        content: "Would you like more details about any of these options, see different alternatives, or speak with a travel specialist?",
+        content: "What would you like to do next?",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Get product details", "See more options", "Speak with specialist", "Check availability", "Download brochures"],
+        options: products.map(p => `Check availability for ${p.name}`).concat(["See more options", "Speak with specialist"]),
       }
 
       setMessages((prev) => prev.filter(m => !m.isLoading).concat([recommendationMessage, followUpMessage]))
     } else {
       await showFallbackProducts()
+      setRecommendationState({ ...recommendationState, stage: "follow_up" })
     }
-
-    setRecommendationState({ ...recommendationState, stage: "follow_up" })
   }
 
   const showFallbackProducts = async () => {
@@ -397,59 +460,351 @@ export function EnhancedRecommendationAssistant() {
   }
 
   const handleFollowUpQuestion = async (input: string) => {
-    if (input.toLowerCase().includes("details") || input.toLowerCase().includes("more about")) {
-      const detailsMessage: Message = {
+    const lowerInput = input.toLowerCase()
+    
+    // Check if user is asking about special deals/offers
+    if (lowerInput.includes("special deal") || lowerInput.includes("special offer") || lowerInput.includes("deal") || lowerInput.includes("discount") || lowerInput.includes("promotion")) {
+      // Fetch special offers
+      const specialOffers = await fetchProducts('special offers', undefined, 'Special Offers')
+      
+      if (specialOffers.length > 0) {
+        setRecommendationState({ 
+          ...recommendationState, 
+          lastProducts: specialOffers,
+          stage: "follow_up"
+        })
+        
+        const specialMessage: Message = {
+          id: generateMessageId(),
+          content: "Great news! Here are our current special offers and exclusive deals:",
+          sender: "bot",
+          timestamp: new Date(),
+          products: specialOffers
+        }
+        
+        const followUpMessage: Message = {
+          id: generateMessageId(),
+          content: "These special offers are limited time only. What would you like to do?",
+          sender: "bot",
+          timestamp: new Date(),
+          options: specialOffers.map(p => `Check availability for ${p.name}`).concat(["View all tours", "Contact specialist"])
+        }
+        
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([specialMessage, followUpMessage]))
+        return
+      } else {
+        const noOffersMessage: Message = {
+          id: generateMessageId(),
+          content: "Let me show you our best value tours and packages:",
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([noOffersMessage]))
+        await showFallbackProducts()
+        return
+      }
+    }
+    
+    // Check if user is asking about availability for a specific product
+    if (lowerInput.includes("check availability for") || lowerInput.includes("see available dates") || lowerInput.includes("see dates for")) {
+      // Extract product name from the input
+      let productToCheck: Product | undefined
+      
+      if (recommendationState.lastProducts) {
+        // Try to match product from last shown products
+        productToCheck = recommendationState.lastProducts.find(p => 
+          lowerInput.includes(p.name.toLowerCase())
+        )
+        
+        // If user just said "see available dates" without specifying, use the current product or first product
+        if (!productToCheck && (lowerInput.includes("see available dates") || lowerInput === "see available dates")) {
+          productToCheck = recommendationState.currentProduct || recommendationState.lastProducts[0]
+        }
+      }
+      
+      if (productToCheck) {
+        // Update state to track current product
+        setRecommendationState({
+          ...recommendationState,
+          currentProduct: productToCheck,
+          stage: "checking_availability"
+        })
+        
+        // Check availability for the specific product
+        const availability = await checkProductAvailability(productToCheck.code)
+        
+        const availabilityMessage: Message = {
+          id: generateMessageId(),
+          content: availability.message,
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        
+        // Add follow-up options based on availability
+        const followUpOptions = availability.available 
+          ? ["Book this tour", "Customize this package", "View other packages", "Contact specialist"]
+          : ["View similar tours", "Contact specialist for availability", "See other options"]
+        
+        const followUpMessage: Message = {
+          id: generateMessageId(),
+          content: "What would you like to do next?",
+          sender: "bot",
+          timestamp: new Date(),
+          options: followUpOptions
+        }
+        
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([availabilityMessage, followUpMessage]))
+        setRecommendationState({ ...recommendationState, stage: "showing_dates" })
+        return
+      }
+    }
+    
+    // Handle booking request
+    if (lowerInput.includes("book this") || lowerInput.includes("book the")) {
+      if (recommendationState.currentProduct) {
+        const bookingMessage: Message = {
+          id: generateMessageId(),
+          content: `Great choice! I'll help you book the ${recommendationState.currentProduct.name}. Click the link below to start your booking:`,
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        
+        const bookingLinkMessage: Message = {
+          id: generateMessageId(),
+          content: `🔗 [Start Booking ${recommendationState.currentProduct.name}](${recommendationState.currentProduct.url})`,
+          sender: "bot",
+          timestamp: new Date(),
+          options: ["Need help with booking?", "View other tours", "Contact specialist"]
+        }
+        
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([bookingMessage, bookingLinkMessage]))
+        return
+      }
+    }
+    
+    // Handle customization request
+    if (lowerInput.includes("customize") || lowerInput.includes("tailor")) {
+      const customizeMessage: Message = {
         id: generateMessageId(),
-        content: "I can provide detailed information about any of our products. Which specific tour or experience would you like to know more about? I can access live pricing, availability, and detailed brochure content.",
+        content: "I'd be happy to help customize this package for you! Our specialists can adjust the itinerary, accommodation, activities, and duration to match your preferences.",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Classic Kenya Safari", "Zambezi River Cruise", "Victoria Falls Experience", "Show all current options"],
+        options: ["Speak with specialist", "Send customization request", "View customization options", "Back to tours"]
       }
-      setMessages((prev) => prev.filter(m => !m.isLoading).concat([detailsMessage]))
-    } else if (input.toLowerCase().includes("specialist") || input.toLowerCase().includes("speak")) {
-      const specialistMessage: Message = {
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([customizeMessage]))
+      return
+    }
+    
+    // Handle when user selects specific action options
+    if (lowerInput === "show special offers") {
+      // Direct request for special offers from button click
+      const specialOffers = await fetchProducts('special offers', undefined, 'Special Offers')
+      
+      if (specialOffers.length > 0) {
+        setRecommendationState({ 
+          ...recommendationState, 
+          lastProducts: specialOffers,
+          stage: "follow_up"
+        })
+        
+        const specialMessage: Message = {
+          id: generateMessageId(),
+          content: "Here are our exclusive special offers with limited-time pricing:",
+          sender: "bot",
+          timestamp: new Date(),
+          products: specialOffers
+        }
+        
+        const followUpMessage: Message = {
+          id: generateMessageId(),
+          content: "These deals won't last long! What would you like to do?",
+          sender: "bot",
+          timestamp: new Date(),
+          options: specialOffers.map(p => `Book ${p.name}`).concat(["Browse all tours", "Contact specialist"])
+        }
+        
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([specialMessage, followUpMessage]))
+      } else {
+        await showFallbackProducts()
+      }
+      return
+    }
+    
+    if (lowerInput === "see different destinations" || lowerInput === "search by destination") {
+      setRecommendationState({ ...recommendationState, stage: "asking_destination" })
+      const destinationMessage: Message = {
         id: generateMessageId(),
-        content: "I'll connect you with one of our Africa specialists who can provide personalized assistance. They have access to the same live data I do, plus they can customize any itinerary.",
+        content: "Where in Africa would you like to explore?",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Schedule a call", "Email me", "Contact form", "Live chat"],
+        options: ["Kenya Safari", "South Africa", "Tanzania", "Botswana", "Victoria Falls", "Egypt", "Morocco", "Show all destinations"]
       }
-      setMessages((prev) => prev.filter(m => !m.isLoading).concat([specialistMessage]))
-    } else if (input.toLowerCase().includes("more options") || input.toLowerCase().includes("alternatives")) {
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([destinationMessage]))
+      return
+    }
+    
+    if (lowerInput === "check availability for tours") {
+      if (recommendationState.lastProducts && recommendationState.lastProducts.length > 0) {
+        const availMessage: Message = {
+          id: generateMessageId(),
+          content: "Which tour would you like to check availability for?",
+          sender: "bot",
+          timestamp: new Date(),
+          options: recommendationState.lastProducts.map(p => `Check availability for ${p.name}`)
+        }
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([availMessage]))
+      } else {
+        await showFallbackProducts()
+      }
+      return
+    }
+    
+    // Handle view other packages
+    if (lowerInput.includes("other packages") || lowerInput.includes("other options") || lowerInput.includes("view other") || lowerInput.includes("different tour")) {
       const products = await fetchProducts()
+      setRecommendationState({ 
+        ...recommendationState, 
+        lastProducts: products,
+        stage: "follow_up"
+      })
+      
       const moreOptionsMessage: Message = {
         id: generateMessageId(),
-        content: "Here are additional options from our current inventory:",
+        content: "Here are more amazing African adventures from our current inventory:",
         sender: "bot",
         timestamp: new Date(),
         products: products
       }
-      setMessages((prev) => prev.filter(m => !m.isLoading).concat([moreOptionsMessage]))
-    } else if (input.toLowerCase().includes("availability") || input.toLowerCase().includes("dates")) {
-      const availabilityMessage: Message = {
+      
+      const followUpMessage: Message = {
         id: generateMessageId(),
-        content: "I can check real-time availability for any of our tours. Which specific product would you like me to check dates for?",
+        content: "Select a tour to check availability or learn more:",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Classic Kenya Tours", "River Cruises", "Rail Journeys", "Victoria Falls Tours", "All products"],
+        options: products.map(p => `Check availability for ${p.name}`).concat(["Contact specialist"])
       }
-      setMessages((prev) => prev.filter(m => !m.isLoading).concat([availabilityMessage]))
-    } else if (input.toLowerCase().includes("brochure") || input.toLowerCase().includes("pdf")) {
-      const brochureMessage: Message = {
+      
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([moreOptionsMessage, followUpMessage]))
+      return
+    }
+    
+    // Handle specialist contact
+    if (lowerInput.includes("specialist") || lowerInput.includes("speak") || lowerInput.includes("contact")) {
+      const specialistMessage: Message = {
         id: generateMessageId(),
-        content: "I have access to detailed PDF brochures for all our products. Which tour would you like the brochure information for?",
+        content: "I'll connect you with one of our Africa specialists who can provide personalized assistance and help with bookings.",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Kenya Safaris", "Botswana Cruises", "Rail Journeys", "Multi-country Tours", "All brochures"],
+        options: ["Call +61 2 9664 9187", "Email info@thisisafrica.com.au", "Schedule callback", "Continue browsing"]
       }
-      setMessages((prev) => prev.filter(m => !m.isLoading).concat([brochureMessage]))
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([specialistMessage]))
+      return
+    }
+    
+    // Handle browsing requests
+    if (lowerInput.includes("browse") || lowerInput.includes("show me") || lowerInput.includes("all tours") || lowerInput.includes("what else")) {
+      const products = await fetchProducts()
+      setRecommendationState({ 
+        ...recommendationState, 
+        lastProducts: products,
+        stage: "follow_up"
+      })
+      
+      const browseMessage: Message = {
+        id: generateMessageId(),
+        content: "Here are some of our most popular African adventures:",
+        sender: "bot",
+        timestamp: new Date(),
+        products: products
+      }
+      
+      const followUpMessage: Message = {
+        id: generateMessageId(),
+        content: "Which of these interests you most?",
+        sender: "bot",
+        timestamp: new Date(),
+        options: products.map(p => `Tell me more about ${p.name}`).concat(["Show special offers", "Contact specialist"])
+      }
+      
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([browseMessage, followUpMessage]))
+      return
+    }
+    
+    // Handle "tell me more" requests
+    if (lowerInput.includes("tell me more") || lowerInput.includes("more about") || lowerInput.includes("details about")) {
+      // Extract product name and provide details
+      let productToDescribe: Product | undefined
+      
+      if (recommendationState.lastProducts) {
+        productToDescribe = recommendationState.lastProducts.find(p => 
+          lowerInput.includes(p.name.toLowerCase())
+        )
+      }
+      
+      if (productToDescribe) {
+        const detailsMessage: Message = {
+          id: generateMessageId(),
+          content: `Here are the details for ${productToDescribe.name}:\n\n${productToDescribe.description}\n\nDuration: ${productToDescribe.duration}\nLocation: ${productToDescribe.location}\nPrice: ${productToDescribe.price}`,
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        
+        const actionMessage: Message = {
+          id: generateMessageId(),
+          content: "What would you like to do next?",
+          sender: "bot",
+          timestamp: new Date(),
+          options: [`Check availability for ${productToDescribe.name}`, "See similar tours", "View special offers", "Contact specialist"]
+        }
+        
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([detailsMessage, actionMessage]))
+        setRecommendationState({
+          ...recommendationState,
+          currentProduct: productToDescribe
+        })
+        return
+      }
+    }
+    
+    // Handle start over
+    if (lowerInput.includes("start over") || lowerInput.includes("restart") || lowerInput.includes("start new")) {
+      setRecommendationState({ stage: "asking_destination" })
+      const restartMessage: Message = {
+        id: generateMessageId(),
+        content: "Let's start fresh! What type of African experience are you looking for?",
+        sender: "bot",
+        timestamp: new Date(),
+        options: ["Safari Adventures", "River Cruises", "Luxury Rail Journeys", "Beach Escapes", "Multi-Country Tours", "Show me popular options"],
+      }
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([restartMessage]))
+      return
+    }
+    
+    // Better default response based on context
+    if (recommendationState.lastProducts && recommendationState.lastProducts.length > 0) {
+      // User has seen products, offer relevant actions
+      const contextualMessage: Message = {
+        id: generateMessageId(),
+        content: "I can help you with these options for the tours we've been discussing:",
+        sender: "bot",
+        timestamp: new Date(),
+        options: [
+          "Check availability for tours", 
+          "Show special offers",
+          "See different destinations",
+          "Speak with specialist",
+          "Start new search"
+        ],
+      }
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([contextualMessage]))
     } else {
+      // No context, offer general help
       const helpMessage: Message = {
         id: generateMessageId(),
-        content: "I'm here to help with live product information, pricing, and availability. What would you like to explore?",
+        content: "I'm here to help you find the perfect African adventure. What would you like to explore?",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Browse products", "Check pricing", "View availability", "Speak with specialist", "Start over"],
+        options: ["Browse all tours", "Show special offers", "Search by destination", "Speak with specialist"],
       }
       setMessages((prev) => prev.filter(m => !m.isLoading).concat([helpMessage]))
     }
@@ -470,8 +825,9 @@ export function EnhancedRecommendationAssistant() {
       {/* Chat button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all ${isOpen ? "scale-0" : "scale-100"}`}
+        className={`fixed bottom-6 right-6 z-[9999] flex items-center justify-center p-4 rounded-full bg-amber-500 text-white shadow-lg hover:bg-amber-600 transition-all ${isOpen ? "scale-0" : "scale-100"}`}
         aria-label="Open enhanced chat assistant"
+        style={{ zIndex: 9999 }}
       >
         <MessageSquare className="h-6 w-6" />
         <span className="absolute top-0 right-0 flex h-3 w-3">
@@ -482,7 +838,8 @@ export function EnhancedRecommendationAssistant() {
 
       {/* Chat window */}
       <div
-        className={`fixed bottom-0 right-0 z-50 w-full sm:w-96 transition-all duration-300 ease-in-out ${isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
+        className={`fixed bottom-0 right-0 z-[9999] w-full sm:w-96 transition-all duration-300 ease-in-out ${isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
+        style={{ zIndex: 9999 }}
       >
         <div className="flex flex-col h-[600px] max-h-[80vh] m-4 rounded-xl overflow-hidden shadow-2xl bg-white border border-gray-200">
           {/* Chat header */}
@@ -545,15 +902,30 @@ export function EnhancedRecommendationAssistant() {
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{product.price}</span>
                         </div>
                         <p className="text-xs text-gray-600 mb-2">{product.description}</p>
-                        <div className="flex justify-between items-center text-xs text-gray-500">
+                        <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
                           <span>{product.duration} • {product.location}</span>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => {
+                              setRecommendationState({
+                                ...recommendationState,
+                                currentProduct: product,
+                                lastProducts: message.products
+                              })
+                              handleOptionClick(`Check availability for ${product.name}`)
+                            }}
+                            className="flex-1 min-w-[100px] px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600 transition-colors"
+                          >
+                            See Available Dates
+                          </button>
                           <Link 
                             href={product.url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="flex items-center text-amber-600 hover:text-amber-700"
+                            className="flex-1 min-w-[100px] px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded text-xs hover:bg-gray-50 transition-colors text-center"
                           >
-                            View Details <ExternalLink className="h-3 w-3 ml-1" />
+                            View Details
                           </Link>
                         </div>
                       </div>

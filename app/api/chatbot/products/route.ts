@@ -10,6 +10,55 @@ export async function GET(request: NextRequest) {
 
     console.log('🤖 Chatbot product search:', { query, destination, productType, limit })
 
+    // Check if looking for special offers
+    if (query?.toLowerCase().includes('special offer') || 
+        query?.toLowerCase().includes('deal') || 
+        productType?.toLowerCase() === 'special offers') {
+      
+      console.log('🤖 Fetching special offers for chatbot')
+      
+      // Return the special offers
+      const specialOffers = [
+        {
+          code: 'GKPSPSABBLDSABBLS',
+          name: 'Sabi Sabi Earth Lodge - Stay 4 Pay 3',
+          description: 'Experience the award-winning Sabi Sabi Earth Lodge. Stay 4 nights and pay for only 3, including all meals and game drives.',
+          supplier: 'Sabi Sabi Private Game Reserve',
+          duration: '4 nights',
+          price: 'From AUD $2,275',
+          location: 'South Africa',
+          url: '/products/GKPSPSABBLDSABBLS'
+        },
+        {
+          code: 'GKPSPSAV002SAVLHM',
+          name: 'Savanna Lodge Honeymoon Special',
+          description: 'Romantic honeymoon getaway at Savanna Private Game Reserve with luxury accommodation and intimate safari experiences.',
+          supplier: 'Savanna Private Game Reserve',
+          duration: '3 nights',
+          price: 'From AUD $1,204',
+          location: 'South Africa',
+          url: '/products/GKPSPSAV002SAVLHM'
+        },
+        {
+          code: 'HDSSPMAKUTSMSSCLS',
+          name: 'Classic Kruger Package',
+          description: 'Experience the best of Kruger National Park with expert guides and luxury accommodation at Makutsi Safari Springs.',
+          supplier: 'Makutsi Safari Springs',
+          duration: '5 nights',
+          price: 'From AUD $1,945',
+          location: 'South Africa',
+          url: '/products/HDSSPMAKUTSMSSCLS'
+        }
+      ]
+      
+      return NextResponse.json({
+        success: true,
+        products: specialOffers,
+        count: specialOffers.length,
+        isSpecialOffer: true
+      })
+    }
+
     // Return pre-built product data with real codes but static info for reliability
     const featuredProductsWithDetails = [
       {

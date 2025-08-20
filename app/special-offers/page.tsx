@@ -6,15 +6,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Clock, MapPin, Search, Loader2, Star, Gift, Calendar, X } from "lucide-react"
+import { Clock, MapPin, Loader2, Star, Gift, Calendar } from "lucide-react"
 
 export default function SpecialOffersPage() {
   const router = useRouter()
   const [offers, setOffers] = useState<any[]>([])
-  const [filteredOffers, setFilteredOffers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
 
@@ -49,19 +46,6 @@ export default function SpecialOffersPage() {
     loadSpecialOffers()
   }, [])
 
-  // Filter offers based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredOffers(offers)
-    } else {
-      const filtered = offers.filter(offer => 
-        offer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        offer.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        offer.supplier?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      setFilteredOffers(filtered)
-    }
-  }, [offers, searchQuery])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (offer: any) => {
@@ -113,13 +97,15 @@ export default function SpecialOffersPage() {
       if (result.success && result.data?.calendar) {
         // Check if there are any valid/available days in the calendar
         const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available)
+        console.log(`✅ Availability for ${productCode}:`, hasValidDays, 'Days checked:', result.data.calendar.length)
         setProductAvailability(prev => ({ ...prev, [productCode]: hasValidDays }))
       } else {
         // If we can't get calendar data, default to false (show Get Quote)
+        console.log(`❌ No calendar data for ${productCode}, result:`, result)
         setProductAvailability(prev => ({ ...prev, [productCode]: false }))
       }
     } catch (error) {
-      console.warn('Error checking availability for', productCode, ':', error)
+      console.warn('❌ Error checking availability for', productCode, ':', error)
       // On error, default to false (show Get Quote)
       setProductAvailability(prev => ({ ...prev, [productCode]: false }))
     }
@@ -138,7 +124,6 @@ export default function SpecialOffersPage() {
       if (result.success && result.offers) {
         console.log('🎁 Found', result.offers.length, 'special offers')
         setOffers(result.offers)
-        setFilteredOffers(result.offers)
         
         // Check availability for each offer
         result.offers.forEach((offer: any) => {
@@ -147,12 +132,10 @@ export default function SpecialOffersPage() {
       } else {
         console.error("🎁 Special offers failed:", result.error)
         setOffers([])
-        setFilteredOffers([])
       }
     } catch (error) {
       console.error("🎁 Error loading special offers:", error)
       setOffers([])
-      setFilteredOffers([])
     } finally {
       setLoading(false)
     }
@@ -182,40 +165,6 @@ export default function SpecialOffersPage() {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="bg-white py-8 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">Search special offers</h2>
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Search by offer name, description, or supplier..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 py-3 text-lg"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            {searchQuery && (
-              <p className="text-center mt-4 text-gray-600">
-                {filteredOffers.length === 0 
-                  ? "No offers found matching your search" 
-                  : `Found ${filteredOffers.length} offer${filteredOffers.length === 1 ? '' : 's'} matching "${searchQuery}"`
-                }
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* Special Offers Section */}
       <section className="py-12">
@@ -232,9 +181,9 @@ export default function SpecialOffersPage() {
               <Loader2 className="h-12 w-12 text-amber-500 animate-spin mb-4" />
               <p className="text-lg text-gray-600">Loading special offers...</p>
             </div>
-          ) : filteredOffers.length > 0 ? (
+          ) : offers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredOffers.map((offer) => (
+              {offers.map((offer) => (
                 <div key={offer.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                   <div className="relative h-48">
                     <Image 
@@ -350,7 +299,7 @@ export default function SpecialOffersPage() {
                         } else {
                           // Has calendar availability - show Book Now
                           return (
-                            <Link href={`/booking/create?tourId=${offer.id}`} className="flex-1">
+                            <Link href={`/booking/create?tourId=${offer.code}`} className="flex-1">
                               <Button className="w-full bg-amber-500 hover:bg-amber-600">
                                 <Calendar className="mr-2 h-4 w-4" />
                                 Book now
@@ -378,7 +327,7 @@ export default function SpecialOffersPage() {
       </section>
 
       {/* Why Choose Our Special Offers */}
-      {filteredOffers.length > 0 && (
+      {offers.length > 0 && (
         <section className="py-12 bg-amber-50">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">

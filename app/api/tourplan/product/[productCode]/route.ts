@@ -139,11 +139,8 @@ export async function GET(
     console.log(`   - Notes: ${productData.notes?.length || 0}`);
     console.log(`   - Rates: ${productData.rates?.length || 0}`);
     
-    // Return in the format expected by the frontend (matching docs/page.tsx)
-    return successResponse({
-      success: true,
-      data: productData
-    });
+    // Return the product data directly (successResponse already wraps it)
+    return successResponse(productData);
     
   } catch (error) {
     console.error(`❌ Error fetching product details for ${productCode}:`, error);

@@ -59,16 +59,16 @@ export const PRODUCT_DESTINATIONS: Record<string, CountryDestinations> = {
     'botswana': {
       displayName: 'Botswana',
       destinations: [
-        { value: 'botswana', label: 'Botswana (All Cruises)', tourPlanName: 'Botswana' },
-        { value: 'chobe-river', label: 'Chobe River', tourPlanName: 'Botswana' },
-        { value: 'okavango-delta', label: 'Okavango Delta', tourPlanName: 'Botswana' }
+        { value: 'kasane-airport', label: 'Kasane Airport', tourPlanName: 'Botswana' }
       ]
     },
     'namibia': {
       displayName: 'Namibia',
-      destinations: [
-        { value: 'namibia', label: 'Namibia (Zambezi Region)', tourPlanName: 'Botswana' }
-      ]
+      destinations: []
+    },
+    'zimbabwe': {
+      displayName: 'Zimbabwe', 
+      destinations: []
     }
   },
 

@@ -16,15 +16,17 @@ export default function ContactPage() {
     tourName: '',
     message: '',
     travelers: '2',
-    preferredDate: ''
+    preferredDate: '',
+    agreeToTerms: false
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  // Pre-fill form if tour details are provided
+  // Pre-fill form if tour details or brochure request are provided
   useEffect(() => {
     const tourCode = searchParams.get('tour')
     const tourName = searchParams.get('name')
+    const subject = searchParams.get('subject')
     
     if (tourCode || tourName) {
       setFormData(prev => ({
@@ -35,11 +37,22 @@ export default function ContactPage() {
           ? `I am interested in getting a quote for the tour: ${decodeURIComponent(tourName || tourCode)}\n\nPlease provide pricing and availability details.`
           : ''
       }))
+    } else if (subject === 'brochure-request') {
+      setFormData(prev => ({
+        ...prev,
+        message: 'Please send me a printed brochure.\n\nI would like to receive your latest travel brochure with details of all your African tours and packages.'
+      }))
     }
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.agreeToTerms) {
+      alert('Please agree to the Terms & Conditions and Privacy Policy to continue.')
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
@@ -226,6 +239,29 @@ export default function ContactPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                       placeholder="Tell us about your dream African adventure. Include any special requirements, preferences, or questions you have."
                     />
+                  </div>
+
+                  <div className="flex items-start space-x-2">
+                    <input
+                      type="checkbox"
+                      id="agreeToTerms"
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleChange}
+                      required
+                      className="mt-1"
+                    />
+                    <label htmlFor="agreeToTerms" className="text-sm text-gray-600">
+                      * I agree with{' '}
+                      <Link href="/terms-conditions" target="_blank" className="text-amber-600 hover:text-amber-700 underline">
+                        Terms & Conditions
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="/privacy-policy" target="_blank" className="text-amber-600 hover:text-amber-700 underline">
+                        Privacy Policy
+                      </Link>
+                      .
+                    </label>
                   </div>
 
                   <Button

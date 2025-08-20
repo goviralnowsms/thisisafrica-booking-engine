@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #d97706;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chatbot API Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>Test Chatbot APIs</h2>
+        <button class="test-button" onclick="testSpecialOffers()">Test Special Offers</button>
+        <button class="test-button" onclick="testAvailability('GKPSPSABBLDSABBLS')">Test Sabi Sabi Availability</button>
+        <button class="test-button" onclick="testAvailability('GKPSPSAV002SAVLHM')">Test Savanna Availability</button>
+        <button class="test-button" onclick="testAvailability('HDSSPMAKUTSMSSCLS')">Test Kruger Availability</button>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Live Site with Chatbot</h2>
+        <iframe src="http://localhost:3002/" title="Live Site"></iframe>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        async function testSpecialOffers() {
+            resultsDiv.textContent = 'Testing special offers...';
+            try {
+                const response = await fetch('http://localhost:3002/api/chatbot/products?q=special%20offers&limit=3');
+                const data = await response.json();
+                resultsDiv.textContent = 'Special Offers Response:\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultsDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testAvailability(productCode) {
+            resultsDiv.textContent = `Testing availability for ${productCode}...`;
+            try {
+                const response = await fetch(`http://localhost:3002/api/chatbot/availability?productCode=${productCode}`);
+                const data = await response.json();
+                resultsDiv.textContent = `Availability for ${productCode}:\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultsDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
