@@ -23,6 +23,7 @@ export default function PackagesPage() {
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
+  const [availableClasses, setAvailableClasses] = useState<{value: string, label: string}[]>([])
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -127,16 +128,79 @@ export default function PackagesPage() {
           setAvailableDestinations(destinations)
         }
         
-        // Reset destination selection when country changes
+        // Reset destination and class selections when country changes
         setSelectedDestination("")
+        setSelectedClass("")
+        setAvailableClasses([])
       } else {
         setAvailableDestinations([])
         setSelectedDestination("")
+        setSelectedClass("")
+        setAvailableClasses([])
       }
     }
     
     loadDestinationsFromAPI()
   }, [selectedCountry, availableCountries])
+
+  // Update available classes when destination changes
+  useEffect(() => {
+    const loadClassesFromAPI = async () => {
+      if (selectedDestination && availableDestinations.length > 0) {
+        try {
+          console.log('📦 Fetching classes for destination:', selectedDestination)
+          
+          // Get the destination's TourPlan name
+          const destination = availableDestinations.find(d => d.value === selectedDestination)
+          const tourPlanDestination = destination?.tourPlanName || selectedDestination
+          
+          // Fetch classes from TourPlan API using COUNTRY name (not destination)
+          // Classes come from country-level API calls, not destination-level
+          const country = availableCountries.find(c => c.value === selectedCountry)
+          const tourPlanCountry = country?.label || selectedCountry
+          const response = await fetch(`/api/tourplan/destinations?productType=Packages&country=${encodeURIComponent(tourPlanCountry)}`)
+          const result = await response.json()
+          
+          console.log('📦 TourPlan classes response:', result)
+          
+          if (result.success && result.classes) {
+            // Convert TourPlan class names to our format
+            const apiClasses = result.classes.map((className: string) => ({
+              value: className.toLowerCase(),
+              label: className
+            }))
+            
+            console.log('📦 Setting available classes from API:', apiClasses)
+            setAvailableClasses(apiClasses)
+          } else {
+            console.warn('📦 Failed to get classes from API, using fallback')
+            // Fallback to basic classes if API fails
+            setAvailableClasses([
+              { value: 'basic', label: 'Basic' },
+              { value: 'standard', label: 'Standard' },
+              { value: 'luxury', label: 'Luxury' }
+            ])
+          }
+        } catch (error) {
+          console.error('📦 Error fetching classes from API:', error)
+          // Fallback to basic classes
+          setAvailableClasses([
+            { value: 'basic', label: 'Basic' },
+            { value: 'standard', label: 'Standard' },
+            { value: 'luxury', label: 'Luxury' }
+          ])
+        }
+        
+        // Reset class selection when destination changes
+        setSelectedClass("")
+      } else {
+        setAvailableClasses([])
+        setSelectedClass("")
+      }
+    }
+    
+    loadClassesFromAPI()
+  }, [selectedDestination, availableDestinations])
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -336,14 +400,20 @@ export default function PackagesPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedClass} onValueChange={(value) => setSelectedClass(value)}>
-                  <SelectTrigger className="bg-amber-500 text-white border-amber-500">
-                    <SelectValue placeholder="Class" />
+                <Select 
+                  value={selectedClass} 
+                  onValueChange={(value) => setSelectedClass(value)}
+                  disabled={!selectedDestination || availableClasses.length === 0}
+                >
+                  <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
+                    <SelectValue placeholder={selectedDestination ? "Select Class" : "Select Destination First"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="luxury">Luxury</SelectItem>
+                    {availableClasses.map((classOption) => (
+                      <SelectItem key={classOption.value} value={classOption.value}>
+                        {classOption.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -383,6 +453,15 @@ export default function PackagesPage() {
                   {filteredTours.length > 0 && (
                     <div className="text-sm text-gray-600">
                       Showing results for {selectedCountry || selectedDestination}
+                      {filteredTours.some(tour => tour._isHybridFallback) && (
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                          <div className="flex items-center">
+                            <div className="text-amber-800 text-sm">
+                              <strong>Note:</strong> Showing all {selectedCountry} results. More specific filtering for {selectedDestination}/{selectedClass} is being improved.
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -462,6 +541,7 @@ export default function PackagesPage() {
                       setSelectedCountry("")
                       setSelectedDestination("")
                       setSelectedClass("")
+                      setAvailableClasses([])
                       setSearchPerformed(false)
                       setTours([])
                       setFilteredTours([])

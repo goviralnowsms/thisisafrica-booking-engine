@@ -7,16 +7,30 @@ import { searchProducts, createBooking } from "@/lib/tourplan/services"
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const destination = searchParams.get("destination") || undefined
+  const classFilter = searchParams.get("class") || undefined
   const startDate = searchParams.get("startDate") || undefined
   const endDate = searchParams.get("endDate") || undefined
   const travelers = searchParams.get("travelers") ? Number.parseInt(searchParams.get("travelers")!) : undefined
   const adults = searchParams.get("adults") ? Number.parseInt(searchParams.get("adults")!) : undefined
   const children = searchParams.get("children") ? Number.parseInt(searchParams.get("children")!) : undefined
 
+  console.log('📍 GET /api/tourplan - Search params:', {
+    productType: searchParams.get("productType"),
+    destination,
+    class: classFilter,
+    startDate,
+    endDate,
+    adults: adults || travelers,
+    children
+  });
+  
+  console.log('🚨 PACKAGES PAGE API ROUTE HIT!');
+
   try {
     const result = await searchProducts({
       productType: searchParams.get("productType") || 'Group Tours',
       destination,
+      class: classFilter,
       dateFrom: startDate,
       dateTo: endDate,
       adults: adults || travelers,

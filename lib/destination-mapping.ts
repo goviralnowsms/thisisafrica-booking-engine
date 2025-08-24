@@ -42,15 +42,15 @@ export const PRODUCT_DESTINATIONS: Record<string, CountryDestinations> = {
       displayName: 'South Africa',
       destinations: [
         { value: 'south-africa', label: 'South Africa (All Routes)', tourPlanName: 'South Africa' },
-        { value: 'cape-town', label: 'Cape Town Routes', tourPlanName: 'South Africa' },
-        { value: 'pretoria', label: 'Pretoria Routes', tourPlanName: 'South Africa' }
+        { value: 'cape-town-rail-station', label: 'Cape Town Rail Station', tourPlanName: 'South Africa' },
+        { value: 'pretoria-rail-station', label: 'Pretoria Rail Station', tourPlanName: 'South Africa' }
       ]
     },
     'zimbabwe': {
       displayName: 'Zimbabwe',
       destinations: [
         { value: 'zimbabwe', label: 'Zimbabwe (All Routes)', tourPlanName: 'Zimbabwe' },
-        { value: 'victoria-falls', label: 'Victoria Falls Routes', tourPlanName: 'Zimbabwe' }
+        { value: 'victoria-falls-town', label: 'Victoria Falls Town', tourPlanName: 'Zimbabwe' }
       ]
     }
   },
@@ -65,20 +65,61 @@ export const PRODUCT_DESTINATIONS: Record<string, CountryDestinations> = {
     'namibia': {
       displayName: 'Namibia',
       destinations: []
-    },
-    'zimbabwe': {
-      displayName: 'Zimbabwe', 
-      destinations: []
     }
   },
 
   'Packages': {
+    'botswana': {
+      displayName: 'Botswana',
+      destinations: [
+        { value: 'botswana', label: 'Botswana (All Packages)', tourPlanName: 'Botswana' },
+        { value: 'chobe-national-park', label: 'Chobe National Park', tourPlanName: 'Botswana' },
+        { value: 'kasane-airport', label: 'Kasane Airport', tourPlanName: 'Botswana' }
+      ]
+    },
     'kenya': {
       displayName: 'Kenya',
       destinations: [
         { value: 'kenya', label: 'Kenya (All Packages)', tourPlanName: 'Kenya' },
-        { value: 'masai-mara', label: 'Masai Mara Packages', tourPlanName: 'Kenya' },
-        { value: 'nairobi', label: 'Nairobi Packages', tourPlanName: 'Kenya' }
+        { value: 'nairobi-jki-airport', label: 'Nairobi JKI Airport', tourPlanName: 'Kenya' }
+      ]
+    },
+    'rwanda': {
+      displayName: 'Rwanda',
+      destinations: [
+        { value: 'rwanda', label: 'Rwanda (All Packages)', tourPlanName: 'Rwanda' },
+        { value: 'kigali-airport', label: 'Kigali Airport', tourPlanName: 'Rwanda' }
+      ]
+    },
+    'south-africa': {
+      displayName: 'South Africa',
+      destinations: [
+        { value: 'south-africa', label: 'South Africa (All Packages)', tourPlanName: 'South Africa' },
+        { value: 'cape-town-airport', label: 'Cape Town Airport', tourPlanName: 'South Africa' },
+        { value: 'hoedspruit-airport', label: 'Hoedspruit Airport', tourPlanName: 'South Africa' },
+        { value: 'johannesburg-airport', label: 'Johannesburg Airport', tourPlanName: 'South Africa' },
+        { value: 'sabi-sand-game-reserve', label: 'Sabi Sand Game Reserve', tourPlanName: 'South Africa' }
+      ]
+    },
+    'uganda': {
+      displayName: 'Uganda',
+      destinations: [
+        { value: 'uganda', label: 'Uganda (All Packages)', tourPlanName: 'Uganda' },
+        { value: 'entebbe-airport', label: 'Entebbe Airport', tourPlanName: 'Uganda' }
+      ]
+    },
+    'zambia': {
+      displayName: 'Zambia',
+      destinations: [
+        { value: 'zambia', label: 'Zambia (All Packages)', tourPlanName: 'Zambia' },
+        { value: 'livingstone-airport', label: 'Livingstone Airport', tourPlanName: 'Zambia' }
+      ]
+    },
+    'zimbabwe': {
+      displayName: 'Zimbabwe',
+      destinations: [
+        { value: 'zimbabwe', label: 'Zimbabwe (All Packages)', tourPlanName: 'Zimbabwe' },
+        { value: 'victoria-falls-airport', label: 'Victoria Falls Airport', tourPlanName: 'Zimbabwe' }
       ]
     }
   }

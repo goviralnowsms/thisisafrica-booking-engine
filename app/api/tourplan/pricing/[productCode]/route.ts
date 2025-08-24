@@ -59,16 +59,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                             productCode.includes('LODGE') ||
                             productCode.includes('HOTEL')
     
-    // For rail products, extend the date range to get more availability data
-    // WordPress might be requesting a longer time period to show all available dates
+    // Extend the date range to match WordPress behavior (goes to 2027)
+    // WordPress searches much further ahead to show all available dates
     const currentDate = new Date()
-    const defaultMonths = isRail ? 12 : 6 // 12 months for rail, 6 months for others
-    const defaultDateTo = new Date(currentDate.getFullYear(), currentDate.getMonth() + defaultMonths, currentDate.getDate())
+    const defaultMonths = 24 // 24 months (2 years) to match WordPress extended availability
+    const defaultDateTo = new Date(currentDate.getFullYear() + 2, currentDate.getMonth(), currentDate.getDate())
     
     const dateFrom = dateFromParam || currentDate.toISOString().split('T')[0]
     const dateTo = dateToParam || defaultDateTo.toISOString().split('T')[0]
     
-    console.log(`📅 Using date range for ${isRail ? 'rail' : 'standard'} product:`, { dateFrom, dateTo, months: defaultMonths })
+    console.log(`📅 Using extended date range (2 years):`, { dateFrom, dateTo, months: defaultMonths })
     
     console.log('Getting pricing calendar for:', { productCode, dateFrom, dateTo, adults, children, roomType })
     

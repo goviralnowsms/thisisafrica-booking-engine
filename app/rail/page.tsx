@@ -136,9 +136,10 @@ export default function RailPage() {
       const params = new URLSearchParams()
       params.set('productType', 'Rail')
       
-      // Use the correct TourPlan destination name
-      const tourPlanDestination = getTourPlanDestinationName('Rail', selectedCountry, selectedDestination || selectedCountry)
-      params.set('destination', tourPlanDestination)
+      // For Rail, pass the actual destination value to enable proper filtering
+      // The API will handle mapping to country level for search
+      const destinationValue = selectedDestination || selectedCountry
+      params.set('destination', destinationValue)
       
       if (selectedClass) params.set('class', selectedClass)
       
@@ -261,8 +262,7 @@ export default function RailPage() {
                     <SelectValue placeholder="Class" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="standard">Standard</SelectItem>
+                    {/* Rail products only have Luxury class per WordPress */}
                     <SelectItem value="luxury">Luxury</SelectItem>
                   </SelectContent>
                 </Select>

@@ -51,6 +51,7 @@ const ALL_RAIL_PRODUCTS = [
   // South Africa rail products
   'CPTRLROV001RRCTPR', // Cape Town rail journey
   'CPTRLROV001CTPPUL', // Cape Town rail journey (variant)
+  'CPTRLROV001CTPRRO', // Cape Town rail journey (Royal)
   'PRYRLROV001ROV004', // Pretoria Rovos Rail
   'PRYRLROV001PRCPRY', // Pretoria to Cape Town rail
   'PRYRLROV001PRCPPM', // Pretoria rail journey
@@ -65,6 +66,7 @@ const RAIL_CATALOG: Record<string, string[]> = {
   'south-africa': [
     'CPTRLROV001RRCTPR', // Cape Town rail journey
     'CPTRLROV001CTPPUL', // Cape Town rail journey (variant)
+    'CPTRLROV001CTPRRO', // Cape Town rail journey (Royal)
     'PRYRLROV001ROV004', // Pretoria Rovos Rail
     'PRYRLROV001PRCPRY', // Pretoria to Cape Town rail
     'PRYRLROV001PRCPPM', // Pretoria rail journey
@@ -74,9 +76,20 @@ const RAIL_CATALOG: Record<string, string[]> = {
     'VFARLROV001VFPRRY', // Victoria Falls rail journey (variant)
     'VFARLROV001VFPYPM', // Victoria Falls rail journey (variant 2)
   ],
+  'victoria-falls-town': [
+    'VFARLROV001VFPRDX', // Victoria Falls rail journey
+    'VFARLROV001VFPRRY', // Victoria Falls rail journey (variant)
+    'VFARLROV001VFPYPM', // Victoria Falls rail journey (variant 2)
+  ],
   'cape-town': [
     'CPTRLROV001RRCTPR', // Cape Town rail journey
     'CPTRLROV001CTPPUL', // Cape Town rail journey (variant)
+    'CPTRLROV001CTPRRO', // Cape Town rail journey (Royal)
+  ],
+  'cape-town-rail-station': [
+    'CPTRLROV001RRCTPR', // Cape Town rail journey
+    'CPTRLROV001CTPPUL', // Cape Town rail journey (variant)
+    'CPTRLROV001CTPRRO', // Cape Town rail journey (Royal)
   ],
   'johannesburg': [
     'PRYRLROV001ROV004', // Pretoria Rovos Rail
@@ -84,6 +97,11 @@ const RAIL_CATALOG: Record<string, string[]> = {
     'PRYRLROV001PRCPPM', // Pretoria rail journey
   ],
   'pretoria': [
+    'PRYRLROV001ROV004', // Pretoria Rovos Rail
+    'PRYRLROV001PRCPRY', // Pretoria to Cape Town rail
+    'PRYRLROV001PRCPPM', // Pretoria rail journey
+  ],
+  'pretoria-rail-station': [
     'PRYRLROV001ROV004', // Pretoria Rovos Rail
     'PRYRLROV001PRCPRY', // Pretoria to Cape Town rail
     'PRYRLROV001PRCPPM', // Pretoria rail journey
@@ -466,17 +484,25 @@ async function searchRailFromTourPlanAPI(criteria: {
       'south-africa': 'South Africa',
       'south africa': 'South Africa',
       'southafrica': 'South Africa',
+      'cape town rail station': 'South Africa',  // Search at country level, filter later
+      'cape-town-rail-station': 'South Africa',
+      'pretoria rail station': 'South Africa',   // Search at country level, filter later
+      'pretoria-rail-station': 'South Africa',
       'zimbabwe': 'Zimbabwe',
       'victoria-falls': 'Zimbabwe',
       'victoria falls': 'Zimbabwe',
+      'victoria falls town': 'Zimbabwe',  // Search at country level, filter later
+      'victoria-falls-town': 'Zimbabwe',
       'victoriafalls': 'Zimbabwe'
     };
 
     const destination = criteria.destination?.toLowerCase();
+    console.log(`🚂 TourPlan API: Looking up destination mapping for: "${destination}"`);
     const tourPlanDestination = destination ? destinationMapping[destination] : null;
 
     if (!tourPlanDestination) {
       console.log(`🚂 TourPlan API: No mapping for destination "${criteria.destination}", returning empty`);
+      console.log(`🚂 Available mappings:`, Object.keys(destinationMapping));
       return {
         products: [],
         totalResults: 0,
@@ -604,6 +630,7 @@ async function searchCruisesFromCatalog(criteria: {
   dateTo?: string;
   adults?: number;
   children?: number;
+  class?: string;
 }) {
   console.log('🚢 Searching cruise catalog with criteria:', criteria);
   
@@ -704,6 +731,7 @@ async function searchCruisesFromCatalog(criteria: {
 export async function searchProducts(criteria: {
   productType: string;
   destination?: string;
+  class?: string;
   dateFrom?: string;
   dateTo?: string;
   adults?: number;
@@ -711,6 +739,8 @@ export async function searchProducts(criteria: {
   roomConfigs?: Array<{Adults: number, Children?: number, Type: string, Quantity: number}>;
 }): Promise<{products: any[], totalResults: number, searchCriteria?: any}> {
   try {
+    console.log('🔍 Starting product search with criteria:', criteria);
+    console.log(`🔍 ProductType="${criteria.productType}" (will match switch case)`);
     let xml: string;
     
     // Build appropriate request based on product type
@@ -721,7 +751,79 @@ export async function searchProducts(criteria: {
         
       case 'Group Tours':
       case 'Guided group tours':
-        xml = buildGroupTourSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo);
+        // For Group Tours, search by country only to include "On request" products,
+        // then apply destination/class filtering client-side
+        console.log('🚌 Using country-only search + client-side filtering for Group Tours to preserve "On request" products');
+        
+        // Extract country from destination - comprehensive mapping
+        let countryForSearch = '';
+        if (criteria.destination) {
+          const destLower = criteria.destination.toLowerCase();
+          
+          // Kenya
+          if (destLower.includes('nairobi') || destLower.includes('jki') || destLower.includes('kenya')) {
+            countryForSearch = 'Kenya';
+          } 
+          // Botswana  
+          else if (destLower.includes('maun') || destLower.includes('kasane') || destLower.includes('botswana')) {
+            countryForSearch = 'Botswana';
+          } 
+          // South Africa
+          else if (destLower.includes('cape town') || destLower.includes('durban') || 
+                   destLower.includes('johannesburg') || destLower.includes('port elizabeth') || 
+                   destLower.includes('south africa')) {
+            countryForSearch = 'South Africa';
+          } 
+          // Namibia
+          else if (destLower.includes('windhoek') || destLower.includes('namibia')) {
+            countryForSearch = 'Namibia';
+          } 
+          // Tanzania
+          else if (destLower.includes('kilimanjaro') || destLower.includes('arusha') || 
+                   destLower.includes('tanzania')) {
+            countryForSearch = 'Tanzania';
+          } 
+          // Zimbabwe
+          else if (destLower.includes('victoria falls') || destLower.includes('harare') || 
+                   destLower.includes('zimbabwe')) {
+            countryForSearch = 'Zimbabwe';
+          } 
+          // Zambia  
+          else if (destLower.includes('livingstone') || destLower.includes('lusaka') || 
+                   destLower.includes('zambia')) {
+            countryForSearch = 'Zambia';
+          } 
+          // Uganda
+          else if (destLower.includes('kampala') || destLower.includes('entebbe') || 
+                   destLower.includes('uganda')) {
+            countryForSearch = 'Uganda';
+          } 
+          // Rwanda
+          else if (destLower.includes('kigali') || destLower.includes('rwanda')) {
+            countryForSearch = 'Rwanda';
+          } 
+          // Ethiopia
+          else if (destLower.includes('addis ababa') || destLower.includes('ethiopia')) {
+            countryForSearch = 'Ethiopia';
+          } 
+          // Morocco
+          else if (destLower.includes('casablanca') || destLower.includes('marrakech') || 
+                   destLower.includes('morocco')) {
+            countryForSearch = 'Morocco';
+          } 
+          // Egypt
+          else if (destLower.includes('cairo') || destLower.includes('egypt')) {
+            countryForSearch = 'Egypt';
+          } 
+          else {
+            // Default to destination if no mapping found - still search by country
+            countryForSearch = criteria.destination;
+          }
+        }
+        
+        // Build country-only search (no destination/class filtering in XML)
+        xml = buildGroupTourSearchRequest(countryForSearch, criteria.dateFrom, criteria.dateTo);
+        console.log(`🌍 Group Tours: Searching country "${countryForSearch}" with client-side filtering for destination="${criteria.destination}" class="${criteria.class}"`);
         break;
         
       case 'Accommodation':
@@ -754,10 +856,12 @@ export async function searchProducts(criteria: {
         break;
 
       case 'Cruises':
-        // Try TourPlan API first, fallback to catalog if no results
-        console.log('🚢 Attempting TourPlan API cruise search first');
-        xml = buildCruiseSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo);
-        console.log('🚢 Cruise search XML built - will fallback to catalog if empty');
+        // Try TourPlan API first with class filtering, fallback to catalog if no results
+        console.log('🚢 Attempting TourPlan API cruise search first with class filtering');
+        xml = buildCruiseSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo, criteria.class);
+        console.log('🚢 Cruise search XML built with class filter:');
+        console.log('📋 CRUISE XML REQUEST:', xml);
+        console.log('🚢 Will fallback to catalog if TourPlan returns empty');
         break;
         
       case 'Rail':
@@ -767,6 +871,27 @@ export async function searchProducts(criteria: {
         const railApiResults = await searchRailFromTourPlanAPI(criteria);
         if (railApiResults.totalResults > 0) {
           console.log(`🚂 ✅ TourPlan API returned ${railApiResults.totalResults} rail products`);
+          
+          // Apply destination and class filtering to Rail products for specific stations
+          const destLower = criteria.destination?.toLowerCase() || '';
+          const needsFiltering = destLower.includes('rail station') || destLower.includes('rail-station') || 
+                                 destLower.includes('victoria falls town') || destLower.includes('victoria-falls-town');
+          
+          if (needsFiltering) {
+            console.log('🚂 Applying destination filtering for Rail station:', criteria.destination);
+            const filteredRailProducts = applyDynamicDestinationFiltering(
+              railApiResults.products,
+              criteria.destination,
+              criteria.class
+            );
+            console.log(`🚂 Filtered from ${railApiResults.totalResults} to ${filteredRailProducts.length} products`);
+            return {
+              products: filteredRailProducts,
+              totalResults: filteredRailProducts.length,
+              searchCriteria: criteria
+            };
+          }
+          
           return railApiResults;
         } else {
           console.log('🚂 ⚠️ TourPlan API returned no results, falling back to curated catalog');
@@ -780,10 +905,105 @@ export async function searchProducts(criteria: {
         
       case 'Packages':
       case 'Pre-designed packages':
-        // Packages use ButtonName="Packages" with Info="P"  
-        console.log('📦 Building packages search with destination:', criteria.destination);
-        xml = buildPackagesSearchRequest(criteria.destination, criteria.dateFrom, criteria.dateTo);
-        console.log('📦 Packages search XML built');
+        // For Packages, search by country only to include "On request" products,
+        // then apply destination/class filtering client-side (same as Group Tours)
+        console.log('📦 Using country-only search + client-side filtering for Packages to preserve "On request" products');
+        
+        // Extract country from destination (reuse Group Tours mapping logic)
+        let packageCountryForSearch = '';
+        if (criteria.destination) {
+          const destLower = criteria.destination.toLowerCase();
+          
+          // Kenya
+          if (destLower.includes('nairobi') || destLower.includes('jki') || destLower.includes('kenya')) {
+            packageCountryForSearch = 'Kenya';
+          } 
+          // Botswana  
+          else if (destLower.includes('maun') || destLower.includes('kasane') || 
+                   destLower.includes('chobe') || destLower.includes('botswana')) {
+            packageCountryForSearch = 'Botswana';
+            console.log(`📦 MATCHED Botswana mapping for destination "${criteria.destination}"`);
+          } 
+          // South Africa - add hoedspruit to the check
+          else if (destLower.includes('cape town') || destLower.includes('durban') || 
+                   destLower.includes('johannesburg') || destLower.includes('port elizabeth') || 
+                   destLower.includes('hoedspruit') || destLower.includes('sabi sand') ||
+                   destLower.includes('south africa')) {
+            packageCountryForSearch = 'South Africa';
+          } 
+          // Namibia
+          else if (destLower.includes('windhoek') || destLower.includes('namibia')) {
+            packageCountryForSearch = 'Namibia';
+          } 
+          // Tanzania
+          else if (destLower.includes('kilimanjaro') || destLower.includes('arusha') || 
+                   destLower.includes('tanzania')) {
+            packageCountryForSearch = 'Tanzania';
+          } 
+          // Zimbabwe
+          else if (destLower.includes('victoria falls') || destLower.includes('harare') || 
+                   destLower.includes('zimbabwe')) {
+            packageCountryForSearch = 'Zimbabwe';
+          } 
+          // Zambia  
+          else if (destLower.includes('livingstone') || destLower.includes('lusaka') || 
+                   destLower.includes('zambia')) {
+            packageCountryForSearch = 'Zambia';
+          } 
+          // Uganda
+          else if (destLower.includes('kampala') || destLower.includes('entebbe') || 
+                   destLower.includes('uganda')) {
+            packageCountryForSearch = 'Uganda';
+          } 
+          // Rwanda
+          else if (destLower.includes('kigali') || destLower.includes('rwanda')) {
+            packageCountryForSearch = 'Rwanda';
+          } 
+          // Ethiopia
+          else if (destLower.includes('addis ababa') || destLower.includes('ethiopia')) {
+            packageCountryForSearch = 'Ethiopia';
+          } 
+          // Morocco
+          else if (destLower.includes('casablanca') || destLower.includes('marrakech') || 
+                   destLower.includes('morocco')) {
+            packageCountryForSearch = 'Morocco';
+          } 
+          // Egypt
+          else if (destLower.includes('cairo') || destLower.includes('egypt')) {
+            packageCountryForSearch = 'Egypt';
+          } 
+          else {
+            // Default to destination if no mapping found
+            packageCountryForSearch = criteria.destination;
+          }
+        }
+        
+        // Build country-only search (no destination/class filtering in XML)
+        console.log(`📦 DEBUG: packageCountryForSearch="${packageCountryForSearch}", criteria.destination="${criteria.destination}"`);
+        if (!packageCountryForSearch || packageCountryForSearch === '') {
+          console.error(`⚠️ No country found for destination "${criteria.destination}" - this will cause empty results!`);
+          console.log(`📦 Available country mappings: Kenya, Botswana, South Africa, Namibia, Tanzania, Zimbabwe, Zambia, Uganda, Rwanda`);
+        }
+        xml = buildPackagesSearchRequest(packageCountryForSearch, criteria.dateFrom, criteria.dateTo);
+        console.log(`📦 Packages: Searching country "${packageCountryForSearch}" with client-side filtering for destination="${criteria.destination}" class="${criteria.class}"`);
+        console.log(`📦 Looking for specific products like BBKPKTVT001BOD6KM in the response...`);
+        
+        // Store the original destination for later checking if we need product code search
+        (criteria as any)._originalDestination = criteria.destination;
+        (criteria as any)._needsProductCodeSearch = false;
+        
+        // Check if this is a problematic destination that needs direct product code search
+        if (criteria.destination) {
+          const destLower = criteria.destination.toLowerCase();
+          if ((destLower.includes('hoedspruit') || destLower.includes('hds')) ||
+              (destLower.includes('johannesburg') && destLower.includes('airport')) ||
+              (destLower.includes('sabi sand')) ||
+              (destLower.includes('entebbe')) ||
+              (destLower.includes('livingstone') && destLower.includes('airport'))) {
+            console.log(`📦 ⚠️ Detected problematic destination "${criteria.destination}" - may need direct product code search`);
+            (criteria as any)._needsProductCodeSearch = true;
+          }
+        }
         break;
         
       case 'Special Offers':
@@ -902,10 +1122,25 @@ export async function searchProducts(criteria: {
       // For Cruises, fallback to catalog approach if TourPlan API returns empty
       if (criteria.productType === 'Cruises') {
         console.log('🚢 ⚠️ TourPlan API returned no cruise results, falling back to curated catalog');
+        console.log('🚢 Cruise search criteria:', JSON.stringify(criteria, null, 2));
         const cruiseResults = await searchCruisesFromCatalog(criteria);
+        
+        // ALWAYS apply filtering for cruises, even if no destination (class filtering is important!)
+        console.log(`🚢 Applying filtering to ${cruiseResults.products?.length || 0} cruise products`);
+        console.log('🚢 Filtering by destination:', criteria.destination || 'none');
+        console.log('🚢 Filtering by class:', criteria.class || 'none');
+        
+        const filteredCruiseProducts = applyDynamicDestinationFiltering(
+          cruiseResults.products || [],
+          criteria.destination || '',
+          criteria.class || ''
+        );
+        
+        console.log(`🚢 After filtering: ${filteredCruiseProducts.length} cruise products`);
+        
         return {
-          products: cruiseResults.products || [],
-          totalResults: cruiseResults.totalResults || 0,
+          products: filteredCruiseProducts,
+          totalResults: filteredCruiseProducts.length,
           searchCriteria: criteria
         };
       }
@@ -1045,9 +1280,11 @@ export async function searchProducts(criteria: {
           id: option.Opt || option['@_Opt'],
           code: option.Opt || option['@_Opt'],
           name: option.OptGeneral?.Description || option.OptGeneral?.SupplierName || 'Unnamed Product',
-          description: option.OptGeneral?.Description || '',
+          description: option.OptGeneral?.Comment || option.OptGeneral?.Description || '',
           supplier: option.OptGeneral?.SupplierName || '',
           duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : '',
+          location: option.OptGeneral?.LocalityDescription || '', // Add location field!
+          locality: option.OptGeneral?.Locality || '', // Add locality code too
           image: null,
           rates: productRates,
         };
@@ -1083,6 +1320,90 @@ export async function searchProducts(criteria: {
       console.log(`🧪 Filtered out ${productsBeforeTestFilter - finalProducts.length} test products`);
     }
     
+    // Apply destination-specific filtering to match WordPress behavior
+    console.log('🔍 Pre-filter check:', {
+      productType: criteria.productType,
+      destination: criteria.destination,
+      class: criteria.class,
+      productsBeforeFilter: finalProducts.length
+    });
+    
+    // Configuration: Countries that work correctly with TourPlan API filtering
+    // Add countries here as TourPlan configuration gets fixed
+    const countriesWithWorkingTourPlanConfig = [
+      // Removed Kenya to enable client-side filtering for "On request" products
+      // Add countries as client fixes TourPlan config: 'botswana', 'south africa', 'namibia', etc.
+    ];
+    
+    const destinationLower = criteria.destination?.toLowerCase() || '';
+    const hasWorkingConfig = countriesWithWorkingTourPlanConfig.some(country => 
+      destinationLower.includes(country)
+    );
+    
+    // Check if we need destination filtering (with or without class)
+    const needsDestinationFiltering = criteria.destination && 
+                                     (criteria.productType === 'Group Tours' || 
+                                      criteria.productType === 'Guided group tours' ||
+                                      criteria.productType === 'Packages' ||
+                                      criteria.productType === 'Pre-designed packages' ||
+                                      criteria.productType === 'Cruises');
+    
+    // Debug for cruise products specifically
+    if (criteria.productType === 'Cruises') {
+      console.log('🚢 DEBUG: Cruise API success path reached');
+      console.log('🚢 DEBUG: needsDestinationFiltering:', needsDestinationFiltering);
+      console.log('🚢 DEBUG: criteria.destination:', criteria.destination);
+      console.log('🚢 DEBUG: criteria.class:', criteria.class);
+      console.log('🚢 DEBUG: finalProducts.length before filtering:', finalProducts.length);
+      
+      // ALWAYS apply class filtering for cruises since TourPlan API ignores ClassDescription
+      if (criteria.class) {
+        console.log('🚢 DEBUG: Forcing cruise class filtering (TourPlan ignores ClassDescription)');
+        const filteredByClass = applyDynamicDestinationFiltering(finalProducts, criteria.destination || '', criteria.class);
+        if (filteredByClass.length !== finalProducts.length) {
+          console.log(`🚢 Applied forced cruise class filtering: ${finalProducts.length} → ${filteredByClass.length} products`);
+          finalProducts = filteredByClass;
+        } else {
+          console.log('🚢 WARNING: Class filtering had no effect - check patterns');
+        }
+      }
+    }
+    
+    if (needsDestinationFiltering) {
+      // If only destination is provided (no class), we still need to filter by destination
+      if (!criteria.class) {
+        console.log('✅ Applying destination-only filtering (no class specified)');
+        // Pass empty string for class to filter by destination only
+        const filteredByDestination = applyDynamicDestinationFiltering(finalProducts, criteria.destination, '');
+        if (filteredByDestination.length !== finalProducts.length) {
+          console.log(`🎯 Applied destination-only filtering: ${finalProducts.length} → ${filteredByDestination.length} products`);
+          finalProducts = filteredByDestination;
+        }
+      } else {
+        console.log('✅ Applying client-side destination/class filtering to preserve "On request" products');
+        const filteredByDestination = applyDynamicDestinationFiltering(finalProducts, criteria.destination, criteria.class);
+        if (filteredByDestination.length !== finalProducts.length) {
+          console.log(`🎯 Applied dynamic destination filtering: ${finalProducts.length} → ${filteredByDestination.length} products`);
+          finalProducts = filteredByDestination;
+        }
+      }
+    } else if (criteria.productType === 'Cruises' && criteria.class) {
+      // Special case: Cruises need class filtering even without destination filtering
+      console.log('🚢 DEBUG: Applying class-only filtering for cruises');
+      const filteredByClass = applyDynamicDestinationFiltering(finalProducts, '', criteria.class);
+      if (filteredByClass.length !== finalProducts.length) {
+        console.log(`🚢 Applied cruise class filtering: ${finalProducts.length} → ${filteredByClass.length} products`);
+        finalProducts = filteredByClass;
+      }
+    } else {
+      console.log('⏭️ No destination/class filtering needed for this search:', {
+        destination: criteria.destination,
+        hasDestination: !!criteria.destination,
+        hasClass: !!criteria.class,
+        productType: criteria.productType
+      });
+    }
+    
     return {
       products: finalProducts,
       totalResults: finalProducts.length,
@@ -1105,9 +1426,9 @@ export async function searchProducts(criteria: {
  */
 export async function getProductDetails(productCode: string) {
   try {
-    // Build request for this product with a broader date range to get more pricing data
+    // Build request for this product with extended date range to match WordPress (goes to 2027)
     const currentDate = new Date();
-    const nextYear = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
+    const nextYear = new Date(currentDate.getFullYear() + 2, currentDate.getMonth(), currentDate.getDate());
     const dateFrom = currentDate.toISOString().split('T')[0];
     const dateTo = nextYear.toISOString().split('T')[0];
     
@@ -2052,6 +2373,455 @@ function extractRatesFromOption(option: any): any[] {
   }
 
   return rates;
+}
+
+/**
+ * Map local class names to WordPress class names based on CSV analysis
+ * This handles the mismatch between local search classes and WordPress display classes
+ */
+function mapLocalClassToWordPressPatterns(localClass: string, productType: string): string[] {
+  const classLower = localClass.toLowerCase();
+  
+  if (productType === 'Packages' || productType === 'Pre-designed packages') {
+    // Package class mappings from CSV analysis - some specific products show different classes in WordPress
+    switch(classLower) {
+      case 'basic':
+        // Most Basic packages stay as Basic, but some specific products show as Deluxe in WordPress
+        return ['basic', 'deluxe']; // Allow both to capture product-specific mappings
+      case 'standard': 
+        // Most Standard packages show as Standard, but some show as Deluxe in WordPress  
+        return ['standard', 'deluxe']; // Allow both to capture Rwanda "deluxe (wp class)" products
+      case 'luxury':
+        // Most Luxury packages show as Luxury, but some might show as Deluxe in WordPress
+        return ['luxury', 'deluxe']; // Allow both to be safe
+      default:
+        return [classLower];
+    }
+  } else {
+    // Group Tours - use direct mapping for now (can be expanded based on CSV patterns)
+    return [classLower];
+  }
+}
+
+/**
+ * Apply dynamic destination filtering based on TourPlan API response data
+ * Filters products by their LocalityDescription and ClassDescription to match WordPress behavior
+ */
+function applyDynamicDestinationFiltering(products: any[], destination: string, classFilter: string): any[] {
+  // If no destination, return all products
+  if (!destination) {
+    return products;
+  }
+  
+  // Note: classFilter can be empty string for destination-only filtering
+
+  console.log(`🎯 Applying pattern-based filtering for destination: "${destination}", class: "${classFilter || 'NO CLASS'}"`);
+  console.log(`🎯 Class filter check - Value: '${classFilter}', Type: ${typeof classFilter}, Empty: ${!classFilter || classFilter === ''}`);
+  console.log(`📦 Total products before filtering: ${products.length}`);
+  
+  // Check if BBKPKTVT001BOD6KM is in the products array
+  const hasBOD6KM = products.some(p => (p.code || p.id || '').includes('BOD6KM'));
+  if (!hasBOD6KM) {
+    console.log(`⚠️ BBKPKTVT001BOD6KM is NOT in the products array from TourPlan API`);
+  } else {
+    console.log(`✅ BBKPKTVT001BOD6KM IS in the products array from TourPlan API`);
+  }
+  
+  const filteredProducts = products.filter((product: any) => {
+    const productCode = product.code || product.id || '';
+    const productName = (product.name || '').toLowerCase();
+    const productDescription = (product.description || '').toLowerCase();
+    const supplierName = (product.supplier || '').toLowerCase();
+    
+    if (productCode.includes('BOD6KM')) {
+      console.log(`🎯 FOUND BOD6KM product: ${productCode} - "${product.name}" - Supplier: "${product.supplier}"`);
+    }
+    console.log(`🔍 Checking product: ${productCode} - "${product.name}" - Supplier: "${product.supplier}"`);
+    
+    // Pattern-based matching for destinations and classes
+    const destLower = destination.toLowerCase();
+    const classLower = classFilter.toLowerCase();
+    
+    // DESTINATION PATTERNS - Based on product code prefixes and content
+    let destinationMatch = false;
+    
+    // SPECIAL CASE: Botswana needs strict filtering because TourPlan returns wrong results
+    if (destLower.includes('maun')) {
+      if (destLower.includes('airport')) {
+        // Maun Airport products - check for specific patterns
+        if (classLower === 'deluxe') {
+          destinationMatch = productCode.includes('JENMAN'); // Jenman operates deluxe from Maun Airport
+        } else if (classLower === 'overland camping' || classLower.includes('camping')) {
+          destinationMatch = productCode.includes('SUBT'); // Sunway Budget Tours from Maun Airport
+        }
+      } else {
+        // Plain "Maun" products - check for basic tours
+        if (classLower === 'basic') {
+          destinationMatch = productCode.includes('SUNA'); // Sunway basic tours from Maun (MUBGTSUNWAYSUNA13)
+        }
+      }
+    } else if (destLower.includes('kasane')) {
+      // Kasane Airport products - specific mappings to match WordPress
+      // Exclude products that WordPress puts in Chobe National Park
+      if (productCode === 'BBKPKCHO0153NIGPA' || productCode === 'BBKPKCHO015BUSDEL' || 
+          productCode === 'BBKPKTVT001CGLCOK') {
+        // These are in Chobe National Park according to WordPress, even though they have BBK
+        destinationMatch = false;
+      } else {
+        // Include all other BBK products and specifically BBKPKTVT001BOD6KM
+        destinationMatch = productCode.includes('KAS') || productCode.includes('BBK') ||
+                          productCode === 'BBKPKTVT001BOD6KM'; // Explicitly include this one
+      }
+    } else if (destLower.includes('chobe')) {
+      // Chobe National Park packages - specific patterns for Chobe-based products
+      // Exclude Kasane Airport products that just visit Chobe (e.g. BBKPKCHOBAKBAK*)
+      if (productCode.includes('CHOBAK') || productCode.includes('CHOLWA')) {
+        // These are Kasane Airport products that visit Chobe, not Chobe-based
+        destinationMatch = false;
+      } else {
+        // True Chobe products have CHO, CHB, or CGL (Chobe Game Lodge)
+        destinationMatch = productCode.includes('CHO') || productCode.includes('CHB') || 
+                          productCode.includes('CGL'); // Chobe Game Lodge (e.g. BBKPKTVT001CGLCOK)
+      }
+    } 
+    // NORMAL CASES: These countries work fine with TourPlan API, just match by airport code
+    else if (destLower.includes('nairobi') || destLower.includes('jki')) {
+      destinationMatch = productCode.includes('NBO'); // Kenya works fine with TourPlan filtering
+    }
+    // Tanzania destinations  
+    else if (destLower.includes('arusha') || destLower.includes('jro') || destLower.includes('kilimanjaro')) {
+      destinationMatch = productCode.includes('JRO') || productCode.includes('ARU');
+    }
+    // South Africa destinations
+    else if (destLower.includes('johannesburg')) {
+      if (destLower.includes('airport')) {
+        // Johannesburg Airport specific products: JNBPKTHISSA* but exclude ones that actually start elsewhere
+        // Based on WordPress comparison: exclude products that start at Hoedspruit per their descriptions
+        // JNBPKTHISSAHOSALU - actually starts at "Kruger" (should be in Hoedspruit)
+        // JNBPKTHISSAHOSAST - actually starts at "Hoedspruit Airport" (should be in Hoedspruit)
+        const excludedFromJohannesburg = ['JNBPKTHISSAHOSALU', 'JNBPKTHISSAHOSAST'];
+        destinationMatch = productCode.includes('JNBPKTHISSA') && !excludedFromJohannesburg.includes(productCode);
+        
+        if (excludedFromJohannesburg.includes(productCode)) {
+          console.log(`🚫 Excluding ${productCode} from Johannesburg Airport - actually starts at Hoedspruit`);
+        }
+      } else {
+        // General Johannesburg products
+        destinationMatch = productCode.includes('JNB');
+      }
+    } else if (destLower.includes('cape town') || destLower.includes('cape-town')) {
+      if (destLower.includes('rail station') || destLower.includes('rail-station')) {
+        // Cape Town Rail Station for Rail products: Only these 3 specific products per WordPress
+        // CPTRLROV001CTPPUL, CPTRLROV001CTPRRO, CPTRLROV001RRCTPR
+        console.log(`🚂 Cape Town Rail Station filtering: ${productCode}`);
+        destinationMatch = productCode === 'CPTRLROV001CTPPUL' || 
+                          productCode === 'CPTRLROV001CTPRRO' || 
+                          productCode === 'CPTRLROV001RRCTPR';
+        if (destinationMatch) {
+          console.log(`✅ Cape Town Rail product matched: ${productCode}`);
+        } else {
+          console.log(`❌ Cape Town Rail product excluded: ${productCode}`);
+        }
+      } else {
+        // Cape Town Airport for other products: CPT*
+        destinationMatch = productCode.includes('CPT');
+      }
+    } else if (destLower.includes('pretoria')) {
+      if (destLower.includes('rail station') || destLower.includes('rail-station')) {
+        // Pretoria Rail Station for Rail products: Only these 3 specific products per WordPress
+        // PRYRLROV001PRCPPM, PRYRLROV001PRCPRY, PRYRLROV001ROV004
+        destinationMatch = productCode === 'PRYRLROV001PRCPPM' || 
+                          productCode === 'PRYRLROV001PRCPRY' || 
+                          productCode === 'PRYRLROV001ROV004';
+      } else {
+        // General Pretoria products
+        destinationMatch = productCode.includes('PRY');
+      }
+    } else if (destLower.includes('hoedspruit') || destLower.includes('hds')) {
+      // Hoedspruit products: HDSPKMAKUTS* or GKPPKTVT001* (not GKPPKSABBLD which is Sabi Sand)
+      // Also include products that were excluded from Johannesburg because they actually start at Hoedspruit
+      const hoedspruitProducts = ['JNBPKTHISSAHOSALU', 'JNBPKTHISSAHOSAST'];
+      destinationMatch = productCode.includes('HDS') || productCode.includes('GKPPKTVT001') || hoedspruitProducts.includes(productCode);
+      
+      if (hoedspruitProducts.includes(productCode)) {
+        console.log(`✅ Including ${productCode} in Hoedspruit - correctly identified start location`);
+      }
+    } else if (destLower.includes('sabi sand') || destLower.includes('sabi sabi')) {
+      // Sabi Sand products: GKPPKSABBLD*
+      destinationMatch = productCode.includes('GKPPKSABBLD');
+    } else if (destLower.includes('durban') || destLower.includes('dur')) {
+      destinationMatch = productCode.includes('DUR');
+    } else if (destLower.includes('port elizabeth') || destLower.includes('plz')) {
+      destinationMatch = productCode.includes('PLZ');
+    }
+    // Zambia destinations  
+    else if (destLower.includes('livingstone') || destLower.includes('lvi')) {
+      destinationMatch = productCode.includes('LVI');
+    }
+    // Zimbabwe destinations
+    else if (destLower.includes('victoria falls')) {
+      if (destLower.includes('town')) {
+        // Victoria Falls Town for Rail products: Only these 3 specific products per WordPress
+        // VFARLROV001VFPRDX, VFARLROV001VFPRRY, VFARLROV001VFPYPM
+        destinationMatch = productCode === 'VFARLROV001VFPRDX' || 
+                          productCode === 'VFARLROV001VFPRRY' || 
+                          productCode === 'VFARLROV001VFPYPM';
+      } else {
+        // Victoria Falls Airport for other products: VFA*
+        destinationMatch = productCode.includes('VFA');
+      }
+    }
+    // Namibia destinations
+    else if (destLower.includes('windhoek') || destLower.includes('wdh')) {
+      destinationMatch = productCode.includes('WDH');
+    }
+    // Rwanda destinations
+    else if (destLower.includes('kigali') || destLower.includes('kgl') || destLower.includes('rwanda')) {
+      destinationMatch = productCode.includes('KGL'); // All Rwanda packages start with KGL
+    }
+    // Uganda destinations  
+    else if (destLower.includes('entebbe') || destLower.includes('ebb') || destLower.includes('uganda')) {
+      destinationMatch = productCode.includes('EBB'); // All Uganda packages start with EBB
+    }
+    
+    // If no specific destination pattern matched, skip this product
+    if (!destinationMatch) {
+      console.log(`❌ ${productCode}: No destination match for "${destination}"`);
+      return false;
+    }
+    
+    // CLASS PATTERNS - Based on supplier and product code patterns
+    let classMatch = false;
+    
+    // If no class filter provided, match all classes for this destination
+    if (!classFilter || classFilter === '') {
+      classMatch = true; // Match all classes when no class is specified
+    }
+    // RAIL-SPECIFIC CLASS FILTERING: Rail products only exist in Luxury class per WordPress
+    // Based on CSV data: NO BASIC CLASS IN WORDPRESS, NO STANDARD CLASS IN WORDPRESS for Rail
+    else if ((classLower === 'basic' || classLower === 'standard') && productCode.includes('RL')) {
+      // Rail products (RL code) should NOT appear in Basic or Standard classes
+      classMatch = false;
+      console.log(`🚂 Excluding Rail product ${productCode} from ${classFilter} class - Rail only has Luxury class in WordPress`);
+    } else if (classLower === 'basic') {
+      // Basic class patterns - future products with these patterns will auto-match
+      classMatch = productCode.includes('SAA') || // Sunway Africa Adventure basic (e.g. JNBGTSUNWAYSAA17)
+                  productCode.includes('CKSM') || // Classic Kenya Standard/Mixed
+                  productCode.includes('THRSO') || // Three parks standard/other
+                  productCode.includes('SUNA13') || // Sunway basic tours (e.g. MUBGTSUNWAYSUNA13)
+                  productCode.includes('CWA13') || // Sunway Cape West adventure (e.g. CPTGTSUNWAYCWA13)
+                  productCode.includes('NAZZ') || // Nomad Zimbabwe basic (e.g. VFAGTNOMAD%20NAZZ)
+                  productCode.includes('NOMNAM') || // Nomad Namibia tours (e.g. CPTGTNOMAD%20NOMNAM)
+                  productCode.includes('NBA15') || // Sunway Namibia basic (e.g. LVIGTSUNWAYNBA15)
+                  productCode.includes('SUNNBA') || // Sunway Namibia basic (e.g. LVIGTSUNWAYSUNNBA)
+                  // Package (PK) basic patterns
+                  productCode.includes('CKSNPK') || // Kenya basic packages (e.g. NBOPKARP001CKSNPK) 
+                  productCode.includes('CPGRKA') || // Cape Town basic packages (e.g. CPTPKTHISSACPGRKA)
+                  productCode.includes('GEUB') || productCode.includes('GERB') || // Rwanda basic packages (e.g. KGLPKAASAFAGEUB, KGLPKAASAFAGERB)
+                  productCode.includes('EBBPKAASAFAGITMB') || // Uganda basic packages (specific pattern)
+                  // Zimbabwe packages moved to Deluxe (per WordPress mapping)
+                  productCode.includes('HOSADE') || // Johannesburg basic packages (e.g. JNBPKTHISSAHOSADE)
+                  (productCode.includes('NOMAD') && (productCode.includes('%20NA') || productCode.includes(' NA')) && 
+                   !productCode.includes('SG')) || // Nomad basic: has NA prefix, no SG suffix (e.g. DURGTNOMAD%20NADC, JNBGTNOMAD%20NAJC)
+                  (supplierName.includes('sunway') && (productCode.includes('SAA') || productCode.includes('SUNA') || productCode.includes('CWA'))) || // Sunway basic patterns
+                  (supplierName.includes('nomad') && (productCode.includes('%20NA') || productCode.includes(' NA')) && 
+                   !productCode.includes('SG')); // Nomad supplier basic (NA prefix, no SG)
+    } else if (classLower === 'standard') {
+      // Exclude products that belong in other classes
+      if (productCode.includes('BAIRDX') || productCode === 'EBBPKAASAFAGITMB') {
+        classMatch = false; // BAIRDX is Deluxe, AGITMB is Basic only
+      } else {
+        // Standard class patterns
+        classMatch = productCode === 'BBKPKCHO004CHOLUX' || // Special case: has CHOLUX but is actually Standard (3-star hotel)
+                  productCode.includes('CKSO') || // Classic Kenya Standard Other
+                  productCode.includes('THRSO') || // Three parks standard
+                  productCode.includes('SOAEAS') || // East Africa standard
+                  productCode.includes('SATOUR') || // SA Tours standard (e.g. CPTGTSATOURSAGRD4)
+                  productCode.includes('SIMTW') || // Alpha Travel standard lodges (e.g. JROGTARP001SIMTW7)
+                  productCode.includes('HINAMC') || // South African Overland Adventure standard (e.g. WDHGTSOANAMHINAMC)
+                  productCode.includes('JENW15') || productCode.includes('JENW12') || // Jenman standard (e.g. VFAGTJENMANJENW15)
+                  // Package (PK) standard patterns
+                  productCode.includes('AAGMST') || productCode.includes('AAPPST') || productCode.includes('AGERS') || productCode.includes('AGEUS') || productCode.includes('AGGAME') || // Rwanda standard packages
+                  productCode.includes('CKSLP') || // Kenya standard packages (e.g. NBOPKARP001CKSLP)
+                  // Johannesburg Airport standard packages (from WordPress mapping)
+                  productCode === 'JNBPKTHISSASPLEN1' || productCode === 'JNBPKTHISSASPLEN2' || // Johannesburg specific standard packages
+                  // Zambia standard packages (from WordPress mapping)
+                  productCode.includes('FE2NAV') || // Zambia standard package (LVIPKTVT001FE2NAV)
+                  // Uganda standard packages (explicit list from WordPress mapping)
+                  productCode === 'EBBPKARP001BAIRST' || productCode === 'EBBPKAASAFAAGITMS' || // Only these 2 are Standard in WordPress
+                  // Zimbabwe standard packages (from WordPress mapping)
+                  productCode.includes('VFCH01') || productCode.includes('VFCHD1') || productCode.includes('VFCHO5') || // Victoria Falls standard
+                  productCode.includes('FC3NT2') || productCode.includes('FE2NT1') || // More VF standard packages
+                  productCode.includes('CHOLWA') || productCode.includes('BAK3DP') || productCode.includes('BAK4DP') || // Botswana standard packages
+                  // Cape Town standard packages  
+                  productCode.includes('GRANDS') || productCode.includes('SCENST') || productCode.includes('SDCGST') || // This is Africa Cape Town standard (e.g. CPTPKTHISSAGRANDS)
+                  productCode.includes('CTEXHO') || productCode.includes('CTCLHO') || productCode.includes('CTERHO') || productCode.includes('CTERPW') || // TVT Cape Town standard packages
+                  // Hoedspruit standard packages
+                  productCode.includes('MSSCLA') || productCode.includes('MSSWLK') || productCode.includes('MAKUTS') || // Hoedspruit standard (e.g. HDSPKMAKUTSMSSCLA)
+                  productCode.includes('AGMST') || productCode.includes('APPST') || productCode.includes('GERS') || productCode.includes('GEUS') || productCode.includes('GGAME') || // Rwanda standard packages
+                  // Cruise (CR) standard patterns - Per WordPress mapping
+                  productCode.includes('TIACP2') || productCode.includes('TIACP3') || // Chobe Princess standard (e.g. BBKCRCHO018TIACP2/3)
+                  (productCode.includes('NOMAD') && productCode.includes('SG')) || // NOMAD with SG suffix = Standard Group (e.g. JNBGTNOMAD%20NAJCSG)
+                  productName.includes('standard');
+      }
+    } else if (classLower === 'deluxe') {
+      // Deluxe class patterns - specific lodge/operator patterns
+      classMatch = productCode.includes('JENMAN') || // Jenman is deluxe operator
+                  productCode.includes('CKEKEE') || // Classic Kenya Keekorok (deluxe)
+                  productCode.includes('CKSE') || // Classic Kenya Serena (deluxe)
+                  productCode.includes('THRKE') || // Three parks Kenya (deluxe)
+                  productCode.includes('THRSE') || // Three parks Serena (deluxe)
+                  productCode.includes('SIMSE') || // Serena lodges deluxe (e.g. JROGTARP001SIMSE7)
+                  productCode.includes('EAEKE') || // East Africa Kenya deluxe (e.g. NBOGTARP001EAEKE)
+                  productCode.includes('CAPNAM') || // South African Overland Adventure Cape to Namibia deluxe (e.g. WDHGTSOANAMCAPNAM)
+                  // Package (PK) deluxe patterns
+                  productCode.includes('ENCHAN') || productCode.includes('FIMSER') || productCode.includes('WLWFPC') || productCode.includes('WDD') || // Kenya deluxe packages
+                  productCode.includes('3NIGPA') || productCode.includes('BUSDEL') || productCode.includes('CGLCOK') || // Botswana deluxe packages
+                  // Johannesburg Airport deluxe packages (from WordPress mapping)
+                  productCode === 'JNBPKTHISSAHOSADE' || // Johannesburg specific deluxe package
+                  productCode.includes('BOD6KM') || // Botswana deluxe package (e.g. BBKPKTVT001BOD6KM)
+                  productCode.includes('GEUD') || productCode.includes('GERWDX') || // Rwanda deluxe packages (e.g. KGLPKAASAFAGEUD, KGLPKARP001GERWDX)
+                  // Uganda deluxe packages (from WordPress mapping)
+                  productCode.includes('BAIRDX') || // Uganda deluxe package (EBBPKARP001BAIRDX)
+                  // Zimbabwe deluxe packages (moved from Basic per WordPress mapping)
+                  productCode.includes('VFCHD2') || productCode.includes('VFCHO2') || productCode.includes('VFCHO6') || // Victoria Falls deluxe packages
+                  productCode.includes('VFCRU1') || productCode.includes('VFCRU2') || productCode.includes('ZAMDR1') || productCode.includes('ZAMDR2') || // More VF deluxe
+                  productCode.includes('FC3NT1') || productCode.includes('FC3NT3') || productCode.includes('FC3NT5') || // FC deluxe packages
+                  productCode.includes('FE2NSL') || productCode.includes('FE2NT2') || productCode.includes('FE2NT3') || // FE deluxe packages  
+                  productCode.includes('FE3NT2') || productCode.includes('FE3NT3') || productCode.includes('FE3NT6') || // More FE deluxe packages
+                  productCode.includes('FSD2NW') || productCode.includes('FSD3NS') || productCode.includes('FSD3NW') || productCode.includes('FSD3WS') || // FSD deluxe packages
+                  // Cape Town deluxe packages
+                  productCode.includes('CPGRKA') || productCode.includes('ASCENDX') || productCode.includes('SDCRDX') || // This is Africa Cape Town deluxe (e.g. CPTPKTHISSACPGRKA)
+                  productCode.includes('CTCLCM') || productCode.includes('CTCLPW') || productCode.includes('CTCLRB') || productCode.includes('CTCLSS') || productCode.includes('CTCLVL') || // TVT Cape Town deluxe packages
+                  productCode.includes('CTERRB') || productCode.includes('CTERSS') || productCode.includes('CTERVL') || productCode.includes('CTEXCM') || productCode.includes('CTEXPW') || // More TVT Cape Town deluxe
+                  productCode.includes('CTEXRB') || productCode.includes('CTEXSS') || productCode.includes('CTEXVL') || productCode.includes('CTRCO') || // Even more TVT Cape Town deluxe
+                  // Hoedspruit deluxe packages
+                  productCode.includes('KREDEL') || // Hoedspruit deluxe (e.g. GKPPKTVT001KREDEL)
+                  supplierName.includes('jenman');
+    } else if (classLower === 'deluxe plus' || classLower === 'd+') {
+      // Deluxe Plus patterns
+      classMatch = productCode.includes('EAESE') || // East Africa Serena (premium)
+                  productCode.includes('EXNASP') || // South African Overland Adventure exclusive Namibia (e.g. WDHGTSOANAMEXNASP)
+                  productCode.includes('ULTSAF') || // Ultimate Safaris (e.g. WDHGTULTSAFULTNAM)
+                  productName.includes('premium') ||
+                  productName.includes('exclusive');
+    } else if (classLower === 'overland camping' || classLower.includes('camping') || classLower === 'oc') {
+      // Overland camping patterns - future SUBT/SUC products will auto-match  
+      classMatch = productCode.includes('SUBT') || // Sunway Budget Tours
+                  productCode.includes('SUC') || // Sunway Camping tours (e.g. CPTGTSUNWAYSUC)
+                  productCode.includes('OVLD') || // Overland codes
+                  (productCode.includes('NOMAD') && (productCode.includes('%20N') || productCode.includes(' N')) && 
+                   !(productCode.includes('%20NA') || productCode.includes(' NA'))) || // Nomad camping with space+N but not space+NA pattern (e.g. DURGTNOMAD%20NDC)
+                  productName.includes('camping') ||
+                  productName.includes('overland') ||
+                  productDescription.includes('camping');
+    } else if (classLower === 'luxury') {
+      // Special case: BBKPKCHO004CHOLUX is actually Standard despite having CHOLUX in the code
+      if (productCode === 'BBKPKCHO004CHOLUX') {
+        classMatch = false; // This product is Standard, not Luxury
+      } else {
+        // Luxury class patterns
+        classMatch = productCode.includes('LUX') ||
+                    productCode.includes('SIMWEP') || // Alpha Travel luxury lodges (e.g. JROGTARP001SIMWEP)
+                    // Package (PK) luxury patterns
+                    productCode.includes('FIMMG') || productCode.includes('FIMMKT') || productCode.includes('FIMMLG') || // Kenya luxury packages
+                    productCode.includes('CPKU2N') || // Botswana luxury packages (e.g. BBKPKCPKUZ%20CPKU2N)
+                    productCode.includes('STDBUS') || // BBKPKCHO015STDBUS is actually Luxury per WordPress
+                    // Cape Town luxury packages
+                    productCode.includes('SCENLX') || productCode.includes('SDCGLX') || // This is Africa Cape Town luxury (e.g. CPTPKTHISSASCENLX)
+                    productCode.includes('CTCLTB') || productCode.includes('CTCLVA') || productCode.includes('CTERTB') || productCode.includes('CTERVC') || productCode.includes('CTEXTB') || productCode.includes('CTEXVA') || // TVT Cape Town luxury packages
+                    // Zambia luxury packages (from WordPress mapping)
+                    productCode.includes('FE2NRL') || // Zambia luxury package (LVIPKTVT001FE2NRL)
+                    // Zimbabwe luxury packages (from WordPress mapping)
+                    productCode.includes('FE3NT1') || productCode.includes('SAFETST') || productCode.includes('VFCHD4') || productCode.includes('VFCHO7') || // Victoria Falls luxury
+                    productCode.includes('VFCRU3') || productCode.includes('ZAMDR3') || productCode.includes('ZAMDR4') || // More VF luxury
+                    productCode.includes('FC3NT4') || productCode.includes('FC3NT6') || productCode.includes('FC3NT7') || // FC luxury packages
+                    productCode.includes('FE2NT4') || productCode.includes('FE2NT8') || productCode.includes('FE3NT5') || productCode.includes('FE3NT7') || productCode.includes('FE3NT8') || // FE luxury packages
+                    productCode.includes('FEVHPC') || productCode.includes('FSD3CL') || productCode.includes('FSD3CS') || // More VF luxury packages
+                    // Cruise (CR) luxury patterns - Per WordPress mapping
+                    // Note: WordPress puts Zambezi Queen STANDARD cabins in Luxury class (confusing but matches their setup)
+                    productCode.includes('ZAM3NS') || productCode.includes('ZAM2NS') || // Zambezi Queen Standard cabins shown as Luxury in WordPress
+                    // Rail (RL) luxury patterns - ALL Rail products are luxury class per WordPress
+                    productCode.includes('RLROV') || // Rovos Rail luxury trains (e.g. CPTRLROV001CTPPUL, PRYRLROV001PRCPPM)
+                    productCode.includes('VFAR') || // Victoria Falls Rail luxury (e.g. VFARLROV001VFPRDX)
+                    (productCode.includes('RL') && (productCode.includes('CPT') || productCode.includes('PRY') || productCode.includes('VFA'))) || // General Rail pattern
+                    productName.includes('luxury') ||
+                    productDescription.includes('luxury') ||
+                    productName.includes('exclusive');
+      }
+    } else if (classLower === 'superior') {
+      // Superior class patterns (mainly for cruises) - Per WordPress mapping
+      classMatch = productCode.includes('ZAM3NM') || productCode.includes('ZAM2NM'); // Zambezi Queen Master cabin superior (e.g. BBKCRTVT001ZAM3NM)
+    } else {
+      // For unknown classes, be more permissive
+      classMatch = true; // Show all products if class pattern is unknown
+      console.log(`⚠️ Unknown class "${classFilter}" - showing all products for destination`);
+    }
+    
+    const matches = destinationMatch && classMatch;
+    console.log(`${matches ? '✅' : '❌'} ${productCode}: destination=${destinationMatch}, class=${classMatch}`);
+    
+    return matches;
+  });
+  
+  console.log(`🎯 Dynamic filtering result: ${products.length} → ${filteredProducts.length} products`);
+  if (filteredProducts.length > 0) {
+    console.log('✅ Matching products:', filteredProducts.map(p => `${p.code} - ${p.name}`));
+  }
+  
+  // HYBRID APPROACH: If filtering produces 0 results but we had products before filtering,
+  // fall back to showing all country results with a warning - BUT ONLY for combinations we know should have results
+  if (filteredProducts.length === 0 && products.length > 0) {
+    // Check if this is a known "empty" combination that should genuinely return 0 results
+    const destLower = destination.toLowerCase();
+    const classLower = classFilter.toLowerCase();
+    
+    // Known combinations that should return 0 results (don't apply fallback)
+    const knownEmptyCombinations = [
+      // South Africa Hoedspruit Airport has no Luxury packages
+      { dest: 'hoedspruit', class: 'luxury' },
+      // South Africa Sabi Sand has no Standard or Deluxe packages
+      { dest: 'sabi sand', class: 'standard' },
+      { dest: 'sabi sand', class: 'deluxe' },
+      // South Africa Johannesburg Airport has no Luxury packages (per WordPress)
+      { dest: 'johannesburg', class: 'luxury' },
+      // Zambia Livingstone Airport has no Deluxe class (only Standard and Luxury in WordPress)
+      { dest: 'livingstone', class: 'deluxe' },
+      // Zimbabwe Victoria Falls Airport has no Basic class (moved to Deluxe per WordPress)
+      { dest: 'victoria falls', class: 'basic' },
+      // Rail products have NO Basic or Standard classes (only Luxury per WordPress)
+      { dest: 'cape town rail station', class: 'basic' },
+      { dest: 'cape town rail station', class: 'standard' },
+      { dest: 'pretoria rail station', class: 'basic' },
+      { dest: 'pretoria rail station', class: 'standard' },
+      { dest: 'victoria falls town', class: 'basic' },
+      { dest: 'victoria falls town', class: 'standard' },
+      // Add more known empty combinations as discovered
+    ];
+    
+    const isKnownEmpty = knownEmptyCombinations.some(combo => 
+      destLower.includes(combo.dest) && classLower === combo.class
+    );
+    
+    if (isKnownEmpty) {
+      console.log(`✅ Correctly returning 0 results for ${destination}/${classFilter} - this combination has no products`);
+      return [];
+    }
+    
+    // Otherwise apply the hybrid fallback
+    console.log(`🔄 HYBRID FALLBACK: Filtering produced 0 results but ${products.length} products exist at country level`);
+    console.log(`🔄 Returning all country results for destination: "${destination}", class: "${classFilter}"`);
+    console.log(`🔄 This indicates pattern matching needs fixing for this combination`);
+    
+    // Add a flag to each product indicating this is a fallback result
+    return products.map(product => ({
+      ...product,
+      _isHybridFallback: true,
+      _fallbackReason: `Showing all results for ${destination}/${classFilter} - specific filtering needs improvement`
+    }));
+  }
+  
+  return filteredProducts;
 }
 
 /**

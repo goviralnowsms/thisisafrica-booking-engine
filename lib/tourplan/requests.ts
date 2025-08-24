@@ -1,5 +1,41 @@
 import { buildBaseRequest } from './core';
 
+// Mapping functions for TourPlan codes
+function mapDestinationToLocalityCode(destination: string): string {
+  const mapping: Record<string, string> = {
+    'nairobi jki airport': 'NBO', // This will match both "Jki" and "JKI" when lowercased
+    'nairobi': 'NBO', 
+    'kenya': 'Kenya', // Country level stays as is
+    'tanzania': 'Tanzania',
+    'cape town': 'CPT',
+    'johannesburg': 'JNB',
+    'kasane airport': 'BBK',
+    'botswana': 'Botswana'
+  };
+  
+  const key = destination.toLowerCase().trim();
+  console.log(`🗺️ Mapping destination "${destination}" (key: "${key}") to:`, mapping[key] || destination);
+  return mapping[key] || destination; // Return original if no mapping found
+}
+
+function mapClassToTourPlanCode(classFilter: string): string {
+  const mapping: Record<string, string> = {
+    'basic': 'BA',
+    'standard': 'ST', 
+    'deluxe': 'DE',
+    'luxury': 'LU',
+    '1 star': '1S',
+    '2 star': '2S',
+    '3 star': '3S',
+    '4 star': '4S',
+    '5 star': '5S'
+  };
+  
+  const key = classFilter.toLowerCase().trim();
+  console.log(`🏷️ Mapping class "${classFilter}" (key: "${key}") to:`, mapping[key] || classFilter);
+  return mapping[key] || classFilter; // Return original if no mapping found
+}
+
 /**
  * Option Info Request Builder
  * Equivalent to WordPress TourplanOptionRequest class
@@ -324,14 +360,13 @@ export function buildAccommodationSearchRequest(
 }
 
 // Search group tours - using working pattern from old booking engine
-export function buildGroupTourSearchRequest(destination?: string, dateFrom?: string, dateTo?: string): string {
-  return buildGroupTourProperSearchRequest('Group Tours', destination, dateFrom, dateTo);
+export function buildGroupTourSearchRequest(destination?: string, dateFrom?: string, dateTo?: string, classFilter?: string): string {
+  return buildGroupTourProperSearchRequest('Group Tours', destination, dateFrom, dateTo, undefined, undefined, classFilter);
 }
 
-// Search cruises - using 'Cruise' ButtonName (singular) with Botswana destination (FIXED!)
-export function buildCruiseSearchRequest(destination?: string, dateFrom?: string, dateTo?: string): string {
-  // Use corrected ButtonName="Cruise" (singular) and force Botswana destination
-  return buildSpecialOffersProperSearchRequest('Cruise', 'Botswana', dateFrom, dateTo);
+// Search cruises - using 'Cruises' ButtonName with class filtering support
+export function buildCruiseSearchRequest(destination?: string, dateFrom?: string, dateTo?: string, classFilter?: string): string {
+  return buildCruiseProperSearchRequest('Cruises', 'Botswana', dateFrom, dateTo, classFilter);
 }
 
 // Search rail - using 'Rail' ButtonName without Info parameter
@@ -350,7 +385,7 @@ export function buildSpecialOffersSearchRequest(destination?: string, dateFrom?:
 }
 
 // Build Group Tours search request with correct Info parameter (GMFTD)
-export function buildGroupTourProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, adults: number = 2, children: number = 0): string {
+export function buildGroupTourProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, adults: number = 2, children: number = 0, classFilter?: string): string {
   const agentId = process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID || '';
   const password = process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD || '';
   
@@ -362,10 +397,40 @@ export function buildGroupTourProperSearchRequest(buttonName: string, destinatio
     <Password>${password}</Password>
     <ButtonName>${buttonName}</ButtonName>`;
     
-  // Only add destination if provided and not empty
+  // Determine destination mapping for Group Tours
+  let destinationForGroupTours = destination;
+  let isKenya = false;
+  
   if (destination && destination.trim() && destination.toLowerCase() !== 'all') {
+    const destLower = destination.toLowerCase();
+    if (destLower.includes('nairobi') || destLower.includes('jki')) {
+      // Kenya: WordPress sends country name
+      destinationForGroupTours = 'Kenya';
+      isKenya = true;
+    } else if (destLower.includes('maun') || destLower.includes('kasane')) {
+      // Botswana: Use country name like Kenya
+      destinationForGroupTours = 'Botswana';
+    } else if (destLower.includes('cape town') || destLower.includes('durban') || destLower.includes('johannesburg') || destLower.includes('port elizabeth')) {
+      // South Africa: Use full country name (NOT SthAfrica)
+      destinationForGroupTours = 'South Africa';
+    }
+    
+    console.log(`🌍 Group Tours destination mapping: "${destination}" → "${destinationForGroupTours}"`);
     xml += `
-    <DestinationName>${destination}</DestinationName>`;
+    <DestinationName>${destinationForGroupTours}</DestinationName>`;
+  }
+  
+  // Map class to TourPlan class codes for non-Kenya countries
+  if (classFilter && classFilter.trim() && classFilter.toLowerCase() !== 'all') {
+    // Kenya uses ClassDescription, others use Class codes
+    if (isKenya) {
+      xml += `
+    <ClassDescription>${classFilter}</ClassDescription>`;
+    } else {
+      const classCode = mapClassToTourPlanCode(classFilter);
+      xml += `
+    <Class>${classCode}</Class>`;
+    }
   }
   
   // Use GMFTD for Group Tours per CLAUDE.md documentation
@@ -404,7 +469,7 @@ export function buildGroupTourProperSearchRequest(buttonName: string, destinatio
 }
 
 // Build Packages search request with correct Info parameter (GDM like WordPress)
-export function buildPackagesProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, adults: number = 2, children: number = 0): string {
+export function buildPackagesProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, adults: number = 2, children: number = 0, productCodes?: string[]): string {
   const agentId = process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID || '';
   const password = process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD || '';
   
@@ -413,44 +478,33 @@ export function buildPackagesProperSearchRequest(buttonName: string, destination
 <Request>
   <OptionInfoRequest>
     <AgentID>${agentId}</AgentID>
-    <Password>${password}</Password>
+    <Password>${password}</Password>`;
+    
+  // If specific product codes are provided, search by those (like WordPress TourplanOptionCode)
+  if (productCodes && productCodes.length > 0) {
+    for (const code of productCodes) {
+      xml += `
+    <Opt>${code}</Opt>`;
+    }
+  } else {
+    // Otherwise use ButtonName + DestinationName (like WordPress TourplanProductsInCountry)
+    xml += `
     <ButtonName>${buttonName}</ButtonName>`;
     
-  // Only add destination if provided and not empty
-  if (destination && destination.trim() && destination.toLowerCase() !== 'all') {
-    xml += `
+    // Only add destination if provided and not empty
+    if (destination && destination.trim() && destination.toLowerCase() !== 'all') {
+      xml += `
     <DestinationName>${destination}</DestinationName>`;
+    }
   }
   
-  // Use GDM for Packages (same as WordPress implementation)
-  // WordPress uses Info="GDM" not "P" for packages
+  // Match WordPress exactly: Info="GDM" + SCUqty=1095 
   xml += `
-    <Info>GDM</Info>`;
-
-  // WordPress implementation uses DateFrom and SCUqty (1095 days = 3 years)
-  // This gives a wide date range for package availability
-  const startDate = dateFrom || new Date().toISOString().split('T')[0];
-  xml += `
-    <DateFrom>${startDate}</DateFrom>
+    <Info>GDM</Info>
     <SCUqty>1095</SCUqty>`;
 
-  // Note: WordPress doesn't use DateTo for packages search
-  // It uses DateFrom + SCUqty instead
-
-  // Always include RoomConfig as it's required
+  // Match WordPress structure with RateConvert
   xml += `
-    <RoomConfigs>
-      <RoomConfig>
-        <Adults>${adults}</Adults>`;
-  
-  if (children > 0) {
-    xml += `
-        <Children>${children}</Children>`;
-  }
-  
-  xml += `
-      </RoomConfig>
-    </RoomConfigs>
     <RateConvert>Y</RateConvert>
   </OptionInfoRequest>
 </Request>`;
@@ -543,6 +597,65 @@ export function buildRailProperSearchRequest(buttonName: string, destination?: s
   }
 
   // Always include RoomConfig as it's required
+  xml += `
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>`;
+  
+  if (children > 0) {
+    xml += `
+        <Children>${children}</Children>`;
+  }
+  
+  xml += `
+      </RoomConfig>
+    </RoomConfigs>
+    <RateConvert>Y</RateConvert>
+  </OptionInfoRequest>
+</Request>`;
+
+  return xml;
+}
+
+// Build Cruise search request with class filtering support
+export function buildCruiseProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, classFilter?: string, adults: number = 2, children: number = 0): string {
+  const agentId = process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID || '';
+  const password = process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD || '';
+  
+  let xml = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${agentId}</AgentID>
+    <Password>${password}</Password>
+    <ButtonName>${buttonName}</ButtonName>
+    <Info>GDM</Info>`;
+    
+  // Only add destination if provided and not empty
+  if (destination && destination.trim() && destination.toLowerCase() !== 'all') {
+    xml += `
+    <DestinationName>${destination}</DestinationName>`;
+  }
+  
+  // Add class filtering if provided - using WordPress format with ClassDescription
+  if (classFilter && classFilter.trim()) {
+    // Use ClassDescription like WordPress does, not <Class>
+    const classDescription = classFilter.charAt(0).toUpperCase() + classFilter.slice(1).toLowerCase();
+    console.log(`🚢 Adding ClassDescription filter to cruise search: ${classDescription}`);
+    xml += `
+    <ClassDescription>${classDescription}</ClassDescription>`;
+  }
+  
+  if (dateFrom) {
+    xml += `
+    <DateFrom>${dateFrom}</DateFrom>`;
+  }
+  
+  if (dateTo) {
+    xml += `
+    <DateTo>${dateTo}</DateTo>`;
+  }
+  
   xml += `
     <RoomConfigs>
       <RoomConfig>

@@ -22,6 +22,7 @@ const baseSearchSchema = z.object({
     'Special Offers',
   ]),
   destination: z.string().optional(),
+  class: z.string().optional(),
   dateFrom: dateSchema.optional(),
   dateTo: dateSchema.optional(),
 });
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
     const searchCriteria = {
       productType: validatedData.productType,
       destination: validatedData.destination,
+      class: validatedData.class,
       dateFrom: validatedData.dateFrom,
       dateTo: validatedData.dateTo,
       adults: validatedData.adults,

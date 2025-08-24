@@ -189,7 +189,37 @@ export default function CruisesPage() {
         })
       }
       setTours(validProducts)
-      setFilteredTours(validProducts)
+      
+      // Apply class filtering if a class is selected
+      let filteredProducts = validProducts
+      if (selectedClass) {
+        console.log(`🚢 Applying class filter: ${selectedClass}`)
+        filteredProducts = validProducts.filter(product => {
+          const productCode = product.code || product.id
+          if (!productCode) return true // Keep if no product code
+          
+          // Apply same filtering logic as WordPress/services.ts
+          const classLower = selectedClass.toLowerCase()
+          let classMatch = false
+          
+          if (classLower === 'standard') {
+            // Standard class: Chobe Princess products (TIACP2/3)
+            classMatch = productCode.includes('TIACP2') || productCode.includes('TIACP3')
+          } else if (classLower === 'luxury') {
+            // Luxury class: Zambezi Queen Standard cabins (ZAM2NS/3NS) - per WordPress mapping
+            classMatch = productCode.includes('ZAM2NS') || productCode.includes('ZAM3NS')
+          } else if (classLower === 'superior') {
+            // Superior class: Zambezi Queen Master cabins (ZAM2NM/3NM)
+            classMatch = productCode.includes('ZAM2NM') || productCode.includes('ZAM3NM')
+          }
+          
+          console.log(`🚢 Product ${productCode} class match for ${selectedClass}: ${classMatch}`)
+          return classMatch
+        })
+        console.log(`🚢 Class filtering: ${validProducts.length} → ${filteredProducts.length} products`)
+      }
+      
+      setFilteredTours(filteredProducts)
     } catch (error) {
       console.error("🚢 Search error:", error)
       setTours([])

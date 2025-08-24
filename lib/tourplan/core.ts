@@ -69,38 +69,28 @@ export async function wpXmlRequest(inputXml: string): Promise<any> {
   try {
     const config = getTourPlanConfig();
     
-    // Use proxy if available (for Vercel deployment)
-    // Support both FixieIP and custom EC2 proxy
-    const proxyUrl = process.env.PROXY_URL || process.env.FIXIE_URL;
+    // Use proxy only for Vercel production deployment
+    const proxyUrl = process.env.PROXY_URL;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isVercel = process.env.VERCEL === '1';
     
-    let response: Response;
-    if (proxyUrl && typeof window === 'undefined') {
-      // Server-side only - use node-fetch with https-proxy-agent
-      // This is required because Vercel's native fetch doesn't properly support proxy agents
-      const nodeFetch = (await import('node-fetch')).default;
-      const { HttpsProxyAgent } = await import('https-proxy-agent');
-      const agent = new HttpsProxyAgent(proxyUrl);
-      
-      response = await nodeFetch(config.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
-        },
-        body: inputXml,
-        agent,
-        // @ts-ignore - node-fetch timeout handling
-        timeout: config.timeout,
-      }) as unknown as Response;
-    } else {
-      response = await fetch(config.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
-        },
-        body: inputXml,
-        signal: AbortSignal.timeout(config.timeout),
-      });
+    let fetchUrl = config.endpoint;
+    let headers: Record<string, string> = {
+      'Content-Type': 'text/xml; charset=utf-8',
+    };
+    
+    // Only use proxy if we're on Vercel production (not local dev)
+    if (proxyUrl && isProduction && isVercel && typeof window === 'undefined') {
+      fetchUrl = proxyUrl;
+      headers['X-Target-URL'] = config.endpoint;
     }
+    
+    const response = await fetch(fetchUrl, {
+      method: 'POST',
+      headers,
+      body: inputXml,
+      signal: AbortSignal.timeout(config.timeout),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
