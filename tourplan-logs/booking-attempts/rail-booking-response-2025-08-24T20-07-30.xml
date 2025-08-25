@@ -1,0 +1,97 @@
+{
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "BookingId": 1589,
+      "Ref": "TAWB100584",
+      "ServiceLineId": 6479,
+      "SequenceNumber": 10,
+      "Status": "RQ",
+      "Services": {
+        "Service": {
+          "ServiceLineId": 6479,
+          "ServiceLineUpdateCount": 1,
+          "Opt": "PRYRLROV001PRCPPM",
+          "OptionNumber": 103376,
+          "Date": "2025-10-31",
+          "SequenceNumber": 10,
+          "RoomConfigs": {
+            "RoomConfig": {
+              "Adults": 2,
+              "Children": 0,
+              "Infants": 0,
+              "RoomType": "DB",
+              "PaxList": {
+                "PaxDetails": [
+                  {
+                    "PersonId": 2412,
+                    "Forename": "Adult 1",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  },
+                  {
+                    "PersonId": 2413,
+                    "Forename": "Adult 2",
+                    "Surname": "Tess Robinson",
+                    "PaxType": "A",
+                    "PaxText1": "",
+                    "PaxText2": "",
+                    "PaxText3": "",
+                    "PaxText4": "",
+                    "PaxText5": "",
+                    "PaxText6": "",
+                    "PaxText7": "",
+                    "PaxText8": "",
+                    "PaxText9": "",
+                    "PaxText10": ""
+                  }
+                ]
+              }
+            }
+          },
+          "CostedInBooking": "Y",
+          "LinePrice": 796460,
+          "SCU": "Trip",
+          "SCUqty": 1,
+          "Pickup_Date": "2025-10-31",
+          "puTime": 0,
+          "puRemark": 61412123456,
+          "Dropoff_Date": "2025-11-03",
+          "doTime": 0,
+          "doRemark": "",
+          "Remarks": "",
+          "SupplierName": "Rovos Rail",
+          "Description": "Rovos Rail Pretoria to Cape Town",
+          "Description2": "",
+          "Comment": "Pullman Suite",
+          "Comment2": "",
+          "CancelDeleteStatus": "D",
+          "CanUpdate": "N",
+          "CanAccept": "N",
+          "PriceCode": "ST",
+          "TourplanServiceStatus": "WR",
+          "ServiceCategory": "S",
+          "LocationCode": "PRY",
+          "Voucher_Status": "L",
+          "ServiceLineExpiryDate": "2025-10-31",
+          "SupplierConfirmation": ""
+        }
+      }
+    },
+    "BookingUpdateCount": 2,
+    "ServiceLineUpdateCount": 1
+  }
+}

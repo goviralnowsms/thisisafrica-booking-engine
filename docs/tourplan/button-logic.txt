@@ -1,0 +1,111 @@
+Tours state updated
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:254 🚂 Setting loading=false, searchPerformed=true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:257 🚂 Search complete. Final state: {loading: false, searchPerformed: true, toursLength: 0, filteredToursLength: 0}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPPUL: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Manual', singleRate: 497788, twinRate: 663717, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPPUL: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPRRO: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Standard', singleRate: 955752, twinRate: 1274336, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPRRO: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001RRCTPR: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Standard', singleRate: 716814, twinRate: 955752, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001RRCTPR: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPPUL: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Manual', singleRate: 497788, twinRate: 663717, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPPUL: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPRRO: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Standard', singleRate: 955752, twinRate: 1274336, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPRRO: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001RRCTPR: {hasCalendarAvailability: undefined, hasRates: true, rateName: 'Standard', singleRate: 716814, twinRate: 955752, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001RRCTPR: true
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for CPTRLROV001CTPPUL - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for CPTRLROV001CTPRRO - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for CPTRLROV001RRCTPR - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for PRYRLROV001PRCPPM - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for PRYRLROV001PRCPRY - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178  Availability check timed out for PRYRLROV001ROV004 - showing as available
+checkProductAvailability @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:178
+await in checkProductAvailability
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:242
+handleSearch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:241
+await in handleSearch
+executeDispatch @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16426
+runWithFiberInDEV @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:1510
+processDispatchQueue @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16476
+eval @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:17074
+batchedUpdates$1 @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:3253
+dispatchEventForPluginEventSystem @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:16630
+dispatchEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20716
+dispatchDiscreteEvent @ D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\node_modules\.pnpm\next@15.2.4_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\react-dom\cjs\react-dom-client.development.js:20684
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPPUL: {hasCalendarAvailability: true, hasRates: true, rateName: 'Manual', singleRate: 497788, twinRate: 663717, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPPUL: false
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPRRO: {hasCalendarAvailability: true, hasRates: true, rateName: 'Standard', singleRate: 955752, twinRate: 1274336, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPRRO: false
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001RRCTPR: {hasCalendarAvailability: true, hasRates: true, rateName: 'Standard', singleRate: 716814, twinRate: 955752, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001RRCTPR: false
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPPUL: {hasCalendarAvailability: true, hasRates: true, rateName: 'Manual', singleRate: 497788, twinRate: 663717, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPPUL: false
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001CTPRRO: {hasCalendarAvailability: true, hasRates: true, rateName: 'Standard', singleRate: 955752, twinRate: 1274336, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001CTPRRO: false
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:507 🚂 Button logic for CPTRLROV001RRCTPR: {hasCalendarAvailability: true, hasRates: true, rateName: 'Standard', singleRate: 716814, twinRate: 955752, …}
+D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\app\rail\page.tsx:528 🚂 shouldShowGetQuote for CPTRLROV001RRCTPR: false

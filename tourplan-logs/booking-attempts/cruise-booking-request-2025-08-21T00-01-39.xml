@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <AddServiceRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <NewBookingInfo>
+      <Name>Tess Robinson</Name>
+      <QB>Q</QB>
+    </NewBookingInfo>
+    <Opt>BBKCRTVT001ZAM2NM</Opt>
+    <RateId>Default</RateId>
+    <DateFrom>2025-10-22</DateFrom>
+    <SCUqty>1</SCUqty>
+    <Adults>2</Adults>
+    <Children>0</Children>
+    <RoomType>DB</RoomType>
+    <Email>goviralnowsms@gmail.com</Email>
+    <puRemark>0413123456</puRemark>
+  </AddServiceRequest>
+</Request>

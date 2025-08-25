@@ -1,0 +1,92 @@
+ Fetching countries from TourPlan API for Group Tours
+D:\drive\My Drive\th…ation-mapping.ts:36 🌍 Found 7 countries for Group Tours: 
+(7) ['Botswana', 'Kenya', 'Namibia', 'South Africa', 'Tanzania', 'Zambia', 'Zimbabwe']
+D:\drive\My Drive\th…rs-list\page.tsx:74 ✅ Loaded 7 countries for Group Tours from TourPlan API
+D:\drive\My Drive\th…s-list\page.tsx:108 ✅ Loaded 1 destinations for kenya
+D:\drive\My Drive\th…s-list\page.tsx:113 ✅ Loaded 4 classes for kenya : 
+(4) ['Basic', 'Deluxe', 'Deluxe plus', 'Standard']
+D:\drive\My Drive\th…s-list\page.tsx:194 🦁 Starting group tours search...
+D:\drive\My Drive\th…s-list\page.tsx:209 🦁 Group tours search params: productType=Group+Tours&destination=Nairobi+Jki+Airport&class=Deluxe
+D:\drive\My Drive\th…s-list\page.tsx:214 🦁 Group tours search response: 
+{success: true, tours: Array(0), totalResults: 0}
+success
+: 
+true
+totalResults
+: 
+0
+tours
+: 
+Array(0)
+length
+: 
+0
+[[Prototype]]
+: 
+Array(0)
+[[Prototype]]
+: 
+Object
+D:\drive\My Drive\th…s-list\page.tsx:217 🦁 Found 0 group tours
+D:\drive\My Drive\th…s-list\page.tsx:218 🦁 Setting tours and filteredTours...
+D:\drive\My Drive\th…s-list\page.tsx:222 🦁 Tours state updated
+D:\drive\My Drive\th…s-list\page.tsx:238 🦁 Setting loading=false, searchPerformed=true
+D:\drive\My Drive\th…s-list\page.tsx:241 🦁 Search complete. Final state: 
+{loading: false, searchPerformed: true, toursLength: 0, filteredToursLength: 0}
+filteredToursLength
+: 
+0
+loading
+: 
+false
+searchPerformed
+: 
+true
+toursLength
+: 
+0
+[[Prototype]]
+: 
+Object
+constructor
+: 
+ƒ Object()
+hasOwnProperty
+: 
+ƒ hasOwnProperty()
+isPrototypeOf
+: 
+ƒ isPrototypeOf()
+propertyIsEnumerable
+: 
+ƒ propertyIsEnumerable()
+toLocaleString
+: 
+ƒ toLocaleString()
+toString
+: 
+ƒ toString()
+valueOf
+: 
+ƒ valueOf()
+__defineGetter__
+: 
+ƒ __defineGetter__()
+__defineSetter__
+: 
+ƒ __defineSetter__()
+__lookupGetter__
+: 
+ƒ __lookupGetter__()
+__lookupSetter__
+: 
+ƒ __lookupSetter__()
+__proto__
+: 
+(...)
+get __proto__
+: 
+ƒ __proto__()
+set __proto__
+: 
+ƒ __proto__()

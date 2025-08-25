@@ -1,0 +1,95 @@
+TourPlan 
+  Configuration 
+  Summary for 
+  BBKCRTVT001ZAM3NS
+
+  Critical Issues 
+  Found:
+
+  Product 
+  Configuration         
+  Problems
+
+  -
+  CostedInBooking:      
+  NOT SET (should       
+  be "Y" for online     
+   booking)
+  - TourplanService     
+  Status: NOT SET       
+  (should be "WR"       
+  for Web Request)      
+  - CancelDeleteSta     
+  tus: NOT SET
+  (booking
+  restrictions
+  unclear)
+  - Status: Returns     
+   "NO" (booking        
+  declined)
+
+  Required TourPlan     
+   Actions
+
+  1. Set
+  CostedInBooking =     
+   "Y" to enable        
+  online booking        
+  2. Configure Tour     
+  planServiceStatus     
+   = "WR" for web       
+  requests
+  3. Set
+  appropriate Cance     
+  lDeleteStatus
+  value
+  4. Review why
+  bookings return       
+  Status="NO"
+  instead of
+  "RQ"/"WQ"
+
+  Current Impact        
+
+  - All booking
+  attempts for
+  BBKCRTVT001ZAM3NS     
+   fail with
+  Status="NO"
+  - System falls        
+  back to manual        
+  TIA-CRUISE
+  reference numbers     
+  - Product needs       
+  TourPlan backend      
+  configuration
+  changes to accept     
+   API bookings
+
+  Configuration         
+  Path: Code Setup      
+  >> Bookings >>        
+  Service Status in     
+   TourPlan admin       
+  interface.
+
+
+Zambezi queen 2 night: BBKCRTVT001ZAM2NS (success) Booking ID: 1579 TAWB100574
+
+Zambezi queen 2 night: BBKCRTVT001ZAM2NM (success) Booking ID: 1580 TAWB100575
+
+Zambezi Queen 3 night river cruise
+Kasane Airport       BBKCRTVT001ZAM3NS  (fail) Booking ID: TIA-CRUISE-1755734832319
+
+Zambezi Queen 3 night river cruise
+Kasane Airport       BBKCRTVT001ZAM3NM  (success) Book ID: 1581 TAWB100576
+
+Chobe Princess 2 Night River Cruise
+Kasane Airport       BBKCRCHO018TIACP2  (success) Book ID: 1582 TAWB100577
+
+Chobe Princess 3 Night River Cruise
+Kasane Airport       BBKCRCHO018TIACP3  (success) Book ID: 1583 TAWB100578
+
+
+
+

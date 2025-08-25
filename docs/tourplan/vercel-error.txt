@@ -1,0 +1,175 @@
+Time
+Status
+Host
+Request
+Messages
+Aug 21 16:57:47.10
+GET504
+book.thisisafrica.com.au
+/api/tourplan
+15
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:57:47.04
+GET200
+book.thisisafrica.com.au
+/api/tourplan/destinations
+4
+TourPlan request failed: Error [FetchError]: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128 at <unknown> (FetchError: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128) at ClientRequest.<anonymous> (.next/server/chunks/6124.js:1:304407) { type: 'system', errno: 'ETIMEDOUT', code: 'ETIMEDOUT', constructor: [Function: w] }
+Aug 21 16:57:21.41
+GET200
+book.thisisafrica.com.au
+/api/tourplan/destinations
+4
+TourPlan request failed: Error [FetchError]: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128 at <unknown> (FetchError: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128) at ClientRequest.<anonymous> (.next/server/chunks/6124.js:1:304407) { type: 'system', errno: 'ETIMEDOUT', code: 'ETIMEDOUT', constructor: [Function: w] }
+Aug 21 16:56:58.42
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.02
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRCHO018TIACP3
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.02
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRCHO018TIACP2
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.01
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.01
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.01
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:56:18.01
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:51:43.11
+GET504
+v0-modern-design-refresh.vercel.app
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:50:40.68
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:49:04.30
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:40:32.29
+GET200
+book.thisisafrica.com.au
+/api/tourplan/destinations
+4
+TourPlan request failed: Error [FetchError]: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128 at <unknown> (FetchError: request to https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi failed, reason: connect ETIMEDOUT 13.210.224.119:3128) at ClientRequest.<anonymous> (.next/server/chunks/6124.js:1:304407) { type: 'system', errno: 'ETIMEDOUT', code: 'ETIMEDOUT', constructor: [Function: w] }
+Aug 21 16:39:54.02
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:39:34.36
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:39:33.88
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:39:19.05
+GET504
+book.thisisafrica.com.au
+/api/tourplan/destinations
+6
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.62
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.62
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRCHO018TIACP2
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.62
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.62
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRCHO018TIACP3
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.62
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:38:22.61
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:37:39.60
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:37:39.60
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NM
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:37:39.60
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM3NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+Aug 21 16:37:39.55
+GET504
+book.thisisafrica.com.au
+/api/tourplan/product/BBKCRTVT001ZAM2NS
+7
+Vercel Runtime Timeout Error: Task timed out after 30 seconds
+
+No more logs to show within selected timeline

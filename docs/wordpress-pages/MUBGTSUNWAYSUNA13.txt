@@ -1,0 +1,34 @@
+Supplier 
+SUNWAY - Sunway Safaris
+ 
+Product 
+MUBGTSUNWAYSUNA13
+  
+Description 
+Botswana Wild Parks - small group
+Comment 
+Maun to Victoria Falls
+Copy Product Discard Save
+ProductPrice RulesFOC DetailsVoucherVoucher Text
+Details
+Description 
+Botswana Wild Parks - small group
+Description 2 
+Comment 
+Maun to Victoria Falls
+Comment 2 
+Locality 
+MAU - Maun
+Class 
+BA - Basic
+Service Category 
+Accommodation
+ Flag Product as Deleted
+Extras
+Extra Name
+Extra Description
+Charge Per
+Single supplement
+Single traveller requesting their own rooms
+Per Pax
+ 

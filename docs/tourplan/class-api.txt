@@ -1,0 +1,84 @@
+Setting available countries from API: 
+Array(7)
+D:\drive\My Drive\th…ackages\page.tsx:97 📦 Fetching destinations for country: botswana
+D:\drive\My Drive\th…ckages\page.tsx:106 📦 TourPlan destinations response: 
+Object
+D:\drive\My Drive\th…ckages\page.tsx:116 📦 Setting available destinations from API: 
+Array(2)
+D:\drive\My Drive\th…ckages\page.tsx:151 📦 Fetching classes for destination: chobe-national-park
+D:\drive\My Drive\th…ckages\page.tsx:161 📦 TourPlan classes response: 
+Object
+classes
+: 
+[]
+classesCount
+: 
+0
+countries
+: 
+[]
+country
+: 
+"Chobe National Park"
+destinations
+: 
+[]
+localityCount
+: 
+0
+productType
+: 
+"Packages"
+success
+: 
+true
+[[Prototype]]
+: 
+Object
+constructor
+: 
+ƒ Object()
+hasOwnProperty
+: 
+ƒ hasOwnProperty()
+isPrototypeOf
+: 
+ƒ isPrototypeOf()
+propertyIsEnumerable
+: 
+ƒ propertyIsEnumerable()
+toLocaleString
+: 
+ƒ toLocaleString()
+toString
+: 
+ƒ toString()
+valueOf
+: 
+ƒ valueOf()
+__defineGetter__
+: 
+ƒ __defineGetter__()
+__defineSetter__
+: 
+ƒ __defineSetter__()
+__lookupGetter__
+: 
+ƒ __lookupGetter__()
+__lookupSetter__
+: 
+ƒ __lookupSetter__()
+__proto__
+: 
+(...)
+get __proto__
+: 
+ƒ __proto__()
+set __proto__
+: 
+ƒ __proto__()
+D:\drive\My Drive\th…ckages\page.tsx:170 📦 Setting available classes from API: 
+Array(0)
+length
+: 
+0

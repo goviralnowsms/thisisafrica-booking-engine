@@ -1,0 +1,44 @@
+Kenya search:
+
+{
+    "success": true,
+    "productType": "Group Tours",
+    "country": "",
+    "countries": [
+        "Botswana",
+        "Kenya",
+        "Namibia",
+        "South Africa",
+        "Tanzania",
+        "Zambia",
+        "Zimbabwe"
+    ],
+    "destinations": [],
+    "classes": [],
+    "localityCount": 7,
+    "classesCount": 0
+}
+
+Kenya/Nairobi JKI Airport (page shows No group tours found for your search criteria)
+
+{
+    "success": true,
+    "productType": "Group Tours",
+    "country": "Kenya",
+    "countries": [],
+    "destinations": [
+        "Nairobi JKI Airport"
+    ],
+    "classes": [
+        "Basic",
+        "Deluxe",
+        "Deluxe plus",
+        "Standard"
+    ],
+    "localityCount": 1,
+    "classesCount": 4
+}
+
+Kenya/Nairobi JKI Airport/Deluxe shows 5 on wordpress and 0 on local)
+
+{"success":true,"tours":[],"totalResults":0}

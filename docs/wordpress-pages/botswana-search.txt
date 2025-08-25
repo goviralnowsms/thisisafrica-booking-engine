@@ -1,0 +1,586 @@
+Product details fallback: {
+  hasRates: true,
+  ratesLength: 1,
+  firstRate: {
+    dateRange: 'Available dates',
+    singleRate: 0,
+    doubleRate: 0,
+    twinRate: 0,
+    twinRateFormatted: 'POA',
+    twinRateTotal: 0,
+    currency: 'AUD',
+    rateName: 'Price on Application',
+    dateFrom: undefined,
+    dateTo: undefined
+  }
+}
+Converted pricing data: 1 items
+Processing calendar data with 1 pricing items
+OptAvail data available: true 92 codes
+🗓️ Processing date: {
+  dateKey: '2025-08-22',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: true
+}
+🔍 Pricing object for 2025-08-22 has optAvail: true
+🎯 Using WordPress-style availability logic for 2025-08-22
+📊 WordPress-style availability check: {
+  dateKey: '2025-08-22',
+  optAvailStartDate: '2025-08-22',
+  daysSinceStart: 0,
+  availCode: '-1',
+  statusText: 'Not available',
+  validDay: false,
+  dayName: 'Friday',
+  isDSTTransitionMonth: false,
+  productType: '(Other)'
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-23',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-24',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-25',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-26',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-27',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-28',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-29',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-30',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-08-31',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-01',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-02',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-03',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-04',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-05',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-06',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-07',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-08',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-09',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-10',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-11',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-12',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-13',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-14',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-15',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-16',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-17',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-18',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-19',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-20',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-21',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-22',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-23',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-24',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-25',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-26',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-27',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-28',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-29',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-09-30',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-01',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-02',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-03',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-04',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-05',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-06',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-07',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-08',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-09',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-10',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-11',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-12',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-13',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-14',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-15',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-16',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-17',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-18',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-19',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-20',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-21',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-22',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-23',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-24',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-25',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-26',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-27',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-28',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-29',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-30',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-10-31',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-01',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-02',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-03',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-04',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-05',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-06',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-07',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-08',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-09',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-10',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-11',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-12',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-13',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-14',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-15',
+  dayOfWeek: 6,
+  dayName: 'Saturday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-16',
+  dayOfWeek: 0,
+  dayName: 'Sunday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-17',
+  dayOfWeek: 1,
+  dayName: 'Monday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-18',
+  dayOfWeek: 2,
+  dayName: 'Tuesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-19',
+  dayOfWeek: 3,
+  dayName: 'Wednesday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-20',
+  dayOfWeek: 4,
+  dayName: 'Thursday',
+  hasDateData: false
+}
+🗓️ Processing date: {
+  dateKey: '2025-11-21',
+  dayOfWeek: 5,
+  dayName: 'Friday',
+  hasDateData: false
+}
+Generated calendar data: 92 days
+ GET /api/tourplan/pricing/MUBGTJENMANJENBSE?dateFrom=2025-08-22&dateTo=2025-11-21&adults=2&children=0&roomType=DB 200 in 3418ms

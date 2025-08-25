@@ -1,0 +1,52 @@
+ TOURPLAN PRODUCT CONFIGURATION ANALYSIS:
+┌─────────────────────────────┬────────────────────────┐
+│ (index)                     │ Values                 │
+├─────────────────────────────┼────────────────────────┤
+│ 🔑 KEY CONFIGURATION FIELDS │ '====================' │
+│ Product Code                │ 'BBKCRTVT001ZAM3NS'    │
+│ Status                      │ 'NO'                   │
+│ CostedInBooking             │ 'NOT SET'              │
+│ TourplanServiceStatus       │ 'NOT SET'              │
+│ CancelDeleteStatus          │ 'NOT SET'              │
+│ ServiceCategory             │ 'NOT SET'              │
+│ Voucher_Status              │ 'NOT SET'              │
+│ CanUpdate                   │ 'NOT SET'              │
+│ CanAccept                   │ 'NOT SET'              │
+│ ====================        │ '====================' │
+└─────────────────────────────┴────────────────────────┘
+⚠️ POTENTIAL CONFIGURATION ISSUES DETECTED:
+❌ CostedInBooking is not "Y" - product may not be configured for online booking
+❌ TourplanServiceStatus is not "WR" (Web Request) - product needs TourPlan configuration
+⚠️ CancelDeleteStatus is blank - may have read-only restrictions
+❌ Status is "NO" - booking was declined by TourPlan
+📞 These issues need to be fixed in TourPlan's product configuration
+⚠️ TourPlan booking returned non-OK status: NO
+📋 Full response: {
+  "?xml": {
+    "@_version": 1,
+    "@_encoding": "utf-8"
+  },
+  "Reply": {
+    "AddServiceReply": {
+      "Status": "NO"
+    }
+  }
+}
+📥 TourPlan booking response: {
+  status: 'NO',
+  bookingId: null,
+  reference: null,
+  message: undefined,
+  totalCost: 0
+}
+📊 BOOKING RESULT SUMMARY:
+=====================================
+Product: BBKCRTVT001ZAM3NS
+Status: NO ❌ DECLINED
+Reference: NONE
+=====================================
+⚠️ TourPlan returned status: NO - handling as quote requiring manual confirmation
+📝 Using TIA-CRUISE fallback for non-working cruise product
+📝 Manual confirmation booking created: TIA-CRUISE-1755734832319
+🔄 Generating booking confirmation email template for: TIA-CRUISE-1755734832319
+📧 Sending booking confirmation

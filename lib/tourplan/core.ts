@@ -40,14 +40,38 @@ export async function tourplanQuery(inputXml: string): Promise<any> {
     });
     console.log('📤 TourPlan Query - XML Request:\n', inputXml);
     
-    const response = await fetch(config.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/xml; charset=utf-8',
-      },
-      body: inputXml,
-      signal: AbortSignal.timeout(config.timeout),
-    });
+    // Check if we need to use proxy
+    const proxyUrl = process.env.PROXY_URL;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isVercel = process.env.VERCEL === '1';
+    
+    let response: Response;
+    
+    if (proxyUrl && isProduction && isVercel && typeof window === 'undefined') {
+      // Use node-fetch with https-proxy-agent for proper proxy support
+      const nodeFetch = (await import('node-fetch')).default;
+      const { HttpsProxyAgent } = await import('https-proxy-agent');
+      const agent = new HttpsProxyAgent(proxyUrl);
+      
+      response = await nodeFetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+        },
+        body: inputXml,
+        agent,
+        signal: AbortSignal.timeout(config.timeout),
+      }) as unknown as Response;
+    } else {
+      response = await fetch(config.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+        },
+        body: inputXml,
+        signal: AbortSignal.timeout(config.timeout),
+      });
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -74,23 +98,44 @@ export async function wpXmlRequest(inputXml: string): Promise<any> {
     const isProduction = process.env.NODE_ENV === 'production';
     const isVercel = process.env.VERCEL === '1';
     
-    let fetchUrl = config.endpoint;
-    let headers: Record<string, string> = {
-      'Content-Type': 'text/xml; charset=utf-8',
+    let fetchOptions: any = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+      },
+      body: inputXml,
+      signal: AbortSignal.timeout(config.timeout),
     };
     
     // Only use proxy if we're on Vercel production (not local dev)
     if (proxyUrl && isProduction && isVercel && typeof window === 'undefined') {
-      fetchUrl = proxyUrl;
-      headers['X-Target-URL'] = config.endpoint;
+      // Use node-fetch with https-proxy-agent for proper proxy support
+      const nodeFetch = (await import('node-fetch')).default;
+      const { HttpsProxyAgent } = await import('https-proxy-agent');
+      const agent = new HttpsProxyAgent(proxyUrl);
+      
+      const response = await nodeFetch(config.endpoint, {
+        ...fetchOptions,
+        agent,
+      }) as unknown as Response;
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const xmlText = await response.text();
+      console.log('📥 TourPlan Response XML:', xmlText);
+      
+      if (xmlText.includes('ErrorReply')) {
+        console.log('⚠️ TourPlan returned an error response');
+      }
+      
+      const parsed = xmlParser.parse(xmlText);
+      return JSON.parse(JSON.stringify(parsed));
     }
     
-    const response = await fetch(fetchUrl, {
-      method: 'POST',
-      headers,
-      body: inputXml,
-      signal: AbortSignal.timeout(config.timeout),
-    });
+    // For local development or non-proxy environments
+    const response = await fetch(config.endpoint, fetchOptions);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

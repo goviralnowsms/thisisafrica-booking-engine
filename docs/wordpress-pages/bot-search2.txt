@@ -1,0 +1,51 @@
+{
+    "success": true,
+    "tours": [
+        {
+            "id": "MUBGTJENMANJENBSE",
+            "code": "MUBGTJENMANJENBSE",
+            "name": "Botswana & Zimbabwe Escape",
+            "description": "Botswana & Zimbabwe Escape",
+            "supplier": "Jenman Safaris",
+            "duration": "9 nights",
+            "image": null,
+            "rates": [
+                {
+                    "currency": "AUD",
+                    "singleRate": 0,
+                    "rateName": "Price on Application"
+                }
+            ]
+        },
+        {
+            "id": "MUBGTSUNWAYSUBT13",
+            "code": "MUBGTSUNWAYSUBT13",
+            "name": "Wild Botswana - Small Group",
+            "description": "Wild Botswana - Small Group",
+            "supplier": "Sunway Safaris",
+            "duration": "12 nights",
+            "image": null,
+            "rates": [
+                {
+                    "currency": "AUD",
+                    "singleRate": 0,
+                    "rateName": "Price on Application"
+                }
+            ]
+        },
+        {
+            "id": "MUBGTSUNWAYSUNA13",
+            "code": "MUBGTSUNWAYSUNA13",
+            "name": "Botswana Wild Parks - small group",
+            "description": "Botswana Wild Parks - small group",
+            "supplier": "Sunway Safaris",
+            "duration": "12 nights",
+            "image": null,
+            "rates": [
+                {
+                    "currency": "AUD",
+                    "singleRate": 0,
+                    "rateName": "Price on Application"
+                }
+            ]
+        }
