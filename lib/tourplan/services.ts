@@ -31,12 +31,112 @@ const ALL_CRUISES = [
   'BBKCRTVT001ZAM3NS', // Zambezi Queen 3 night/4 days
 ];
 
+/**
+ * Group Tours filtering rules based on CSV comparison data
+ * Maps specific destination+class combinations to expected product codes
+ */
+const GROUP_TOURS_CATALOG: Record<string, string[]> = {
+  // Kenya combinations
+  'kenya-nairobi-jki-airport-basic': ['NBOGTARP001CKSM', 'NBOGTARP001THRSM3'],
+  'kenya-nairobi-jki-airport-deluxe': [
+    'NBOGTARP001CKEKEE', 'NBOGTARP001CKSE', 'NBOGTARP001EAEKE',
+    'NBOGTARP001THRKE3', 'NBOGTARP001THRSE3'
+  ],
+  'kenya-nairobi-jki-airport-deluxe-plus': ['NBOGTARP001EAESE'],
+  'kenya-nairobi-jki-airport-standard': [
+    'NBOGTARP001CKSO', 'NBOGTARP001THRSO3', 'NBOGTSOAEASKTNM21',
+    'NBOGTSOAEASSNM022', 'NBOGTSOAEASSNM031', 'NBOGTSOAEASSNM041',
+    'NBOGTSOAEASSNM061', 'NBOGTSOAEASSNM062', 'NBOGTSOAEASSNM071',
+    'NBOGTSOAEASSNM091', 'NBOGTSOAEASSNM111', 'NBOGTSOAEASSNM131'
+  ],
+
+  // Botswana combinations - each product appears in ONLY its correct category
+  'botswana-maun-basic': ['MUBGTSUNWAYSUNA13'], // Basic tour starting in Maun city
+  'botswana-maun-deluxe': [], // No deluxe tours start in city
+  'botswana-maun-overland-camping': [], // No overland tours start in city
+  'botswana-maun-airport-basic': [], // No basic tours start at airport
+  'botswana-maun-airport-deluxe': ['MUBGTJENMANJENBSE'], // Deluxe tour with airport pickup
+  'botswana-maun-airport-overland-camping': ['MUBGTSUNWAYSUBT13'], // Overland with airport pickup
+
+  // Namibia combinations
+  'namibia-windhoek-deluxe': ['WDHGTSOANAMCAPNAM'],
+  'namibia-windhoek-deluxe-plus': ['WDHGTULTSAFULTNAM', 'WDHGTSOANAMEXNASP'],
+  'namibia-windhoek-standard': ['WDHGTSOANAMHINAMC'],
+
+  // South Africa combinations
+  'south-africa-cape-town-city-basic': [
+    'CPTGTNOMAD NOMNAM', 'CPTGTSUNWAYCWA13', 'CPTGTSUNWAYSUNA21'
+  ],
+  'south-africa-cape-town-city-overland-camping': [
+    'CPTGTSUNWAYSUCV21', 'CPTGTSUNWAYSUCW14'
+  ],
+  'south-africa-cape-town-city-standard': ['CPTGTSATOURSAGRD4'],
+  'south-africa-durban-airport-basic': ['DURGTNOMAD NADC'],
+  'south-africa-durban-airport-standard': [], // Empty per CSV - all show 0 in WordPress  
+  'south-africa-durban-airport-overland-camping': ['DURGTNOMAD NDC'],
+  'south-africa-johannesburg-basic': ['JNBGTSUNWAYSAA17'],
+  'south-africa-johannesburg-overland-camping': [], // Empty per CSV - all show 0 in WordPress
+  'south-africa-johannesburg-standard': [], // Empty per CSV - all show 0 in WordPress
+  'south-africa-johannesburg-airport-basic': [
+    'JNBGTNOMAD NAJC', 'JNBGTNOMAD NAJD', 'JNBGTNOMAD NAJP',
+    'JNBGTSUNWAYSUNA14', 'JNBGTSUNWAYSUNZBA'
+  ],
+  'south-africa-johannesburg-airport-overland-camping': [
+    'JNBGTSUNWAYSUBT14', 'JNBGTNOMAD NJP', 'JNBGTNOMAD NJD', 'JNBGTNOMAD NJC'
+  ],
+  'south-africa-johannesburg-airport-standard': [
+    'JNBGTNOMAD NAJCSG', 'JNBGTNOMAD NAJPSG', 'JNBGTSATOURSAJOUR'
+  ],
+  'south-africa-port-elizabeth-basic': ['CPTGTSATOURSAGRD4'],
+  'south-africa-port-elizabeth-standard': ['PLZGTNOMAD NAPCSG', 'PLZGTTVT001TISD20', 'PLZGTTVT001TISG20'],
+  'south-africa-port-elizabeth-overland-camping': ['PLZGTNOMAD NPC'],
+
+  // Tanzania combinations
+  'tanzania-kilimanjaro-airport-deluxe': ['JROGTARP001SIMSE7'],
+  'tanzania-kilimanjaro-airport-luxury': ['JROGTARP001SIMWEP'],
+  'tanzania-kilimanjaro-airport-standard': [
+    'JROGTARP001SIMTW7', 'JROGTSOAEASSNM024', 'JROGTSOAEASSNM042'
+  ],
+
+  // Zambia combinations
+  'zambia-livingstone-basic': ['LVIGTSUNWAYNBA15', 'LVIGTSUNWAYSUNNBA'],
+  'zambia-livingstone-overland-camping': ['LVIGTSUNWAYSUNB15', 'LVIGTSUNWAYSUNB21'],
+
+  // Zimbabwe combinations
+  'zimbabwe-victoria-falls-airport-basic': ['VFAGTNOMAD NAZZ'],
+  'zimbabwe-victoria-falls-airport-standard': ['VFAGTJENMANJENW15', 'VFAGTJENMANJENW12']
+};
+
 const CRUISE_CATALOG: Record<string, string[]> = {
-  // All cruises operate from Botswana but can be filtered by destination
-  'botswana': ALL_CRUISES, // Show all cruises when Botswana is selected
-  'namibia': ALL_CRUISES,  // Show all cruises when Namibia is selected (they visit Namibian waters)
-  'zambezi': ALL_CRUISES,  // Show all cruises when Zambezi is selected (they cruise the Zambezi river)
-  'all': ALL_CRUISES       // Default - show all cruises
+  // Based on tours-filter.csv data for CRUISE section (lines 210-218)
+  // Botswana/Kasane Airport combinations:
+  'botswana-kasane-airport-luxury': [
+    'BBKCRTVT001ZAM2NS', // Zambezi Queen 2-night standard (mapped to luxury in CSV)
+    'BBKCRTVT001ZAM3NS', // Zambezi Queen 3-night standard
+  ],
+  'botswana-kasane-airport-standard': [
+    'BBKCRCHO018TIACP2', // Chobe Princess 2-night
+    'BBKCRCHO018TIACP3', // Chobe Princess 3-night
+  ],
+  'botswana-kasane-airport-superior': [
+    'BBKCRTVT001ZAM2NM', // Zambezi Queen 2-night master
+    'BBKCRTVT001ZAM3NM', // Zambezi Queen 3-night master
+  ],
+  // Namibia gets same products as Botswana (from CSV lines 212, 215, 218)
+  'namibia-kasane-airport-luxury': [
+    'BBKCRTVT001ZAM2NS',
+    'BBKCRTVT001ZAM3NS',
+  ],
+  'namibia-kasane-airport-standard': [
+    'BBKCRCHO018TIACP2',
+    'BBKCRCHO018TIACP3',
+  ],
+  'namibia-kasane-airport-superior': [
+    'BBKCRTVT001ZAM2NM',
+    'BBKCRTVT001ZAM3NM',
+  ],
+  // Legacy fallbacks - only for 'all' or unspecified searches  
+  'all': ALL_CRUISES
 };
 
 /**
@@ -620,6 +720,211 @@ async function retryApiCall<T>(
 }
 
 /**
+ * Apply Group Tours filtering - Hybrid approach:
+ * 1. First tries dynamic filtering based on API response data
+ * 2. Falls back to CSV-based catalog if needed
+ */
+function applyGroupToursFiltering(products: any[], destination: string, classFilter: string): any[] {
+  console.log(`🚌 Applying hybrid Group Tours filtering`);
+  console.log(`🚌 Destination: "${destination}", Class: "${classFilter}"`);
+  
+  if (!destination || !classFilter) {
+    console.log('🚌 No destination or class provided, returning all products');
+    return products;
+  }
+  
+  // STEP 1: Check if we have specific catalog rules first
+  // Build catalog key to see if we have explicit rules
+  const normalizeKey = (str: string) => str.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/airport/g, 'airport')
+    .replace(/jki/g, 'jki')
+    .replace(/overland-camping/g, 'overland-camping')
+    .replace(/deluxe\+/g, 'deluxe-plus');
+
+  const destKey = normalizeKey(destination);
+  const classKey = normalizeKey(classFilter);
+  let catalogKey = '';
+
+  // Determine catalog key (same logic as below)
+  if (destKey.includes('nairobi') || destKey.includes('jki')) {
+    catalogKey = `kenya-nairobi-jki-airport-${classKey}`;
+  }
+  // ... other destination patterns would go here if needed for this check
+
+  // If we have specific catalog rules, use them but also check for new products
+  if (catalogKey && GROUP_TOURS_CATALOG[catalogKey] !== undefined) {
+    console.log(`🚌 Using CSV-based catalog PLUS new products (have specific rules for "${catalogKey}")`);
+    
+    // Get catalog products first
+    const expectedCodes = GROUP_TOURS_CATALOG[catalogKey];
+    console.log(`🚌 Catalog expects: ${expectedCodes.length} products:`, expectedCodes);
+    
+    // Also try dynamic filtering to catch any NEW products
+    const dynamicallyFiltered = applyDynamicDestinationFiltering(products, destination, classFilter);
+    console.log(`🚌 API dynamic filtering found: ${dynamicallyFiltered.length} products`);
+    
+    // Find products that are in dynamic results but NOT in our catalog
+    const newProducts = dynamicallyFiltered.filter(product => {
+      const productCode = product.code || product.id || '';
+      return !expectedCodes.some(expectedCode => {
+        const normalizedProductCode = productCode.replace(/%20/g, ' ');
+        const normalizedExpectedCode = expectedCode.replace(/%20/g, ' ');
+        return normalizedProductCode.includes(normalizedExpectedCode) || 
+               normalizedExpectedCode.includes(normalizedProductCode) ||
+               productCode.includes(expectedCode) || 
+               expectedCode.includes(productCode);
+      });
+    });
+    
+    if (newProducts.length > 0) {
+      console.log(`🚌 Found ${newProducts.length} NEW products not in catalog:`, 
+        newProducts.map(p => p.code || p.id));
+    }
+    
+    // Get catalog products
+    const catalogProducts = products.filter(product => {
+      const productCode = product.code || product.id || '';
+      return expectedCodes.some(expectedCode => {
+        const normalizedProductCode = productCode.replace(/%20/g, ' ');
+        const normalizedExpectedCode = expectedCode.replace(/%20/g, ' ');
+        return normalizedProductCode.includes(normalizedExpectedCode) || 
+               normalizedExpectedCode.includes(normalizedProductCode) ||
+               productCode.includes(expectedCode) || 
+               expectedCode.includes(productCode);
+      });
+    });
+    
+    // Combine catalog products + new products
+    const finalProducts = [...catalogProducts, ...newProducts];
+    console.log(`🚌 Final result: ${catalogProducts.length} catalog + ${newProducts.length} new = ${finalProducts.length} total products`);
+    
+    return finalProducts;
+  } else {
+    // STEP 1.5: Try dynamic filtering first (for destinations without specific catalog rules)
+    const dynamicallyFiltered = applyDynamicDestinationFiltering(products, destination, classFilter);
+    
+    // If dynamic filtering found reasonable results, use it
+    if (dynamicallyFiltered.length > 0 && dynamicallyFiltered.length < products.length) {
+      console.log(`🚌 Dynamic filtering successful: ${products.length} → ${dynamicallyFiltered.length} products`);
+      return dynamicallyFiltered;
+    }
+    
+    console.log(`🚌 Dynamic filtering didn't work well, falling back to CSV-based catalog`);
+  }
+  
+  // If we didn't determine a catalog key above, build it now
+  let fullCatalogKey = catalogKey; // Use the key we already determined above
+  if (!fullCatalogKey) {
+    if (destKey.includes('nairobi') || destKey.includes('jki')) {
+      fullCatalogKey = `kenya-nairobi-jki-airport-${classKey}`;
+    } 
+    // Botswana - treat Maun and Maun Airport as the same
+    else if (destKey.includes('maun')) {
+      // First check if we have an airport-specific key
+      const airportKey = `botswana-maun-airport-${classKey}`;
+      const cityKey = `botswana-maun-${classKey}`;
+      
+      // Try airport key first, then city key
+      if (destKey.includes('airport') && GROUP_TOURS_CATALOG[airportKey]) {
+        fullCatalogKey = airportKey;
+      } else if (GROUP_TOURS_CATALOG[cityKey]) {
+        fullCatalogKey = cityKey;
+      } else {
+        // Default to airport key since most CSV entries use that
+        fullCatalogKey = airportKey;
+      }
+    } 
+    // Namibia destinations  
+    else if (destKey.includes('windhoek')) {
+      fullCatalogKey = `namibia-windhoek-${classKey}`;
+    } 
+    // South Africa - treat Johannesburg and Johannesburg Airport more intelligently
+    else if (destKey.includes('johannesburg')) {
+      // Check both airport and city keys
+      const airportKey = `south-africa-johannesburg-airport-${classKey}`;
+      const cityKey = `south-africa-johannesburg-${classKey}`;
+      
+      // Try to be smart about which one to use
+      if (destKey.includes('airport') && GROUP_TOURS_CATALOG[airportKey]) {
+        fullCatalogKey = airportKey;
+      } else if (!destKey.includes('airport') && GROUP_TOURS_CATALOG[cityKey]) {
+        fullCatalogKey = cityKey;
+      } else if (GROUP_TOURS_CATALOG[airportKey]) {
+        // Default to airport if city doesn't exist
+        fullCatalogKey = airportKey;
+      } else {
+        fullCatalogKey = cityKey;
+      }
+    }
+    else if (destKey.includes('cape-town')) {
+      // Always use city version for Cape Town
+      fullCatalogKey = `south-africa-cape-town-city-${classKey}`;
+    } 
+    else if (destKey.includes('durban')) {
+      // Always use airport version for Durban (that's what CSV has)
+      fullCatalogKey = `south-africa-durban-airport-${classKey}`;
+    } 
+    else if (destKey.includes('port-elizabeth')) {
+      fullCatalogKey = `south-africa-port-elizabeth-${classKey}`;
+    } 
+    // Tanzania destinations
+    else if (destKey.includes('kilimanjaro')) {
+      fullCatalogKey = `tanzania-kilimanjaro-airport-${classKey}`;
+    } 
+    // Zambia destinations
+    else if (destKey.includes('livingstone')) {
+      fullCatalogKey = `zambia-livingstone-${classKey}`;
+    } 
+    // Zimbabwe destinations  
+    else if (destKey.includes('victoria-falls')) {
+      fullCatalogKey = `zimbabwe-victoria-falls-airport-${classKey}`;
+    }
+    // If no specific pattern matches, try to infer from destination name
+    else {
+      console.log(`🚌 No specific destination pattern found for "${destKey}", trying country-based fallback`);
+      // This should not happen often, but provides a fallback
+      fullCatalogKey = `unknown-${destKey}-${classKey}`;
+    }
+  }
+  
+  console.log(`🚌 Built catalog key: "${fullCatalogKey}"`);
+  
+  // Get expected product codes from catalog
+  const expectedCodes = GROUP_TOURS_CATALOG[fullCatalogKey];
+  if (!expectedCodes) {
+    console.log(`🚌 No specific filtering rules found for "${fullCatalogKey}", returning all products`);
+    return products;
+  }
+  
+  console.log(`🚌 Expected product codes:`, expectedCodes);
+  
+  // Handle empty array (no products should be shown)
+  if (expectedCodes.length === 0) {
+    console.log(`🚌 Catalog specifies NO products should be shown for "${fullCatalogKey}"`);
+    return [];
+  }
+  
+  // Filter products to only those that match expected codes
+  const filteredProducts = products.filter(product => {
+    const productCode = product.code || product.id || '';
+    return expectedCodes.some(expectedCode => {
+      // Handle both space and %20 encoded versions
+      const normalizedProductCode = productCode.replace(/%20/g, ' ');
+      const normalizedExpectedCode = expectedCode.replace(/%20/g, ' ');
+      
+      return normalizedProductCode.includes(normalizedExpectedCode) || 
+             normalizedExpectedCode.includes(normalizedProductCode) ||
+             productCode.includes(expectedCode) || 
+             expectedCode.includes(productCode);
+    });
+  });
+  
+  console.log(`🚌 Filtered from ${products.length} to ${filteredProducts.length} products`);
+  return filteredProducts;
+}
+
+/**
  * Search cruises using curated catalog with rate limiting protection
  * Since TourPlan returns empty results for cruise searches
  */
@@ -634,8 +939,53 @@ async function searchCruisesFromCatalog(criteria: {
 }) {
   console.log('🚢 Searching cruise catalog with criteria:', criteria);
   
-  // Get product codes for cruises - all cruises are available regardless of destination filter
-  let productCodes: string[] = ALL_CRUISES;
+  // Build catalog key from destination and class
+  let catalogKey = '';
+  if (criteria.destination && criteria.class) {
+    // Normalize destination (remove spaces, lowercase)
+    let normalizedDestination = criteria.destination.toLowerCase().replace(/\s+/g, '-');
+    
+    // Map common destination patterns to specific keys
+    if (normalizedDestination === 'namibia') {
+      normalizedDestination = 'namibia-kasane-airport'; // Namibia cruises operate from Kasane
+    } else if (normalizedDestination === 'botswana') {
+      normalizedDestination = 'botswana-kasane-airport'; // All cruises operate from Kasane
+    } else if (normalizedDestination === 'kasane-airport') {
+      // "Kasane Airport" maps to Botswana (default country for Kasane)
+      normalizedDestination = 'botswana-kasane-airport';
+    }
+    
+    // Normalize class (lowercase)
+    const normalizedClass = criteria.class.toLowerCase();
+    catalogKey = `${normalizedDestination}-${normalizedClass}`;
+    console.log('🚢 Built catalog key:', catalogKey);
+  } else if (criteria.destination) {
+    let normalizedDestination = criteria.destination.toLowerCase();
+    if (normalizedDestination === 'namibia' || normalizedDestination === 'botswana') {
+      // For destination-only searches, return empty array (need class to filter properly)
+      catalogKey = 'destination-only-no-class';
+    } else {
+      catalogKey = normalizedDestination;
+    }
+  } else {
+    catalogKey = 'all';
+  }
+  
+  // Get product codes for cruises based on destination + class combination
+  let productCodes: string[] = CRUISE_CATALOG[catalogKey];
+  
+  if (!productCodes) {
+    if (catalogKey === 'all') {
+      productCodes = ALL_CRUISES;
+      console.log('🚢 No specific filtering - returning all cruises');
+    } else if (catalogKey === 'destination-only-no-class') {
+      productCodes = [];
+      console.log('🚢 Destination provided but no class - returning empty (need both for filtering)');
+    } else {
+      productCodes = [];
+      console.log(`🚢 No catalog entry found for "${catalogKey}" - returning empty array`);
+    }
+  }
   
   console.log('🚢 Using all cruise product codes:', productCodes);
   console.log('🚢 Implementing rate limiting protection with delays between calls');
@@ -1125,22 +1475,12 @@ export async function searchProducts(criteria: {
         console.log('🚢 Cruise search criteria:', JSON.stringify(criteria, null, 2));
         const cruiseResults = await searchCruisesFromCatalog(criteria);
         
-        // ALWAYS apply filtering for cruises, even if no destination (class filtering is important!)
-        console.log(`🚢 Applying filtering to ${cruiseResults.products?.length || 0} cruise products`);
-        console.log('🚢 Filtering by destination:', criteria.destination || 'none');
-        console.log('🚢 Filtering by class:', criteria.class || 'none');
-        
-        const filteredCruiseProducts = applyDynamicDestinationFiltering(
-          cruiseResults.products || [],
-          criteria.destination || '',
-          criteria.class || ''
-        );
-        
-        console.log(`🚢 After filtering: ${filteredCruiseProducts.length} cruise products`);
+        // Catalog search already applies the filtering, no need for additional filtering
+        console.log(`🚢 Catalog search completed: ${cruiseResults.products?.length || 0} cruise products`);
         
         return {
-          products: filteredCruiseProducts,
-          totalResults: filteredCruiseProducts.length,
+          products: cruiseResults.products || [],
+          totalResults: cruiseResults.totalResults || 0,
           searchCriteria: criteria
         };
       }
@@ -1285,6 +1625,8 @@ export async function searchProducts(criteria: {
           duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : '',
           location: option.OptGeneral?.LocalityDescription || '', // Add location field!
           locality: option.OptGeneral?.Locality || '', // Add locality code too
+          class: option.OptGeneral?.ClassDescription || '', // Add class field!
+          countries: extractCountriesFromAmenities(option.Amenities), // Add countries from amenities!
           image: null,
           rates: productRates,
         };
@@ -1350,23 +1692,9 @@ export async function searchProducts(criteria: {
     
     // Debug for cruise products specifically
     if (criteria.productType === 'Cruises') {
-      console.log('🚢 DEBUG: Cruise API success path reached');
-      console.log('🚢 DEBUG: needsDestinationFiltering:', needsDestinationFiltering);
-      console.log('🚢 DEBUG: criteria.destination:', criteria.destination);
-      console.log('🚢 DEBUG: criteria.class:', criteria.class);
-      console.log('🚢 DEBUG: finalProducts.length before filtering:', finalProducts.length);
-      
-      // ALWAYS apply class filtering for cruises since TourPlan API ignores ClassDescription
-      if (criteria.class) {
-        console.log('🚢 DEBUG: Forcing cruise class filtering (TourPlan ignores ClassDescription)');
-        const filteredByClass = applyDynamicDestinationFiltering(finalProducts, criteria.destination || '', criteria.class);
-        if (filteredByClass.length !== finalProducts.length) {
-          console.log(`🚢 Applied forced cruise class filtering: ${finalProducts.length} → ${filteredByClass.length} products`);
-          finalProducts = filteredByClass;
-        } else {
-          console.log('🚢 WARNING: Class filtering had no effect - check patterns');
-        }
-      }
+      console.log('🚢 DEBUG: Cruise API success path reached (but should not happen - cruises use catalog)');
+      console.log('🚢 DEBUG: finalProducts.length:', finalProducts.length);
+      console.log('🚢 WARNING: Cruises should use catalog fallback, not TourPlan API results');
     }
     
     if (needsDestinationFiltering) {
@@ -1381,20 +1709,26 @@ export async function searchProducts(criteria: {
         }
       } else {
         console.log('✅ Applying client-side destination/class filtering to preserve "On request" products');
-        const filteredByDestination = applyDynamicDestinationFiltering(finalProducts, criteria.destination, criteria.class);
-        if (filteredByDestination.length !== finalProducts.length) {
-          console.log(`🎯 Applied dynamic destination filtering: ${finalProducts.length} → ${filteredByDestination.length} products`);
-          finalProducts = filteredByDestination;
+        
+        // Use CSV-based filtering for Group Tours, fall back to dynamic filtering for others
+        if (criteria.productType === 'Group Tours' || criteria.productType === 'Guided group tours') {
+          console.log('🚌 Using CSV-based Group Tours filtering');
+          const filteredByGroupTours = applyGroupToursFiltering(finalProducts, criteria.destination, criteria.class);
+          if (filteredByGroupTours.length !== finalProducts.length) {
+            console.log(`🚌 Applied Group Tours CSV filtering: ${finalProducts.length} → ${filteredByGroupTours.length} products`);
+            finalProducts = filteredByGroupTours;
+          }
+        } else {
+          const filteredByDestination = applyDynamicDestinationFiltering(finalProducts, criteria.destination, criteria.class);
+          if (filteredByDestination.length !== finalProducts.length) {
+            console.log(`🎯 Applied dynamic destination filtering: ${finalProducts.length} → ${filteredByDestination.length} products`);
+            finalProducts = filteredByDestination;
+          }
         }
       }
     } else if (criteria.productType === 'Cruises' && criteria.class) {
-      // Special case: Cruises need class filtering even without destination filtering
-      console.log('🚢 DEBUG: Applying class-only filtering for cruises');
-      const filteredByClass = applyDynamicDestinationFiltering(finalProducts, '', criteria.class);
-      if (filteredByClass.length !== finalProducts.length) {
-        console.log(`🚢 Applied cruise class filtering: ${finalProducts.length} → ${filteredByClass.length} products`);
-        finalProducts = filteredByClass;
-      }
+      // Cruises should not reach this code path - they use catalog fallback
+      console.log('🚢 WARNING: Cruise class filtering reached - should use catalog instead');
     } else {
       console.log('⏭️ No destination/class filtering needed for this search:', {
         destination: criteria.destination,
@@ -1426,9 +1760,9 @@ export async function searchProducts(criteria: {
  */
 export async function getProductDetails(productCode: string) {
   try {
-    // Build request for this product with extended date range to match WordPress (goes to 2027)
+    // Build request for this product with extended date range to match WordPress (goes to 2027+)
     const currentDate = new Date();
-    const nextYear = new Date(currentDate.getFullYear() + 2, currentDate.getMonth(), currentDate.getDate());
+    const nextYear = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate());
     const dateFrom = currentDate.toISOString().split('T')[0];
     const dateTo = nextYear.toISOString().split('T')[0];
     
@@ -1622,6 +1956,7 @@ export async function getProductDetails(productCode: string) {
       // Additional metadata
       locality: option.OptGeneral?.LocalityDescription,
       class: option.OptGeneral?.ClassDescription,
+      countries: extractCountriesFromAmenities(option.Amenities),
     };
   } catch (error) {
     console.error('Error getting product details:', error);
@@ -2432,10 +2767,18 @@ function applyDynamicDestinationFiltering(products: any[], destination: string, 
     const productName = (product.name || '').toLowerCase();
     const productDescription = (product.description || '').toLowerCase();
     const supplierName = (product.supplier || '').toLowerCase();
+    const productLocation = (product.location || '').toLowerCase(); // Use API location field
+    const productClass = (product.class || '').toLowerCase(); // Use API class field
     
     if (productCode.includes('BOD6KM')) {
       console.log(`🎯 FOUND BOD6KM product: ${productCode} - "${product.name}" - Supplier: "${product.supplier}"`);
     }
+    
+    // Debug logging for Johannesburg products to understand location/class data
+    if (productCode.includes('JNB') && productCode.includes('NOMAD')) {
+      console.log(`🏢 JNB NOMAD product: ${productCode} - Location: "${product.location}" - Class: "${product.class}"`);
+    }
+    
     console.log(`🔍 Checking product: ${productCode} - "${product.name}" - Supplier: "${product.supplier}"`);
     
     // Pattern-based matching for destinations and classes
@@ -2887,4 +3230,54 @@ function getRailProductPricing(productCode: string) {
       console.log('🚂 Unknown rail product code:', productCode, '- no pricing override');
       return null
   }
+}
+
+/**
+ * Extract countries from TourPlan amenities data
+ * Countries are stored as amenities with category "CTY"
+ */
+function extractCountriesFromAmenities(amenities: any): string[] {
+  if (!amenities || !amenities.Amenity) {
+    return [];
+  }
+
+  // Handle both single amenity and array of amenities
+  const amenityArray = Array.isArray(amenities.Amenity) ? amenities.Amenity : [amenities.Amenity];
+  
+  // Country mapping from TourPlan codes to display names
+  const countryMapping: {[key: string]: string} = {
+    'BW': 'Botswana',
+    'KE': 'Kenya', 
+    'TZ': 'Tanzania',
+    'ZW': 'Zimbabwe',
+    'ZM': 'Zambia',
+    'NA': 'Namibia',
+    'SA': 'South Africa',
+    'ZA': 'South Africa', // Alternative code
+    'MW': 'Malawi',
+    'MZ': 'Mozambique',
+    'UG': 'Uganda',
+    'RW': 'Rwanda',
+    'ET': 'Ethiopia',
+    'LS': 'Lesotho',
+    'SZ': 'eSwatini (Swaziland)',
+    'MU': 'Mauritius',
+    'MG': 'Madagascar',
+    'RE': 'Reunion',
+    'SC': 'Seychelles'
+  };
+
+  // Extract countries from amenities with category "CTY" 
+  const countries: string[] = [];
+  
+  amenityArray.forEach((amenity: any) => {
+    if (amenity.AmenityCategory === 'CTY' && amenity.AmenityCode) {
+      const countryName = countryMapping[amenity.AmenityCode];
+      if (countryName && !countries.includes(countryName)) {
+        countries.push(countryName);
+      }
+    }
+  });
+
+  return countries.sort(); // Return sorted list
 }
