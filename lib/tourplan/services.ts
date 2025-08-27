@@ -1618,57 +1618,24 @@ export async function searchProducts(criteria: {
         // For other product types, use the basic search response data
         const productRates = extractRatesFromOption(option);
         
-        // For Cruises, fetch detailed product information like the product details page does
+        // For Cruises, use basic response data to avoid production issues
         if (criteria.productType === 'Cruises') {
           const productCode = option.Opt || option['@_Opt'];
-          console.log('🚢 Fetching detailed cruise info for:', productCode);
-          try {
-            const productDetails = await getProductDetails(productCode);
-            
-            return {
-              id: productCode,
-              code: productCode,
-              name: productDetails.name || `Cruise ${productCode}`,
-              description: productDetails.description || productDetails.content?.introduction || 'River cruise in Southern Africa',
-              supplier: productDetails.supplierName || 'River Cruise Operator',
-              duration: productDetails.duration || 'Multi-day cruise',
-              location: productDetails.location || option.OptGeneral?.LocalityDescription || '',
-              class: productDetails.class || option.OptGeneral?.ClassDescription || '',
-              countries: productDetails.countries || extractCountriesFromAmenities(option.Amenities),
-              image: null,
-              rates: productDetails.rates?.length > 0 ? productDetails.rates.map(rate => ({
-                currency: rate.currency,
-                singleRate: rate.singleRate || 0,
-                doubleRate: rate.doubleRate || 0,
-                twinRate: rate.twinRate || 0,
-                rateName: rate.rateName || 'Standard'
-              })) : [{
-                currency: 'AUD',
-                singleRate: 0,
-                rateName: 'Price on Application'
-              }],
-            };
-          } catch (error) {
-            console.error(`🚢 Failed to get detailed cruise info for ${productCode}:`, error);
-            // Fallback to basic info
-            return {
-              id: productCode,
-              code: productCode,
-              name: `Cruise ${productCode}`,
-              description: 'River cruise in Southern Africa',
-              supplier: 'River Cruise Operator',
-              duration: 'Multi-day cruise',
-              location: option.OptGeneral?.LocalityDescription || '',
-              class: option.OptGeneral?.ClassDescription || '',
-              countries: extractCountriesFromAmenities(option.Amenities),
-              image: null,
-              rates: [{
-                currency: 'AUD',
-                singleRate: 0,
-                rateName: 'Price on Application'
-              }],
-            };
-          }
+          console.log('🚢 Using basic cruise info for production stability:', productCode);
+          // Skip detailed fetch to avoid production API issues
+          return {
+            id: productCode,
+            code: productCode,
+            name: option.OptGeneral?.Description || `Cruise ${productCode}`,
+            description: option.OptGeneral?.Comment || 'River cruise in Southern Africa',
+            supplier: option.OptGeneral?.SupplierName || 'River Cruise Operator',
+            duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : 'Multi-day cruise',
+            location: option.OptGeneral?.LocalityDescription || '',
+            class: option.OptGeneral?.ClassDescription || '',
+            countries: extractCountriesFromAmenities(option.Amenities),
+            image: null,
+            rates: productRates,
+          };
         }
         
         // For other product types, use the basic search response data
