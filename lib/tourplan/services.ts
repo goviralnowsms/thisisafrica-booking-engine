@@ -1538,63 +1538,63 @@ export async function searchProducts(criteria: {
             
             const defaultName = (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') ? 'Rail Journey' : 'Travel Package';
           
-          return {
-            id: productCode,
-            code: productCode,
-            name: detailedProduct.name || defaultName,
-            description: detailedProduct.description || detailedProduct.content?.introduction || '',
-            supplier: detailedProduct.supplierName || '',
-            duration: detailedProduct.duration || '',
-            location: detailedProduct.location || option.OptGeneral?.LocalityDescription || '', // Add API location field
-            class: detailedProduct.class || option.OptGeneral?.ClassDescription || '', // Add API class field
-            countries: detailedProduct.countries || extractCountriesFromAmenities(option.Amenities), // Add countries for destination filter
-            image: null,
-            rates: detailedProduct.rates?.length > 0 ? detailedProduct.rates.map(rate => {
-              // For packages, the API values appear to be in a different scale
-              if (criteria.productType === 'Packages' || criteria.productType === 'Pre-designed packages') {
-                return {
-                  currency: rate.currency,
-                  singleRate: Math.round(rate.singleRate || 0), // API values are already in dollars
-                  doubleRate: Math.round(rate.doubleRate || 0), // API values are already in dollars  
-                  twinRate: Math.round((rate.twinRate || 0) / 2), // Divide by 2 for per person twin share
-                  rateName: rate.rateName || 'Standard'
-                };
-              } else {
-                // For rail products, keep existing logic
-                return {
-                  currency: rate.currency,
-                  singleRate: rate.singleRate || 0,
-                  doubleRate: rate.doubleRate || 0,
-                  twinRate: rate.twinRate || 0,
-                  rateName: rate.rateName || 'Standard'
-                };
-              }
-            }) : [{
-              currency: 'AUD',
-              singleRate: 0,
-              rateName: 'Price on Application'
-            }],
-          };
-        } catch (error) {
-          console.error(`Failed to get detailed ${criteria.productType} product info for`, productCode, error);
-          // Fallback to basic info
-          const productRates = extractRatesFromOption(option);
-          const defaultName = (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') ? 'Rail Journey' : 'Travel Package';
-          
-          return {
-            id: productCode,
-            code: productCode,
-            name: option.OptGeneral?.Description || defaultName,
-            description: option.OptGeneral?.Description || '',
-            supplier: option.OptGeneral?.SupplierName || '',
-            duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : '',
-            location: option.OptGeneral?.LocalityDescription || '', // Add API location field
-            class: option.OptGeneral?.ClassDescription || '', // Add API class field
-            countries: extractCountriesFromAmenities(option.Amenities), // Add countries for destination filter
-            image: null,
-            rates: productRates,
-          };
-        }
+            return {
+              id: productCode,
+              code: productCode,
+              name: detailedProduct.name || defaultName,
+              description: detailedProduct.description || detailedProduct.content?.introduction || '',
+              supplier: detailedProduct.supplierName || '',
+              duration: detailedProduct.duration || '',
+              location: detailedProduct.location || option.OptGeneral?.LocalityDescription || '', // Add API location field
+              class: detailedProduct.class || option.OptGeneral?.ClassDescription || '', // Add API class field
+              countries: detailedProduct.countries || extractCountriesFromAmenities(option.Amenities), // Add countries for destination filter
+              image: null,
+              rates: detailedProduct.rates?.length > 0 ? detailedProduct.rates.map(rate => {
+                // For packages, the API values appear to be in a different scale
+                if (criteria.productType === 'Packages' || criteria.productType === 'Pre-designed packages') {
+                  return {
+                    currency: rate.currency,
+                    singleRate: Math.round(rate.singleRate || 0), // API values are already in dollars
+                    doubleRate: Math.round(rate.doubleRate || 0), // API values are already in dollars  
+                    twinRate: Math.round((rate.twinRate || 0) / 2), // Divide by 2 for per person twin share
+                    rateName: rate.rateName || 'Standard'
+                  };
+                } else {
+                  // For rail products, keep existing logic
+                  return {
+                    currency: rate.currency,
+                    singleRate: rate.singleRate || 0,
+                    doubleRate: rate.doubleRate || 0,
+                    twinRate: rate.twinRate || 0,
+                    rateName: rate.rateName || 'Standard'
+                  };
+                }
+              }) : [{
+                currency: 'AUD',
+                singleRate: 0,
+                rateName: 'Price on Application'
+              }]
+            };
+          } catch (error) {
+            console.error(`Failed to get detailed ${criteria.productType} product info for`, productCode, error);
+            // Fallback to basic info
+            const productRates = extractRatesFromOption(option);
+            const defaultName = (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') ? 'Rail Journey' : 'Travel Package';
+            
+            return {
+              id: productCode,
+              code: productCode,
+              name: option.OptGeneral?.Description || defaultName,
+              description: option.OptGeneral?.Description || '',
+              supplier: option.OptGeneral?.SupplierName || '',
+              duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : '',
+              location: option.OptGeneral?.LocalityDescription || '', // Add API location field
+              class: option.OptGeneral?.ClassDescription || '', // Add API class field
+              countries: extractCountriesFromAmenities(option.Amenities), // Add countries for destination filter
+              image: null,
+              rates: productRates
+            };
+          }
         } else {
           // Fast path: Use search response data directly (no extra API call needed!)
           const productRates = extractRatesFromOption(option);
@@ -1611,7 +1611,7 @@ export async function searchProducts(criteria: {
             class: option.OptGeneral?.ClassDescription || '', // Use API class field
             countries: extractCountriesFromAmenities(option.Amenities), // Add countries for destination filter
             image: null,
-            rates: productRates,
+            rates: productRates
           };
         }
       } else {
