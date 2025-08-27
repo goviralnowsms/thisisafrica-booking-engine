@@ -234,10 +234,11 @@ export default function GroupToursPage() {
       params.set('productType', 'Group Tours')
       
       // Use the correct TourPlan destination name
-      const tourPlanDestination = getTourPlanDestinationNameFromValue('Group Tours', selectedCountry, selectedDestination || selectedCountry)
+      const effectiveDestination = (selectedDestination && selectedDestination !== "select-option") ? selectedDestination : selectedCountry
+      const tourPlanDestination = getTourPlanDestinationNameFromValue('Group Tours', selectedCountry, effectiveDestination)
       params.set('destination', tourPlanDestination)
       
-      if (selectedClass) params.set('class', selectedClass)
+      if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
       
       console.log('🦁 Group tours search params:', params.toString())
       
@@ -350,6 +351,7 @@ export default function GroupToursPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {availableDestinations.map((destination) => (
                       <SelectItem key={destination.value} value={destination.value}>
                         {destination.label}
@@ -370,11 +372,14 @@ export default function GroupToursPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {availableClasses.length > 0 ? (
-                      availableClasses.map((classOption) => (
-                        <SelectItem key={classOption} value={classOption}>
-                          {classOption}
-                        </SelectItem>
-                      ))
+                      <>
+                        <SelectItem value="select-option">Select Option</SelectItem>
+                        {availableClasses.map((classOption) => (
+                          <SelectItem key={classOption} value={classOption}>
+                            {classOption}
+                          </SelectItem>
+                        ))}
+                      </>
                     ) : (
                       <SelectItem value="no-classes" disabled>
                         {selectedCountry ? "No classes available" : "Select a country first"}

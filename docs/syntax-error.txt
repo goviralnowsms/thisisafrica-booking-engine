@@ -1,0 +1,32 @@
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/tourplan/services.ts
+./app/api/tourplan/[id]/route.ts
+ ⨯ ./lib/tourplan/services.ts
+Error:   × Expression expected
+      ╭─[D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\lib\tourplan\services.ts:1593:1]
+ 1590 │             image: null,
+ 1591 │             rates: productRates,
+ 1592 │           };
+ 1593 │         } else {
+      ·           ────
+ 1594 │           // Fast path: Use search response data directly (no extra API call needed!)
+ 1595 │           const productRates = extractRatesFromOption(option);
+ 1595 │           const defaultName = (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') ? 'Rail Journey' : 'Travel Package';
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/tourplan/services.ts
+./app/api/tourplan/[id]/route.ts
+ GET /_next/static/webpack/0964a8b78159e517.webpack.hot-update.json 500 in 4466ms
+ GET /api/tourplan/destinations?productType=Packages&country= 500 in 5834ms
+ GET /api/tourplan/destinations?productType=Packages&country= 500 in 5861ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /packages 200 in 1488ms
+ GET /packages 500 in 25ms
+ GET /packages 500 in 22ms

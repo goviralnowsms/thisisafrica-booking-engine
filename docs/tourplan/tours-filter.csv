@@ -1,0 +1,234 @@
+﻿Group tours filters by country,Show only these destinations,No Filter?,Filter,0 = no change
+,,,,
+Botswana,Kenya | Tanzania,results,no results,
+,,,,
+Kenya/NairobiJKIAirport/Basic,Kenya,2,0,
+Kenya/NairobiJKIAirport/Deluxr,Kenya,5,5,
+,Tanzania,,1,
+,,,,
+Kenya/NairobiJKIAirport/Deluxe +,Kenya,1,0,
+,Tanzania,1,0,
+Kenya/NairobiJKIAirport/Standard,Kenya,13,13,
+,Tanzania,4,4,
+,,,,
+Namibia/Windhoek/Deluxe,Namibia,1,1,
+,Botswana,1,1,
+Namibia/Windhoek/Deluxe+,Namibia,2,0,
+Namibia/Windhoek/Standard,Namibia,1,0,
+,,,,
+South Africa/Cape Town City/Basic,South Africa,3,0,CPTGTNOMAD%20NOMNAM
+,,,,CPTGTSUNWAYCWA13
+,,,,CPTGTSUNWAYSUNA21
+,Botswana,1,1,CPTGTSUNWAYSUNA21
+,Namibia,3,0,
+,Zimbabwe,1,1,CPTGTSUNWAYSUNA21
+South Africa/Cape Town City/Overland Camping,South Africa,2,0,
+,Botswana,1,1,CPTGTSUNWAYSUCV21
+,Namibia,2,0,
+,Zimbabwe,1,1,CPTGTSUNWAYSUCV21
+South Africa/Cape Town City/Standard,South Africa,1,0,
+South Africa/Durban Airport/Basic,South Africa,1,0,
+,Lesotho,1,0,
+South Africa/Durban Airport/OL,South Africa,1,0,
+,Lesotho,1,0,
+South Africa/Durban Airport/Standard,,0,0,
+South Africa/Johannesburg/Basic,South Africa,1,0,
+,eSwatini (Swaziland),1,0,
+South Africa/Johannesburg/OL,,0,0,
+South Africa/Johannesburg/Standard,,0,0,
+South Africa/Johannesburg Airport/Basic,South Africa,5,0,
+,Botswana,2,2,JNBGTSUNWAYSUNZBA
+,Botswana,,,JNBGTSUNWAYSUNA14
+,Lesotho,2,2,JNBGTNOMAD%20NAJP
+,Lesotho,,,JNBGTNOMAD NAJC
+,Zimbabwe,2,2,JNBGTSUNWAYSUNZBA
+,Zimbabwe,,,JNBGTSUNWAYSUNA14
+,eSwatini (Swaziland),3,3,JNBGTNOMAD%20NAJC
+,eSwatini (Swaziland),,,JNBGTNOMAD NAJD
+,eSwatini (Swaziland),,,JNBGTNOMAD NAJP
+South Africa/Johannesburg Airport/OL,South Africa,4,0,
+,Botswana,1,1,JNBGTSUNWAYSUBT14
+,Lesotho,2,2,JNBGTNOMAD NJC
+,Lesotho,,,JNBGTNOMAD NJP
+,Zambia,1,1,JNBGTSUNWAYSUBT14
+,eSwatini (Swaziland),3,3,JNBGTNOMAD%20NJC
+,eSwatini (Swaziland),,,JNBGTNOMAD NJD
+,eSwatini (Swaziland),,,JNBGTNOMAD NJP
+South Africa/JohannesburgAirport/Standard,South Africa,3,0,
+,Lesotho,2,2,JNBGTNOMAD%20NAJCSG
+,Lesotho,,,JNBGTNOMAD NAJPSG
+,eSwatini (Swaziland),3,0,
+South Africa/Port Elizabeth Airport/OL,South Africa,1,0,
+South Africa/Port Elizabeth Airport/Basic,South Africa,1,0,
+South Africa/Port Elizabeth Airport/Standard,South Africa,3,0,
+,Botswana,2,2,PLZGTTVT001TISD20
+,Botswana,,,PLZGTTVT001TISG20
+,Namibia,2,2,PLZGTTVT001TISD20
+,,,,PLZGTTVT001TISG20
+Tanzania/Kilimanjaro Airport/Deluxe,Tanzania,1,0,
+Tanzania/Kilimanjaro Airport/Standard,Tanzania,1,0,
+Tanzania/Kilimanjaro Airport/Luxury,Tanzania,3,0,
+,,,,
+Zambia/Livingstone/Basic,Zambia,2,0,
+,Botswana,1,1,LVIGTSUNWAYSUNNBA
+,Namibia,2,0,
+Zambia/Livingstone/OL,Zambia,2,0,
+,Botswana,1,1,LVIGTSUNWAYSUNB21
+,Namibia,2,0,
+Zimbabwe/Victoria Falls Airport/Basic,Zimbabwe,1,0,
+,South Africa,1,0,
+Zimbabwe/Victoria Falls Airport/Standard,Zimbabwe,2,0,
+,Botswana,2,0,
+,Namibia,2,0,
+,,,,
+PACKAGES,,,,
+,,,,
+Botswana/Chobe National Park/Deluxe,Botswana,3,0,
+,Namibia,1,1,BBKPKTVT001CGLCOK
+Botwana/Chobe National Park/Luxury,Botswana,1,0,
+Botwana/Chobe National Park/Standard,Botswana,1,0,
+Botswana/KasaneAirport/Deluxe,Botswana,1,0,
+,Namibia,1,0,
+Botswana/Chobe National Park/Luxury,Botswana,1,0,
+Botswana/Chobe National Park/Standard,Botswana,1,0,
+,,,,
+Kenya/NairobiJKIAirport/Basic,Kenya,1,0,
+Kenya/NairobiJKIAirport/Deluxe,Kenya,5,0,
+,Tanzania,2,2,NBOPKARP001WDD
+,,,,NBOPKTHISSAWLWFPC
+,Zimbabwe,1,1,NBOPKTHISSAWLWFPC
+Kenya/NairobiJKIAirport/Luxury,Kenya,3,0,
+,,,,
+Rwanda/KigaliAirport/Basic,Rwanda,2,0,
+,Uganda,1,1,KGLPKAASAFAGEUB
+Rwanda/KigaliAirport/Deluxe,Rwanda,2,0,
+,Uganda,1,1,KGLPKAASAFAGEUD
+Rwanda/KigaliAirport/Standard,Rwanda,5,0,
+,Kenya,1,1,KGLPKTHISSAGGAME
+,Uganda,4,4,KGLPKAASAFAAAGMST
+,,,,KGLPKAASAFAAAPPST
+,,,,KGLPKAASAFAGEUS
+,,,,KGLPKTHISSAGGAME
+South Africa/Cape Town Airport/Deluxe,South Africa,17,0,
+,Botswana,15,15,CPTPKTHISSASCENDX
+,,,,CPTPKTVT001CTCLCM
+,,,,CPTPKTVT001CTCLPW
+,,,,CPTPKTVT001CTCLRB
+,,,,CPTPKTVT001CTCLSS
+,,,,CPTPKTVT001CTCLVL
+,,,,CPTPKTVT001CTERRB
+,,,,CPTPKTVT001CTERSS
+,,,,CPTPKTVT001CTERVL
+,,,,CPTPKTVT001CTEXCM
+,,,,CPTPKTVT001CTEXPW
+,,,,CPTPKTVT001CTEXRB
+,,,,CPTPKTVT001CTEXSS
+,,,,CPTPKTVT001CTEXVL
+,,,,CPTPKTVT001CTRCO
+,Namibia,14,14,CPTPKTVT001CTCLCM
+,,,,CPTPKTVT001CTCLPW
+,,,,CPTPKTVT001CTCLRB
+,,,,CPTPKTVT001CTCLSS
+,,,,CPTPKTVT001CTCLVL
+,,,,CPTPKTVT001CTERRB
+,,,,CPTPKTVT001CTERSS
+,,,,CPTPKTVT001CTERVL
+,,,,CPTPKTVT001CTEXCM
+,,,,CPTPKTVT001CTEXPW
+,,,,CPTPKTVT001CTEXRB
+,,,,CPTPKTVT001CTEXSS
+,,,,CPTPKTVT001CTEXVL
+,,,,CPTPKTVT001CTRCO
+,Zimbabwe,1,1,CPTPKTVT001CTRCO
+South Africa/Cape Town Airport/Luxury,South Africa,8,0,
+,Botswana,7,7,CPTPKTHISSASCENLX
+,,,,CPTPKTVT001CTCLTB
+,,,,CPTPKTVT001CTCLVA
+,,,,CPTPKTVT001CTERTB
+,,,,CPTPKTVT001CTERVC
+,,,,CPTPKTVT001CTEXTB
+,,,,CPTPKTVT001CTEXVA
+,Namibia,6,6,CPTPKTVT001CTCLTB
+,,,,CPTPKTVT001CTCLVA
+,,,,CPTPKTVT001CTERTB
+,,,,CPTPKTVT001CTERVC
+,,,,CPTPKTVT001CTEXTB
+,,,,CPTPKTVT001CTEXVA
+,Zimbabwe,1,1,CPTPKTHISSASCENLX
+South Africa/Cape Town Airport/standard,South Africa,7,0,
+,Botswana,6,6,CPTPKTHISSAGRANDS
+,,,,CPTPKTHISSASCENST
+,,,,CPTPKTVT001CTCLHO
+,,,,CPTPKTVT001CTERHO
+,,,,CPTPKTVT001CTERPW
+,,,,CPTPKTVT001CTEXHO
+,Kenya,1,1,CPTPKTHISSAGRANDS
+,Namibia,4,4,CPTPKTVT001CTCLHO
+,,,,CPTPKTVT001CTERHO
+,,,,CPTPKTVT001CTERPW
+,,,,CPTPKTVT001CTEXHO
+,Rwanda,1,1,CPTPKTHISSAGRANDS
+,Tanzania,1,1,CPTPKTHISSAGRANDS
+,Uganda,1,1,CPTPKTHISSAGRANDS
+,Zambia,1,1,CPTPKTHISSAGRANDS
+,Zimbabwe,2,2,CPTPKTHISSAGRANDS
+,,,,CPTPKTHISSASCENST
+South Africa/Hoedspruit Airport/Deluxe,South Africa,1,1,
+,Botswana,1,0,
+,Namibia,1,0,
+South Africa/Hoedspruit Airport/standard,South Africa,2,0,
+South Africa/Johannesburg Airport/Deluxe,South Africa,1,0,
+,Botswana,1,0,
+,Zimbabwe,1,0,
+South Africa/Johannesburg Airport/standard,South Africa,2,0,
+South Africa/SabiSabiGameREserve/Luxury,,1,1,
+,,,,
+Uganda/Entebbe Airport/Basic,Uganda,1,0,
+Uganda/Entebbe Airport/deluxe,Uganda,1,0,
+Uganda/Entebbe Airport/standard,Uganda,2,0,
+,,,,
+Zambia/Livingstone Airport/Luxury,Zambia,1,0,
+,Botswana,1,0,
+,Namibia ,1,0,
+Zambia/Livingstone Airport/standard,Zambia,1,0,
+,Botswana,1,0,
+,Namibia ,1,0,
+Zimbabwe/Victoria Falls Airport/Deluxe,Zimbabwe,20,0,
+,Botswana,18,18,
+,Namibia ,13,13,
+Zimbabwe/Victoria Falls Airport/luxury,,18,18,
+,Zimbabwe,16,16,
+,Namibia ,12,12,
+,Botswana,15,15,
+Zimbabwe/Victoria Falls Airport/standard,Zimbabwe,6,0,
+,Botswana,6,6,
+,Namibia ,3,3,
+,,,,
+,,,,
+CRUISE,,,,
+,,,,
+Botswana/Kasane Airport/Luxury,Botswana,2,0,BBKCRTVT001ZAM2N
+,,,,BBKCRTVT001ZAM3NS
+,Namibia,2,0,
+Botswana/Kasane Airport/Standard,Botswana,2,0,BBKCRCHO018TIACP2
+,,,,BBKCRCHO018TIACP3
+,Namibia,2,0,
+Botswana/Kasane Airport/Superior,Botswana,2,0,BBKCRTVT001ZAM2NM
+,,,,BBKCRTVT001ZAM3NM
+,Namibia,2,0,
+,,,,
+,,,,
+RAIL,,,,
+,,,,
+South Africa/Cape Town Rail Station/Luxury,South Africa,3,0,CPTRLROV001CTPPUL
+,,,,CPTRLROV001CTPRRO
+,,,,CPTRLROV001RRCTPR
+South Africa/Pretoria Rail Station/Luxury,South Africa,3,0,PRYRLROV001PRCPPM
+,,,,PRYRLROV001PRCPRY
+,,,,PRYRLROV001ROV004
+Zimbabwe/Victoria Falls Rail Station/Luxury,South Africa,3,0,VFARLROV001VFPRDX
+,,,,VFARLROV001VFPRRY
+,,,,VFARLROV001VFPYPM
+,Zimbabwe,3,0,VFARLROV001VFPRDX
+,,,,VFARLROV001VFPRRY
+,,,,VFARLROV001VFPYPM

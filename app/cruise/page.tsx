@@ -166,22 +166,9 @@ export default function CruisesPage() {
     setAvailableDestinationFilters([])
 
     try {
-      // Build search criteria for API - use TourPlan destination mapping
-      let destinationForAPI = selectedCountry
-      
-      // Map country selections to TourPlan destination names
-      if (selectedCountry.toLowerCase() === 'botswana') {
-        destinationForAPI = 'Kasane Airport' // All Botswana cruises operate from Kasane
-      } else if (selectedCountry.toLowerCase() === 'namibia') {
-        destinationForAPI = 'Namibia' // API will map to Kasane Airport
-      } else if (selectedCountry.toLowerCase() === 'zimbabwe') {
-        destinationForAPI = 'Namibia' // Zimbabwe cruises also operate from same region
-      }
-
-      const searchCriteria = {
+      // Build search criteria for API - only include destination if specific destination is selected
+      const searchCriteria: any = {
         productType: 'Cruises',
-        destination: destinationForAPI,
-        class: selectedClass || undefined, // Only include class if selected
         dateFrom: new Date().toISOString().split('T')[0], // Today's date
         cabinConfigs: [
           {
@@ -191,6 +178,33 @@ export default function CruisesPage() {
             Quantity: 1
           }
         ]
+      }
+
+      // Only add destination if a specific destination (not just country) is selected
+      if (selectedDestination && selectedDestination !== "select-option") {
+        // Map specific destination selections to TourPlan destination names
+        let destinationForAPI = selectedDestination
+        if (selectedDestination.toLowerCase() === 'kasane airport') {
+          destinationForAPI = 'Kasane Airport'
+        }
+        searchCriteria.destination = destinationForAPI
+      } else if (selectedCountry && selectedClass && selectedClass !== "select-option") {
+        // If no specific destination but both country and class are selected, use country as destination
+        let destinationForAPI = selectedCountry
+        if (selectedCountry.toLowerCase() === 'botswana') {
+          destinationForAPI = 'Kasane Airport'
+        } else if (selectedCountry.toLowerCase() === 'namibia') {
+          destinationForAPI = 'Namibia'
+        } else if (selectedCountry.toLowerCase() === 'zimbabwe') {
+          destinationForAPI = 'Namibia'
+        }
+        searchCriteria.destination = destinationForAPI
+      }
+      // If only country is selected (no destination, no class), don't set destination - this will return all cruises
+
+      // Only include class if selected
+      if (selectedClass && selectedClass !== "select-option") {
+        searchCriteria.class = selectedClass
       }
 
       console.log('🚢 Search criteria:', searchCriteria)
@@ -323,6 +337,7 @@ export default function CruisesPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {availableDestinations.map((destination) => (
                       <SelectItem key={destination.value} value={destination.value}>
                         {destination.label}
@@ -336,6 +351,7 @@ export default function CruisesPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     <SelectItem value="luxury">Luxury</SelectItem>
                     <SelectItem value="standard">Standard</SelectItem>
                     <SelectItem value="superior">Superior</SelectItem>

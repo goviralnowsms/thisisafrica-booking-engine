@@ -971,8 +971,8 @@ async function searchCruisesFromCatalog(criteria: {
   } else if (criteria.destination) {
     let normalizedDestination = criteria.destination.toLowerCase();
     if (normalizedDestination === 'namibia' || normalizedDestination === 'botswana') {
-      // For destination-only searches, return empty array (need class to filter properly)
-      catalogKey = 'destination-only-no-class';
+      // For destination-only searches, show all cruises for that region
+      catalogKey = 'all-botswana-region';
     } else {
       catalogKey = normalizedDestination;
     }
@@ -984,12 +984,9 @@ async function searchCruisesFromCatalog(criteria: {
   let productCodes: string[] = CRUISE_CATALOG[catalogKey];
   
   if (!productCodes) {
-    if (catalogKey === 'all') {
+    if (catalogKey === 'all' || catalogKey === 'all-botswana-region') {
       productCodes = ALL_CRUISES;
       console.log('🚢 No specific filtering - returning all cruises');
-    } else if (catalogKey === 'destination-only-no-class') {
-      productCodes = [];
-      console.log('🚢 Destination provided but no class - returning empty (need both for filtering)');
     } else {
       productCodes = [];
       console.log(`🚢 No catalog entry found for "${catalogKey}" - returning empty array`);

@@ -288,7 +288,7 @@ export default function PackagesPage() {
       
       // Use the correct TourPlan destination name from API data
       let tourPlanDestination = selectedCountry
-      if (selectedDestination && availableDestinations.length > 0) {
+      if (selectedDestination && selectedDestination !== "select-option" && availableDestinations.length > 0) {
         // Find the selected destination and use its TourPlan name
         const destination = availableDestinations.find(d => d.value === selectedDestination)
         tourPlanDestination = destination?.tourPlanName || selectedDestination
@@ -301,7 +301,7 @@ export default function PackagesPage() {
       console.log('📦 Using TourPlan destination name:', tourPlanDestination)
       params.set('destination', tourPlanDestination)
       
-      if (selectedClass) params.set('class', selectedClass)
+      if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
       
       console.log('📦 Packages search params:', params.toString())
       
@@ -438,6 +438,7 @@ export default function PackagesPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {availableDestinations.map((destination) => (
                       <SelectItem key={destination.value} value={destination.value}>
                         {destination.label}
@@ -455,6 +456,7 @@ export default function PackagesPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {availableClasses.map((classOption) => (
                       <SelectItem key={classOption.value} value={classOption.value}>
                         {classOption.label}

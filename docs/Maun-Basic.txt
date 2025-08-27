@@ -1,0 +1,51 @@
+🔍 Pre-filter check: {
+  productType: 'Group Tours',
+  destination: 'Maun',
+  class: 'Deluxe',
+  productsBeforeFilter: 3
+}
+✅ Applying client-side destination/class filtering to preserve "On request" products
+🚌 Using CSV-based Group Tours filtering
+🚌 Applying hybrid Group Tours filtering
+🚌 Destination: "Maun", Class: "Deluxe"
+🚌 📦 TourPlan API returned 3 total products:
+🚌   1. MUBGTJENMANJENBSE - Location: "Maun Airport" - Class: "Deluxe"
+🚌   2. MUBGTSUNWAYSUBT13 - Location: "Maun Airport" - Class: "Overland camping"
+🚌   3. MUBGTSUNWAYSUNA13 - Location: "Maun" - Class: "Basic"
+🎯 Applying pattern-based filtering for destination: "Maun", class: "Deluxe"
+🎯 Class filter check - Value: 'Deluxe', Type: string, Empty: false
+📦 Total products before filtering: 3
+⚠️ BBKPKTVT001BOD6KM is NOT in the products array from TourPlan API
+🏢 MAUN DEBUG product: MUBGTJENMANJENBSE - Location: "Maun Airport" - Class: "Deluxe"
+🏢 MAUN DEBUG productLocation: "maun airport" - productClass: "deluxe"
+🔍 Checking product: MUBGTJENMANJENBSE - "Botswana & Zimbabwe Escape" - Supplier: "Jenman Safaris"
+✅ MUBGTJENMANJENBSE: Destination match using API location - "maun airport" matches "Maun"
+✅ MUBGTJENMANJENBSE: Class match using API field - "deluxe" matches "Deluxe"
+✅ MUBGTJENMANJENBSE: destination=true, class=true
+🔍 Checking product: MUBGTSUNWAYSUBT13 - "Wild Botswana - Small Group" - Supplier: "Sunway Safaris"
+✅ MUBGTSUNWAYSUBT13: Destination match using API location - "maun airport" matches "Maun"
+❌ MUBGTSUNWAYSUBT13: destination=true, class=false
+🔍 Checking product: MUBGTSUNWAYSUNA13 - "Botswana Wild Parks - small group" - Supplier: "Sunway Safaris"
+✅ MUBGTSUNWAYSUNA13: Destination match using API location - "maun" matches "Maun"
+❌ MUBGTSUNWAYSUNA13: destination=true, class=false
+🎯 Dynamic filtering result: 3 → 1 products
+✅ Matching products: [ 'MUBGTJENMANJENBSE - Botswana & Zimbabwe Escape' ]
+🚌 Dynamic filtering successful: 3 → 1 products
+🚌 Applied Group Tours CSV filtering: 3 → 1 products
+ GET /api/tourplan?productType=Group+Tours&destination=Maun&class=Deluxe 200 in 1644ms
+ ✓ Compiled /api/tourplan/pricing/[productCode] in 85ms (135 modules)
+📅 Using extended date range (2 years): { dateFrom: '2025-08-26', dateTo: '2025-11-26', months: 60 }
+Getting pricing calendar for: {
+  productCode: 'MUBGTJENMANJENBSE',
+  dateFrom: '2025-08-26',
+  dateTo: '2025-11-26',
+  adults: 2,
+  children: 0,
+  roomType: 'DB'
+}
+📊 Using Info parameter "GDMA" for product MUBGTJENMANJENBSE (isRail: false, isCruise: false) - includes availability flags
+Getting pricing for date range: MUBGTJENMANJENBSE 2025-08-26 to 2025-11-26
+🚂 Rail API request using Info="GDMA"
+📥 TourPlan Response XML: <?xml version="1.0" encoding="utf-8"?><!DOCTYPE Reply SYSTEM "hostConnect_5_05_000.dtd"><Reply><OptionInfoReply><Option><Opt>MUBGTJENMANJENBSE</Opt><OptionNumber>103583</OptionNumber><OptGeneral><SupplierId>16659</SupplierId><SupplierName>Jenman Safaris</SupplierName><Description>Botswana &amp; Zimbabwe Escape</Description><Description2 /><Comment>Maun to Victoria Falls</Comment><Comment2 /><Locality>MUB</Locality><LocalityDescription>Maun Airport</LocalityDescription><Class>DE</Class><ClassDescription>Deluxe</ClassDescription><Periods>9</Periods><SType>Y</SType><SCU>Tour</SCU><MinSCU>1</MinSCU><MaxSCU>9999</MaxSCU><VoucherName>Jenman Safaris</VoucherName><Address1 /><Address2 /><Address3>Cape Town</Address3><Address4>Western Cape</Address4><Address5>South Africa</Address5><PostCode>7702</PostCode><Single_Avail>Y</Single_Avail><Single_Ad_Max>1</Single_Ad_Max><Twin_Avail>Y</Twin_Avail><Twin_Ad_Max>2</Twin_Ad_Max><Double_Avail>Y</Double_Avail><Double_Ad_Max>2</Double_Ad_Max><Triple_Avail>N</Triple_Avail><Quad_Avail>N</Quad_Avail><InfantsAllowed>Y</InfantsAllowed><ChildrenAllowed>Y</ChildrenAllowed><AdultsAllowed>Y</AdultsAllowed><PromptForPuDo>N</PromptForPuDo><ButtonName>Group Tours</ButtonName><LastUpdate>2023-11-03T04:25:37Z</LastUpdate></OptGeneral><OptDateRanges /><OptAvail>-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </OptAvail><Amenities><Amenity><AmenityLevel>O</AmenityLevel><AmenityCode>BW</AmenityCode><AmenityCategory>CTY</AmenityCategory><AmenityDescription>Botswana</AmenityDescription></Amenity><Amenity><AmenityLevel>O</AmenityLevel><AmenityCode>ZW</AmenityCode><AmenityCategory>CTY</AmenityCategory><AmenityDescription>Zimbabwe</AmenityDescription></Amenity></Amenities></Option></OptionInfoReply></Reply>
+📊 WordPress-style availability data found: {
+  OptAvail: '-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1'

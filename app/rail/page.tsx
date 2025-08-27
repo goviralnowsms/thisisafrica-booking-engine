@@ -171,10 +171,10 @@ export default function RailPage() {
       
       // For Rail, pass the actual destination value to enable proper filtering
       // The API will handle mapping to country level for search
-      const destinationValue = selectedDestination || selectedCountry
-      params.set('destination', destinationValue)
+      const effectiveDestination = (selectedDestination && selectedDestination !== "select-option") ? selectedDestination : selectedCountry
+      params.set('destination', effectiveDestination)
       
-      if (selectedClass) params.set('class', selectedClass)
+      if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
       
       console.log('🚂 Rail search params:', params.toString())
       
@@ -287,6 +287,7 @@ export default function RailPage() {
                     <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {availableDestinations.map((destination) => (
                       <SelectItem key={destination.value} value={destination.value}>
                         {destination.label}
@@ -300,6 +301,7 @@ export default function RailPage() {
                     <SelectValue placeholder="Class" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-option">Select Option</SelectItem>
                     {/* Rail products only have Luxury class per WordPress */}
                     <SelectItem value="luxury">Luxury</SelectItem>
                   </SelectContent>

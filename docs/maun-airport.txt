@@ -1,0 +1,30 @@
+Applying client-side destination/class filtering to preserve "On request" products
+🚌 Using CSV-based Group Tours filtering
+🚌 Applying hybrid Group Tours filtering
+🚌 Destination: "Maun Airport", Class: "Deluxe"
+🚌 📦 TourPlan API returned 3 total products:
+🚌   1. MUBGTJENMANJENBSE - Location: "Maun Airport" - Class: "Deluxe"
+🚌   2. MUBGTSUNWAYSUBT13 - Location: "Maun Airport" - Class: "Overland camping"
+🚌   3. MUBGTSUNWAYSUNA13 - Location: "Maun" - Class: "Basic"
+🎯 Applying pattern-based filtering for destination: "Maun Airport", class: "Deluxe"
+🎯 Class filter check - Value: 'Deluxe', Type: string, Empty: false
+📦 Total products before filtering: 3
+⚠️ BBKPKTVT001BOD6KM is NOT in the products array from TourPlan API
+🏢 MAUN DEBUG product: MUBGTJENMANJENBSE - Location: "Maun Airport" - Class: "Deluxe"
+🏢 MAUN DEBUG productLocation: "maun airport" - productClass: "deluxe"
+🏢 MAUN DEBUG destination search: "Maun Airport"
+Error searching products: ReferenceError: Cannot access 'destLower' before initialization
+    at eval (lib\tourplan\services.ts:2888:47)
+    at Array.filter (<anonymous>)
+    at applyDynamicDestinationFiltering (lib\tourplan\services.ts:2866:36)
+    at applyGroupToursFiltering (lib\tourplan\services.ts:814:32)
+    at searchProducts (lib\tourplan\services.ts:1725:39)
+    at async GET (app\api\tourplan\route.ts:30:19)
+  2886 |       console.log(`🏢 MAUN DEBUG productLocation: "${productLocation}" - productClass: "${productClass}"`);
+  2887 |       console.log(`🏢 MAUN DEBUG destination search: "${destination}"`);
+> 2888 |       console.log(`🏢 MAUN DEBUG destLower: "${destLower}"`);
+       |                                               ^
+  2889 |     }
+  2890 |
+  2891 |     console.log(`🔍 Checking product: ${productCode} - "${product.name}" - Supplier: "${product.supplier}"`);
+ GET /api/tourplan?productType=Group+Tours&destination=Maun+Airport&class=Deluxe 200 in 2072ms
