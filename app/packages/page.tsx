@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Search, Loader2, Star, Package } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 
@@ -24,6 +25,8 @@ export default function PackagesPage() {
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [availableClasses, setAvailableClasses] = useState<{value: string, label: string}[]>([])
+  const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
+  const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -202,6 +205,33 @@ export default function PackagesPage() {
     loadClassesFromAPI()
   }, [selectedDestination, availableDestinations])
 
+  // Apply destination filtering when selectedDestinationFilters changes
+  useEffect(() => {
+    if (selectedDestinationFilters.length === 0) {
+      // No filters selected - show all tours
+      setFilteredTours(tours)
+    } else {
+      // Filter tours that include at least one of the selected countries
+      const filtered = tours.filter((tour: any) => {
+        if (!tour.countries || !Array.isArray(tour.countries)) return false
+        return selectedDestinationFilters.some(selectedCountry =>
+          tour.countries.includes(selectedCountry)
+        )
+      })
+      setFilteredTours(filtered)
+      console.log(`🌍 Filtered ${tours.length} tours to ${filtered.length} based on destinations:`, selectedDestinationFilters)
+    }
+  }, [selectedDestinationFilters, tours])
+
+  // Handle destination filter checkbox changes
+  const handleDestinationFilterChange = (country: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDestinationFilters(prev => [...prev, country])
+    } else {
+      setSelectedDestinationFilters(prev => prev.filter(c => c !== country))
+    }
+  }
+
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
     if (!tourCode) return "/images/safari-lion.png"
@@ -247,6 +277,9 @@ export default function PackagesPage() {
     console.log('📦 Starting packages search...')
     setLoading(true)
     setSearchPerformed(false)
+    // Clear destination filters for new search
+    setSelectedDestinationFilters([])
+    setAvailableDestinationFilters([])
 
     try {
       // Build search URL with parameters
@@ -313,6 +346,19 @@ export default function PackagesPage() {
         setTours(toursWithAvailability)
         setFilteredTours(toursWithAvailability)
         console.log('📦 Tours state updated with availability data')
+        
+        // Extract available destination filters from tour countries
+        const allCountries = new Set<string>()
+        toursWithAvailability.forEach((tour: any) => {
+          if (tour.countries && Array.isArray(tour.countries)) {
+            tour.countries.forEach((country: string) => {
+              allCountries.add(country)
+            })
+          }
+        })
+        const uniqueCountries = Array.from(allCountries).sort()
+        setAvailableDestinationFilters(uniqueCountries)
+        console.log('🌍 Available destination filters:', uniqueCountries)
       } else {
         console.error("📦 Packages search failed:", result.error)
         setTours([])
@@ -389,7 +435,7 @@ export default function PackagesPage() {
                   disabled={!selectedCountry || availableDestinations.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
+                    <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableDestinations.map((destination) => (
@@ -406,7 +452,7 @@ export default function PackagesPage() {
                   disabled={!selectedDestination || availableClasses.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder={selectedDestination ? "Select Class" : "Select Destination First"} />
+                    <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableClasses.map((classOption) => (
@@ -434,6 +480,50 @@ export default function PackagesPage() {
           </div>
         </div>
       </section>
+
+      {/* Destination Filter Section */}
+      {searchPerformed && availableDestinationFilters.length > 0 && (
+        <section className="bg-gray-50 py-4 border-t">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Show only these destinations:
+                </span>
+                <div className="flex flex-wrap gap-4">
+                  {availableDestinationFilters.map((country) => (
+                    <div key={country} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`destination-${country}`}
+                        checked={selectedDestinationFilters.includes(country)}
+                        onCheckedChange={(checked) => 
+                          handleDestinationFilterChange(country, checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor={`destination-${country}`}
+                        className="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
+                      >
+                        {country}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedDestinationFilters.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDestinationFilters([])}
+                    className="ml-2 text-xs"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Search Results Section */}
       {(loading || searchPerformed) && (
@@ -498,7 +588,7 @@ export default function PackagesPage() {
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                <span>{tour.supplier}</span>
+                                <span>{tour.location || tour.class || 'Africa'}</span>
                               </div>
                             </div>
                             <div className="text-right">
@@ -545,6 +635,8 @@ export default function PackagesPage() {
                       setSearchPerformed(false)
                       setTours([])
                       setFilteredTours([])
+                      setSelectedDestinationFilters([])
+                      setAvailableDestinationFilters([])
                     }}>
                       Clear search
                     </Button>

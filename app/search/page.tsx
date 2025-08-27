@@ -290,7 +290,7 @@ export default function SearchResultsPage() {
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <MapPin className="h-4 w-4 mr-1" />
-                <span>{tour.supplier}</span>
+                <span>{tour.location || tour.class || 'Africa'}</span>
               </div>
             </div>
             <div className="text-right">

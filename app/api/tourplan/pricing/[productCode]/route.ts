@@ -59,11 +59,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                             productCode.includes('LODGE') ||
                             productCode.includes('HOTEL')
     
-    // Extend the date range to match WordPress behavior (goes to 2027)
+    // Extend the date range to match WordPress behavior (goes to 2027+)
     // WordPress searches much further ahead to show all available dates
     const currentDate = new Date()
-    const defaultMonths = 24 // 24 months (2 years) to match WordPress extended availability
-    const defaultDateTo = new Date(currentDate.getFullYear() + 2, currentDate.getMonth(), currentDate.getDate())
+    const defaultMonths = 60 // 60 months (5 years) to match WordPress extended availability
+    const defaultDateTo = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate())
     
     const dateFrom = dateFromParam || currentDate.toISOString().split('T')[0]
     const dateTo = dateToParam || defaultDateTo.toISOString().split('T')[0]

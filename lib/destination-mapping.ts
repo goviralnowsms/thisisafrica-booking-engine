@@ -61,10 +61,6 @@ export const PRODUCT_DESTINATIONS: Record<string, CountryDestinations> = {
       destinations: [
         { value: 'kasane-airport', label: 'Kasane Airport', tourPlanName: 'Botswana' }
       ]
-    },
-    'namibia': {
-      displayName: 'Namibia',
-      destinations: []
     }
   },
 

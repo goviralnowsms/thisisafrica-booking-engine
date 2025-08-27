@@ -54,34 +54,33 @@ export async function POST(request: NextRequest) {
     const baseBody = await request.json();
     const productType = baseBody.productType;
 
-    // Validate based on product type
+    // Validate based on product type using the already parsed body
     let validatedData: any;
-    let validationResult;
+    
+    try {
+      switch (productType) {
+        case 'Accommodation':
+          validatedData = accommodationSearchSchema.parse(baseBody);
+          break;
 
-    switch (productType) {
-      case 'Accommodation':
-        validationResult = await validateRequestBody(request.clone(), accommodationSearchSchema);
-        if (validationResult.error) return validationResult.error;
-        validatedData = validationResult.data;
-        break;
+        case 'Day Tours':
+        case 'Group Tours':
+          validatedData = tourSearchSchema.parse(baseBody);
+          break;
 
-      case 'Day Tours':
-      case 'Group Tours':
-        validationResult = await validateRequestBody(request.clone(), tourSearchSchema);
-        if (validationResult.error) return validationResult.error;
-        validatedData = validationResult.data;
-        break;
+        case 'Cruises':
+          validatedData = cruiseSearchSchema.parse(baseBody);
+          break;
 
-      case 'Cruises':
-        validationResult = await validateRequestBody(request.clone(), cruiseSearchSchema);
-        if (validationResult.error) return validationResult.error;
-        validatedData = validationResult.data;
-        break;
-
-      default:
-        validationResult = await validateRequestBody(request.clone(), baseSearchSchema);
-        if (validationResult.error) return validationResult.error;
-        validatedData = validationResult.data;
+        default:
+          validatedData = baseSearchSchema.parse(baseBody);
+      }
+    } catch (zodError: any) {
+      return errorResponse(
+        'Validation failed',
+        400,
+        zodError?.errors || zodError?.message || 'Invalid request data'
+      );
     }
 
     // Build search criteria for the simplified service

@@ -215,11 +215,11 @@ TourPlan returns XML responses with this structure:
 
 #### Working ButtonName Searches
 - **Group Tours**: WORKS but REQUIRES DestinationName parameter (e.g., "Kenya", "Tanzania")
-- **Packages**: WORKS with Info="GDM" and SCUqty=1095 (WordPress implementation)
+- **Packages**: WORKS with Info="GDM" and SCUqty=1095 (WordPress implementation) 
+- **Cruises**: WORKS with proper RoomConfigs format and destination+class filtering
 - **Special Offers/Deals**: Returns empty
 
 #### Non-Working ButtonName Searches  
-- **Cruises**: Always returns empty (use direct product codes instead)
 - **Rail**: Always returns empty (use direct product codes instead)
 - **Accommodation/Hotels**: Always returns empty (use direct product codes instead)
 

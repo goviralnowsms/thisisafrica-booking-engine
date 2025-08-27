@@ -366,7 +366,7 @@ export function buildGroupTourSearchRequest(destination?: string, dateFrom?: str
 
 // Search cruises - using 'Cruises' ButtonName with class filtering support
 export function buildCruiseSearchRequest(destination?: string, dateFrom?: string, dateTo?: string, classFilter?: string): string {
-  return buildCruiseProperSearchRequest('Cruises', 'Botswana', dateFrom, dateTo, classFilter);
+  return buildCruiseProperSearchRequest('Cruises', destination, dateFrom, dateTo, classFilter);
 }
 
 // Search rail - using 'Rail' ButtonName without Info parameter
@@ -617,10 +617,14 @@ export function buildRailProperSearchRequest(buttonName: string, destination?: s
   return xml;
 }
 
-// Build Cruise search request with class filtering support
+// Build Cruise search request following API documentation format
+// Uses <RoomConfigs> with <RoomType>CABIN_TYPE for class filtering
 export function buildCruiseProperSearchRequest(buttonName: string, destination?: string, dateFrom?: string, dateTo?: string, classFilter?: string, adults: number = 2, children: number = 0): string {
   const agentId = process.env.TOURPLAN_AGENTID || process.env.TOURPLAN_AGENT_ID || '';
   const password = process.env.TOURPLAN_AGENTPASSWORD || process.env.TOURPLAN_PASSWORD || '';
+  
+  console.log(`🚢 Building TourPlan API cruise search with documented format`);
+  console.log(`🚢 Parameters: destination=${destination}, dateFrom=${dateFrom}, class=${classFilter}`);
   
   let xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
@@ -628,51 +632,62 @@ export function buildCruiseProperSearchRequest(buttonName: string, destination?:
   <OptionInfoRequest>
     <AgentID>${agentId}</AgentID>
     <Password>${password}</Password>
-    <ButtonName>${buttonName}</ButtonName>
-    <Info>GDM</Info>`;
-    
-  // Only add destination if provided and not empty
-  if (destination && destination.trim() && destination.toLowerCase() !== 'all') {
-    xml += `
-    <DestinationName>${destination}</DestinationName>`;
-  }
+    <ButtonName>${buttonName}</ButtonName>`;
   
-  // Add class filtering if provided - using WordPress format with ClassDescription
-  if (classFilter && classFilter.trim()) {
-    // Use ClassDescription like WordPress does, not <Class>
-    const classDescription = classFilter.charAt(0).toUpperCase() + classFilter.slice(1).toLowerCase();
-    console.log(`🚢 Adding ClassDescription filter to cruise search: ${classDescription}`);
-    xml += `
-    <ClassDescription>${classDescription}</ClassDescription>`;
-  }
-  
+  // Add DateFrom if provided (required by API docs example)
   if (dateFrom) {
     xml += `
     <DateFrom>${dateFrom}</DateFrom>`;
   }
   
-  if (dateTo) {
-    xml += `
-    <DateTo>${dateTo}</DateTo>`;
+  // Map class filter to cabin type for RoomConfigs
+  let roomType = 'CABIN';
+  if (classFilter) {
+    switch (classFilter.toLowerCase()) {
+      case 'luxury':
+        roomType = 'SUITE';
+        console.log(`🚢 Mapping class 'Luxury' to RoomType 'SUITE'`);
+        break;
+      case 'superior':
+        roomType = 'PREMIUM';
+        console.log(`🚢 Mapping class 'Superior' to RoomType 'PREMIUM'`);
+        break;
+      case 'standard':
+      default:
+        roomType = 'CABIN';
+        console.log(`🚢 Mapping class '${classFilter}' to RoomType 'CABIN'`);
+        break;
+    }
   }
   
+  // RoomConfigs as specified in API documentation
   xml += `
     <RoomConfigs>
       <RoomConfig>
         <Adults>${adults}</Adults>`;
-  
+        
   if (children > 0) {
     xml += `
         <Children>${children}</Children>`;
   }
   
   xml += `
+        <RoomType>${roomType}</RoomType>
       </RoomConfig>
-    </RoomConfigs>
-    <RateConvert>Y</RateConvert>
+    </RoomConfigs>`;
+  
+  // Add DateTo if provided  
+  if (dateTo) {
+    xml += `
+    <DateTo>${dateTo}</DateTo>`;
+  }
+  
+  xml += `
   </OptionInfoRequest>
 </Request>`;
 
+  console.log(`🚢 Generated TourPlan cruise XML request:`);
+  console.log(xml);
   return xml;
 }
 

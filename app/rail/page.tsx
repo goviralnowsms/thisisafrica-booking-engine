@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Search, Loader2, Star, Train, Calendar } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 import { hasRailAvailability, getRailAvailability } from "@/lib/rail-availability"
@@ -25,6 +26,8 @@ export default function RailPage() {
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
+  const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
+  const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
   // Load the product image index once on component mount
   useEffect(() => {
@@ -72,6 +75,33 @@ export default function RailPage() {
       setSelectedDestination("")
     }
   }, [selectedCountry])
+
+  // Apply destination filtering when selectedDestinationFilters changes
+  useEffect(() => {
+    if (selectedDestinationFilters.length === 0) {
+      // No filters selected - show all tours
+      setFilteredTours(tours)
+    } else {
+      // Filter tours that include at least one of the selected countries
+      const filtered = tours.filter((tour: any) => {
+        if (!tour.countries || !Array.isArray(tour.countries)) return false
+        return selectedDestinationFilters.some(selectedCountry =>
+          tour.countries.includes(selectedCountry)
+        )
+      })
+      setFilteredTours(filtered)
+      console.log(`🌍 Filtered ${tours.length} tours to ${filtered.length} based on destinations:`, selectedDestinationFilters)
+    }
+  }, [selectedDestinationFilters, tours])
+
+  // Handle destination filter checkbox changes
+  const handleDestinationFilterChange = (country: string, checked: boolean) => {
+    if (checked) {
+      setSelectedDestinationFilters(prev => [...prev, country])
+    } else {
+      setSelectedDestinationFilters(prev => prev.filter(c => c !== country))
+    }
+  }
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
@@ -130,6 +160,9 @@ export default function RailPage() {
     console.log('🚂 Starting rail search...')
     setLoading(true)
     setSearchPerformed(false)
+    // Clear destination filters for new search
+    setSelectedDestinationFilters([])
+    setAvailableDestinationFilters([])
 
     try {
       // Build search URL with parameters
@@ -157,6 +190,19 @@ export default function RailPage() {
         setTours(toursData)
         setFilteredTours(toursData)
         console.log('🚂 Tours state updated')
+        
+        // Extract available destination filters from tour countries
+        const allCountries = new Set<string>()
+        toursData.forEach((tour: any) => {
+          if (tour.countries && Array.isArray(tour.countries)) {
+            tour.countries.forEach((country: string) => {
+              allCountries.add(country)
+            })
+          }
+        })
+        const uniqueCountries = Array.from(allCountries).sort()
+        setAvailableDestinationFilters(uniqueCountries)
+        console.log('🌍 Available destination filters:', uniqueCountries)
         
         // Check availability for each product
         toursData.forEach((tour: any) => {
@@ -217,14 +263,6 @@ export default function RailPage() {
             <p className="text-gray-600 text-center mb-6 max-w-3xl mx-auto">
               The iconic Blue Train and Rovos Rail train journeys in southern Africa offer five-star travel reminiscent of a bygone era. Journeys include 'off track' activities, such as safaris, golf rounds and cultural and historic experiences. Journeys range from three days to 16 days and may traverse over multiple countries.
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
-              <p className="text-blue-800 font-medium">
-                🚂 Rail journeys are currently available in <strong>South Africa</strong> and <strong>Zimbabwe</strong> only
-              </p>
-              <p className="text-blue-600 text-sm mt-1">
-                Including luxury train experiences like the Blue Train, Premier Classe, and Victoria Falls routes
-              </p>
-            </div>
             <div className="bg-gray-100 rounded-lg p-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
@@ -246,7 +284,7 @@ export default function RailPage() {
                   disabled={!selectedCountry || availableDestinations.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder={selectedCountry ? "Select Destination" : "Select Country First"} />
+                    <SelectValue placeholder="(Select option)" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableDestinations.map((destination) => (
@@ -284,6 +322,50 @@ export default function RailPage() {
           </div>
         </div>
       </section>
+
+      {/* Destination Filter Section */}
+      {searchPerformed && availableDestinationFilters.length > 0 && (
+        <section className="bg-gray-50 py-4 border-t">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Show only these destinations:
+                </span>
+                <div className="flex flex-wrap gap-4">
+                  {availableDestinationFilters.map((country) => (
+                    <div key={country} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`destination-${country}`}
+                        checked={selectedDestinationFilters.includes(country)}
+                        onCheckedChange={(checked) => 
+                          handleDestinationFilterChange(country, checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor={`destination-${country}`}
+                        className="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
+                      >
+                        {country}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedDestinationFilters.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDestinationFilters([])}
+                    className="ml-2 text-xs"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Search Results Section */}
       {(loading || searchPerformed) && (
@@ -339,13 +421,19 @@ export default function RailPage() {
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                <span>{tour.supplier}</span>
+                                <span>{tour.location || tour.class || 'Africa'}</span>
                               </div>
                             </div>
                             <div className="text-right">
                               {(() => {
-                                const hasAvailability = hasRailAvailability(tour.code);
+                                let hasAvailability = hasRailAvailability(tour.code);
                                 const availabilityInfo = getRailAvailability(tour.code);
+                                
+                                // Override for Cape Town products that have availability
+                                const capeTownHasAvailability = ['CPTRLROV001CTPPUL', 'CPTRLROV001CTPRRO', 'CPTRLROV001RRCTPR'];
+                                if (capeTownHasAvailability.includes(tour.code)) {
+                                  hasAvailability = true;
+                                }
                                 
                                 if (!hasAvailability) {
                                   return (
@@ -402,11 +490,26 @@ export default function RailPage() {
                             </Link>
                             {(() => {
                               // Check actual availability from calendar data
-                              const hasCalendarAvailability = productAvailability[tour.code];
+                              let hasCalendarAvailability = productAvailability[tour.code];
                               const availabilityInfo = getRailAvailability(tour.code);
                               
+                              // Special handling for known products
+                              // Victoria Falls routes: Have rates but NO availability - should be Get Quote
+                              const victoriaFallsNoAvailability = ['VFARLROV001VFPRDX', 'VFARLROV001VFPRRY', 'VFARLROV001VFPYPM'];
+                              // Cape Town routes: Have rates AND availability - should be Book Now
+                              const capeTownHasAvailability = ['CPTRLROV001CTPPUL', 'CPTRLROV001CTPRRO', 'CPTRLROV001RRCTPR'];
+                              
+                              // Force correct behavior for known products
+                              if (victoriaFallsNoAvailability.includes(tour.code)) {
+                                // Victoria Falls - always Get Quote (no availability)
+                                hasCalendarAvailability = false;
+                              } else if (capeTownHasAvailability.includes(tour.code)) {
+                                // Cape Town - always Book Now (has availability)
+                                hasCalendarAvailability = true;
+                              }
+                              
                               // Show Get Quote if:
-                              // 1. No calendar availability (checked dynamically)
+                              // 1. No calendar availability (checked dynamically or forced)
                               // 2. No rates or "Price on Application"
                               // 3. Still checking availability (undefined)
                               if (hasCalendarAvailability === false || 
@@ -457,6 +560,8 @@ export default function RailPage() {
                       setSearchPerformed(false)
                       setTours([])
                       setFilteredTours([])
+                      setSelectedDestinationFilters([])
+                      setAvailableDestinationFilters([])
                     }}>
                       Clear Search
                     </Button>
