@@ -38,12 +38,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const referer = request.headers.get('referer') || ''
     const isFromCruisePage = referer.includes('/cruise') || referer.includes('/cruises')
     
-    // Get date range from query params or default to next 6 months
+    // Get date range from query params or default to extended range
     const dateFromParam = searchParams.get('dateFrom')
     const dateToParam = searchParams.get('dateTo')
     const adults = parseInt(searchParams.get('adults') || '2')
     const children = parseInt(searchParams.get('children') || '0')
     const roomType = searchParams.get('roomType') || 'DB'
+    
+    console.log('📅 Raw query parameters:', { 
+      dateFromParam, 
+      dateToParam, 
+      adults, 
+      children, 
+      roomType 
+    })
     
     // Check if this is a rail product first
     const isRail = productCode.includes('RLROV') ||     // Rovos Rail codes like CPTRLROV001CTPPUL
@@ -59,16 +67,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                             productCode.includes('LODGE') ||
                             productCode.includes('HOTEL')
     
-    // Extend the date range to match WordPress behavior (goes to 2027+)
+    // FORCE extended date range to match WordPress behavior (goes to 2027+)
     // WordPress searches much further ahead to show all available dates
+    // IGNORE any dateTo parameter - always use extended range
     const currentDate = new Date()
-    const defaultMonths = 60 // 60 months (5 years) to match WordPress extended availability
-    const defaultDateTo = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate())
+    const extendedDateTo = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate())
     
     const dateFrom = dateFromParam || currentDate.toISOString().split('T')[0]
-    const dateTo = dateToParam || defaultDateTo.toISOString().split('T')[0]
+    const dateTo = extendedDateTo.toISOString().split('T')[0] // Always use 5-year extension
     
-    console.log(`📅 Using extended date range (2 years):`, { dateFrom, dateTo, months: defaultMonths })
+    console.log(`📅 FORCING extended date range to match WordPress:`, { 
+      dateFrom, 
+      dateTo, 
+      originalDateTo: dateToParam,
+      yearsExtended: 5 
+    })
     
     console.log('Getting pricing calendar for:', { productCode, dateFrom, dateTo, adults, children, roomType })
     
