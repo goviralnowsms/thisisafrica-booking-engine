@@ -503,6 +503,23 @@ async function searchRailFromCatalog(criteria: {
     
     // Determine which rail products to fetch based on destination
     const destination = criteria.destination?.toLowerCase() || 'all';
+    
+    // Quick check: If destination is in Botswana, Namibia, Kenya, Tanzania, etc. - return empty immediately
+    // Rail services only operate in South Africa and Zimbabwe
+    const noRailCountries = ['botswana', 'namibia', 'kenya', 'tanzania', 'rwanda', 'uganda', 'zambia'];
+    const noRailDestinations = ['chobe', 'kasane', 'maun', 'okavango', 'windhoek', 'nairobi', 'mombasa', 'arusha', 'serengeti', 'ngorongoro', 'kigali', 'kampala', 'lusaka'];
+    
+    if (noRailCountries.some(country => destination.includes(country)) || 
+        noRailDestinations.some(dest => destination.includes(dest))) {
+      console.log(`🚂 ⚡ Quick return: No rail services operate in/near "${destination}"`);
+      return {
+        success: true,
+        tours: [],
+        totalResults: 0,
+        searchCriteria: criteria
+      };
+    }
+    
     const railCodes = RAIL_CATALOG[destination] || RAIL_CATALOG['all'];
     
     // Fetch product details for each rail code
@@ -1523,13 +1540,62 @@ export async function searchProducts(criteria: {
       // For Rail and Packages products, we can skip detailed fetch if we have enough data
       // The search response already includes name, description, supplier, location, class
       if ((criteria.productType === 'Rail' || criteria.productType === 'Rail journeys' || criteria.productType === 'Packages' || criteria.productType === 'Pre-designed packages') && productCode) {
-        // Check if we already have enough data from the search response
-        const hasBasicData = option.OptGeneral?.Description && option.OptGeneral?.SupplierName;
+        // PERFORMANCE FIX: For Rail, always fetch details but do it efficiently
+        // We need the names and location data for proper display and filtering
+        if (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') {
+          try {
+            console.log(`🚂 Fetching Rail product details for: ${productCode}`);
+            const detailedProduct = await getProductDetails(productCode);
+            
+            return {
+              id: productCode,
+              code: productCode,
+              name: detailedProduct.name || `Rail Journey`,
+              description: detailedProduct.description || 'Luxury rail journey',
+              supplier: '', // Client doesn't want supplier visible
+              duration: detailedProduct.duration || '',
+              location: detailedProduct.location || option.OptGeneral?.LocalityDescription || '',
+              class: 'Luxury', // Rail is always luxury
+              countries: detailedProduct.countries || extractCountriesFromAmenities(option.Amenities),
+              image: null,
+              rates: detailedProduct.rates?.length > 0 ? detailedProduct.rates : [{
+                currency: 'AUD',
+                singleRate: 0,
+                rateName: 'Price on Application'
+              }]
+            };
+          } catch (error) {
+            console.warn(`Failed to get Rail product details for ${productCode}`, error);
+            // Fallback to basic info
+            const productRates = extractRatesFromOption(option);
+            
+            return {
+              id: productCode,
+              code: productCode,
+              name: option.OptGeneral?.Description || `Rail Journey`,
+              description: option.OptGeneral?.Comment || 'Luxury rail journey',
+              supplier: '',
+              duration: option.OptGeneral?.Periods ? `${option.OptGeneral.Periods} nights` : '',
+              location: option.OptGeneral?.LocalityDescription || '',
+              class: 'Luxury',
+              countries: extractCountriesFromAmenities(option.Amenities),
+              image: null,
+              rates: productRates.length > 0 ? productRates : [{
+                currency: 'AUD',
+                singleRate: 0,
+                rateName: 'Price on Application'
+              }]
+            };
+          }
+        }
+        
+        // For Packages, check if we have basic data
+        const hasBasicData = option.OptGeneral?.Description || option.Opt;
         
         if (!hasBasicData) {
-          // Only fetch details if we're missing critical data
+          // Only fetch details for Packages if we're missing critical data
           try {
-            const productTypeIcon = (criteria.productType === 'Rail' || criteria.productType === 'Rail journeys') ? '🚂' : '📦';
+            const productTypeIcon = '📦';
             console.log(`${productTypeIcon} Getting detailed ${criteria.productType} product info for:`, productCode);
             const detailedProduct = await getProductDetails(productCode);
             
