@@ -14,24 +14,20 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       {/* Hero Section with Lion Image - Made Taller */}
       <section className="relative h-[80vh] md:h-screen">
-        <Image src="/images/lion.png" alt="Majestic African lion" fill priority className="object-cover" />
+        <Image src="/images/lion-home.jpeg" alt="Majestic African lion" fill priority className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent">
           <div className="container mx-auto px-4 py-20 md:py-48 flex flex-col items-center justify-center text-center h-full">
             <h1 className="text-4xl md:text-7xl font-bold text-white mb-4">
               TRAVEL WITH <span className="text-amber-500">EXPERIENCE</span>
             </h1>
             <p className="text-lg md:text-xl text-white/90 max-w-3xl mb-8">
-              This is Africa is an Australian-owned company which specialise in selling group tours, pre-designed packages and tailor-made itineraries in southern and eastern Africa and the Middle East. For 25 years we have provided travellers with enriching and memorable Africa adventures and experiences.
+              "Simply amazing... fabulous. We will definitely recommend your company".
             </p>
             <div className="flex gap-4">
               <Button 
                 size="lg" 
                 className="bg-amber-500 hover:bg-amber-600 text-white px-8"
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    document.getElementById('search-section')?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
+                onClick={() => router.push('/group-tours-list')}
               >
                 Explore Tours
               </Button>
@@ -47,46 +43,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product-specific Navigation */}
-      <section id="search-section" className="bg-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4">Explore Our Tours by Category</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Choose the type of African adventure that speaks to you. Each category offers specialized tours with expert guidance and authentic experiences.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Button 
-              onClick={() => router.push('/group-tours-list')}
-              className="bg-amber-500 hover:bg-amber-600 text-white h-16 text-lg font-semibold"
-            >
-              Group Tours
-            </Button>
-            <Button 
-              onClick={() => router.push('/cruise')}
-              className="bg-blue-500 hover:bg-blue-600 text-white h-16 text-lg font-semibold"
-            >
-              River Cruises
-            </Button>
-            <Button 
-              onClick={() => router.push('/rail')}
-              className="bg-green-500 hover:bg-green-600 text-white h-16 text-lg font-semibold"
-            >
-              Rail Journeys
-            </Button>
-            <Button 
-              onClick={() => router.push('/packages')}
-              className="bg-purple-500 hover:bg-purple-600 text-white h-16 text-lg font-semibold"
-            >
-              Packages
-            </Button>
-          </div>
+      {/* About Africa Section */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
+            The African continent includes over 50 countries, each with individual tribal groups, traditions, dialects, landscapes and wildlife species. It is these characteristics which make Africa such an exciting, interesting and unique destination.
+          </p>
         </div>
       </section>
 
       {/* Travel Categories Cards - 2x3 Grid */}
-      <section className="py-12 md:py-16 bg-gray-50">
+      <section id="tour-cards" className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* 1. Guided Group Tours */}

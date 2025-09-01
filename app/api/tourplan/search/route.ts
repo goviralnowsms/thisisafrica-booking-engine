@@ -1,6 +1,8 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { searchProducts } from '@/lib/tourplan/services';
+// Use optimized version if available
+// import { searchProductsOptimized as searchProducts } from '@/lib/tourplan/services-optimized';
 import { 
   validateRequestBody, 
   successResponse, 
@@ -96,10 +98,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Use simplified service function
-    console.log('Calling searchProducts with:', searchCriteria);
     const result = await searchProducts(searchCriteria);
-    console.log('Search result:', result);
-
+    
     if (result.error) {
       return errorResponse('Search failed', 400, { message: result.error });
     }
@@ -109,19 +109,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Enhance products with default images if needed
-    const enhancedProducts = result.products.map((product: any) => {
+    const productsToEnhance = result.products || [];
+    
+    const enhancedProducts = productsToEnhance.map((product: any) => {
       if (!product.image) {
         const productTypeKey = validatedData.productType.toLowerCase().replace(' ', '-');
         product.image = `/images/default-${productTypeKey}.jpg`;
       }
       return product;
     });
-
-    return successResponse({
+    
+    // Return flat structure without wrapping in 'data'
+    const finalResponse = {
+      success: true,
       searchCriteria: validatedData,
       products: enhancedProducts,
-      totalResults: result.totalResults,
-    });
+      totalResults: result.totalResults || enhancedProducts.length,
+    };
+    
+    return NextResponse.json(finalResponse);
   } catch (error) {
     return handleTourPlanError(error);
   }

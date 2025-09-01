@@ -632,30 +632,17 @@ export default function ProductDetailsPage() {
             {/* Main content with tabs */}
             <div className="lg:col-span-2">
               <div id="overview" className="bg-white rounded-lg shadow">
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs defaultValue="introduction" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 rounded-t-lg h-12">
-                    <TabsTrigger value="overview" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Overview</TabsTrigger>
-                    <TabsTrigger value="itinerary" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Itinerary</TabsTrigger>
+                    <TabsTrigger value="introduction" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Introduction</TabsTrigger>
+                    <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Details</TabsTrigger>
                     <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Inclusions</TabsTrigger>
                     <TabsTrigger value="pricing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Pricing</TabsTrigger>
                   </TabsList>
                   
                   <div className="p-6">
-                    <TabsContent value="overview" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Overview</h2>
-                      <div className="prose max-w-none">
-                        {product.content?.introduction ? (
-                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                            {product.content.introduction}
-                          </div>
-                        ) : (
-                          <p className="text-gray-700">{product.description}</p>
-                        )}
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="itinerary" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Itinerary</h2>
+                    <TabsContent value="introduction" className="mt-0">
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Introduction</h2>
                       <div className="prose max-w-none">
                         {product.content?.details ? (
                           <div className="whitespace-pre-line text-gray-700 leading-relaxed">
@@ -663,6 +650,19 @@ export default function ProductDetailsPage() {
                           </div>
                         ) : (
                           <p className="text-gray-700">Detailed itinerary available upon request.</p>
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="details" className="mt-0">
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Details</h2>
+                      <div className="prose max-w-none">
+                        {product.content?.introduction ? (
+                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                            {product.content.introduction}
+                          </div>
+                        ) : (
+                          <p className="text-gray-700">{product.description}</p>
                         )}
                       </div>
                     </TabsContent>

@@ -209,8 +209,8 @@ export default function CruisesPage() {
 
       console.log('🚢 Search criteria:', searchCriteria)
 
-      // Call our fixed API search that uses catalog filtering
-      const response = await fetch('/api/tourplan/search', {
+      // Call the optimized API search endpoint
+      const response = await fetch('/api/tourplan/search-fast', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -230,7 +230,7 @@ export default function CruisesPage() {
         return
       }
 
-      const products = result.data?.products || []
+      const products = result.tours || []
       console.log(`🚢 API returned ${products.length} cruise products (filtered by destination+class)`)
 
       if (products.length === 0) {
@@ -472,10 +472,15 @@ export default function CruisesPage() {
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{tour.duration || 'Multiple days'}</span>
                               </div>
-                              <div className="flex items-center text-sm text-gray-500">
+                              <div className="flex items-center text-sm text-gray-500 mb-1">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                <span>{tour.location || tour.class || 'Africa'}</span>
+                                <span>{tour.location || 'Africa'}</span>
                               </div>
+                              {tour.class && (
+                                <div className="flex items-center text-sm text-gray-500">
+                                  <span>{tour.class}</span>
+                                </div>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">From</p>

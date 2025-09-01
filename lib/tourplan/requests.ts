@@ -433,9 +433,10 @@ export function buildGroupTourProperSearchRequest(buttonName: string, destinatio
     }
   }
   
-  // Use GMFTD for Group Tours per CLAUDE.md documentation
+  // PERFORMANCE: Use "GM" (General + Multimedia) for search results
+  // This gets rates for "Book Now" but avoids massive detailed itineraries (FTD)
   xml += `
-    <Info>GMFTD</Info>`;
+    <Info>GM</Info>`;
 
   if (dateFrom) {
     xml += `
@@ -633,6 +634,23 @@ export function buildCruiseProperSearchRequest(buttonName: string, destination?:
     <AgentID>${agentId}</AgentID>
     <Password>${password}</Password>
     <ButtonName>${buttonName}</ButtonName>`;
+    
+  // Add DestinationName for cruises (like Group Tours)
+  if (destination && destination.trim()) {
+    let destinationForCruises = destination;
+    const destLower = destination.toLowerCase();
+    
+    // Map destinations to countries like Group Tours do
+    if (destLower.includes('botswana') || destLower.includes('kasane') || destLower.includes('chobe')) {
+      destinationForCruises = 'Botswana';
+    } else if (destLower.includes('namibia')) {
+      destinationForCruises = 'Namibia';
+    }
+    
+    xml += `
+    <DestinationName>${destinationForCruises}</DestinationName>`;
+    console.log(`🚢 Added cruise destination: ${destinationForCruises}`);
+  }
   
   // Add DateFrom if provided (required by API docs example)
   if (dateFrom) {

@@ -242,12 +242,19 @@ export default function GroupToursPage() {
       
       console.log('🦁 Group tours search params:', params.toString())
       
-      const response = await fetch(`/api/tourplan?${params.toString()}`)
+      const response = await fetch(`/api/tourplan/search-fast?${params.toString()}`)
       const result = await response.json()
 
       console.log('🦁 Group tours search response:', result)
+      console.log('🦁 Response structure:', {
+        success: result.success,
+        hasToursField: 'tours' in result,
+        toursLength: result.tours?.length,
+        message: result.message,
+        error: result.error
+      })
 
-      if (result.success) {
+      if (result.success && result.tours) {
         console.log('🦁 Found', result.tours?.length || 0, 'group tours')
         console.log('🦁 Setting tours and filteredTours...')
         const tourList = result.tours || []
@@ -268,12 +275,15 @@ export default function GroupToursPage() {
         setAvailableDestinationFilters(uniqueCountries)
         console.log('🌍 Available destination filters:', uniqueCountries)
         
-        // Check availability for each product
+        // Check availability for each product to determine Book Now vs Get Quote
         tourList.forEach((tour: any) => {
-          checkProductAvailability(tour.code)
+          if (tour.code) {
+            checkProductAvailability(tour.code)
+          }
         })
       } else {
-        console.error("🦁 Group tours search failed:", result.error)
+        console.error("🦁 Group tours search failed:", result.message || result.error || 'Unknown error')
+        console.error("🦁 Full failed response:", result)
         setTours([])
         setFilteredTours([])
       }
@@ -502,10 +512,30 @@ export default function GroupToursPage() {
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{tour.duration || 'Multiple days'}</span>
                               </div>
-                              {(tour.location || tour.class) && (
-                                <div className="flex items-center text-sm text-gray-500">
-                                  <MapPin className="h-4 w-4 mr-1" />
-                                  <span>{tour.location || tour.class}</span>
+                              <div className="flex items-center text-sm text-gray-500 mb-1">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                <span>{(() => {
+                                  // Clean up location field - remove outdated departure info
+                                  let location = tour.location || 'Africa';
+                                  
+                                  // Remove departure information with old years
+                                  location = location.replace(/Departs\s+\w+\s+\(202[0-4]\)[^)]*(\([^)]+\))?\s*/gi, '');
+                                  // Remove just "Departs [day]" if no route info
+                                  if (location.match(/^Departs\s+\w+$/i)) {
+                                    location = 'Africa';
+                                  }
+                                  
+                                  return location;
+                                })()}</span>
+                              </div>
+                              {tour.class && (
+                                <div className="flex items-center text-sm text-gray-500 mb-1">
+                                  <span>{tour.class}</span>
+                                </div>
+                              )}
+                              {tour.comment && (
+                                <div className="text-sm text-blue-600">
+                                  {tour.comment}
                                 </div>
                               )}
                             </div>

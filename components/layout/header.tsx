@@ -230,18 +230,39 @@ export function Header() {
               <Phone className="h-4 w-4" />
               <span>+61 2 9664 9187</span>
             </a>
-            <Link href="/group-tours-list">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-white">Book now</Button>
-            </Link>
+            <Button 
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => {
+                if (pathname === "/") {
+                  // On homepage, scroll to tour cards
+                  document.getElementById('tour-cards')?.scrollIntoView({ behavior: 'smooth' })
+                } else {
+                  // On other pages, navigate to group tours
+                  window.location.href = '/group-tours-list'
+                }
+              }}
+            >
+              Book now
+            </Button>
           </div>
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
-            <Link href="/group-tours-list">
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3">
-                Book now
-              </Button>
-            </Link>
+            <Button 
+              size="sm" 
+              className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3"
+              onClick={() => {
+                if (pathname === "/") {
+                  // On homepage, scroll to tour cards
+                  document.getElementById('tour-cards')?.scrollIntoView({ behavior: 'smooth' })
+                } else {
+                  // On other pages, navigate to group tours
+                  window.location.href = '/group-tours-list'
+                }
+              }}
+            >
+              Book now
+            </Button>
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -382,9 +403,21 @@ export function Header() {
                 >
                   My Bookings
                 </Link>
-                <Link href="/group-tours-list" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="bg-amber-500 hover:bg-amber-600 text-white mt-4 w-full">Book now</Button>
-                </Link>
+                <Button 
+                  className="bg-amber-500 hover:bg-amber-600 text-white mt-4 w-full"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    if (pathname === "/") {
+                      // On homepage, scroll to tour cards
+                      document.getElementById('tour-cards')?.scrollIntoView({ behavior: 'smooth' })
+                    } else {
+                      // On other pages, navigate to group tours
+                      window.location.href = '/group-tours-list'
+                    }
+                  }}
+                >
+                  Book now
+                </Button>
               </div>
             </SheetContent>
             </Sheet>

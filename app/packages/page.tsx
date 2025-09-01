@@ -131,10 +131,8 @@ export default function PackagesPage() {
           setAvailableDestinations(destinations)
         }
         
-        // Reset destination and class selections when country changes
+        // Reset destination selection when country changes (class loads separately)
         setSelectedDestination("")
-        setSelectedClass("")
-        setAvailableClasses([])
       } else {
         setAvailableDestinations([])
         setSelectedDestination("")
@@ -146,18 +144,14 @@ export default function PackagesPage() {
     loadDestinationsFromAPI()
   }, [selectedCountry, availableCountries])
 
-  // Update available classes when destination changes
+  // Update available classes when country changes (not destination)
   useEffect(() => {
     const loadClassesFromAPI = async () => {
-      if (selectedDestination && availableDestinations.length > 0) {
+      if (selectedCountry) {
         try {
-          console.log('📦 Fetching classes for destination:', selectedDestination)
+          console.log('📦 Fetching classes for country:', selectedCountry)
           
-          // Get the destination's TourPlan name
-          const destination = availableDestinations.find(d => d.value === selectedDestination)
-          const tourPlanDestination = destination?.tourPlanName || selectedDestination
-          
-          // Fetch classes from TourPlan API using COUNTRY name (not destination)
+          // Fetch classes from TourPlan API using COUNTRY name
           // Classes come from country-level API calls, not destination-level
           const country = availableCountries.find(c => c.value === selectedCountry)
           const tourPlanCountry = country?.label || selectedCountry
@@ -194,7 +188,7 @@ export default function PackagesPage() {
           ])
         }
         
-        // Reset class selection when destination changes
+        // Reset class selection when country changes
         setSelectedClass("")
       } else {
         setAvailableClasses([])
@@ -203,7 +197,7 @@ export default function PackagesPage() {
     }
     
     loadClassesFromAPI()
-  }, [selectedDestination, availableDestinations])
+  }, [selectedCountry, availableCountries])
 
   // Apply destination filtering when selectedDestinationFilters changes
   useEffect(() => {
@@ -305,7 +299,7 @@ export default function PackagesPage() {
       
       console.log('📦 Packages search params:', params.toString())
       
-      const response = await fetch(`/api/tourplan?${params.toString()}`)
+      const response = await fetch(`/api/tourplan/search-fast?${params.toString()}`)
       const result = await response.json()
 
       console.log('📦 Packages search response:', result)
@@ -314,42 +308,20 @@ export default function PackagesPage() {
         console.log('📦 Found', result.tours?.length || 0, 'packages')
         console.log('📦 Setting tours and filteredTours...')
         
-        // Check availability for each tour to determine button type
-        const toursWithAvailability = await Promise.all(
-          (result.tours || []).map(async (tour: any) => {
-            try {
-              // Make a quick availability check by calling the pricing API
-              const availResponse = await fetch(`/api/tourplan/pricing/${tour.code}?dateFrom=${new Date().toISOString().split('T')[0]}&dateTo=${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}`)
-              const availResult = await availResponse.json()
-              
-              // Check if there are any available dates in the calendar
-              const hasAvailableDates = availResult.success && 
-                availResult.data?.calendar?.some((day: any) => day.validDay && day.available)
-              
-              console.log(`📦 Availability check for ${tour.code}: ${hasAvailableDates ? 'HAS' : 'NO'} available dates`)
-              
-              return {
-                ...tour,
-                hasAvailableDates
-              }
-            } catch (error) {
-              console.warn(`📦 Failed to check availability for ${tour.code}:`, error)
-              // If availability check fails, default to showing "Get quote" (safer)
-              return {
-                ...tour,
-                hasAvailableDates: false
-              }
-            }
-          })
-        )
+        // Skip individual availability checks for performance
+        // All packages should show "Get quote" button by default
+        const toursWithDefaultAvailability = (result.tours || []).map((tour: any) => ({
+          ...tour,
+          hasAvailableDates: false // Default to "Get quote" for all packages
+        }))
         
-        setTours(toursWithAvailability)
-        setFilteredTours(toursWithAvailability)
+        setTours(toursWithDefaultAvailability)
+        setFilteredTours(toursWithDefaultAvailability)
         console.log('📦 Tours state updated with availability data')
         
         // Extract available destination filters from tour countries
         const allCountries = new Set<string>()
-        toursWithAvailability.forEach((tour: any) => {
+        toursWithDefaultAvailability.forEach((tour: any) => {
           if (tour.countries && Array.isArray(tour.countries)) {
             tour.countries.forEach((country: string) => {
               allCountries.add(country)
@@ -450,7 +422,7 @@ export default function PackagesPage() {
                 <Select 
                   value={selectedClass} 
                   onValueChange={(value) => setSelectedClass(value)}
-                  disabled={!selectedDestination || availableClasses.length === 0}
+                  disabled={!selectedCountry || availableClasses.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
                     <SelectValue placeholder="(Select option)" />
@@ -588,10 +560,20 @@ export default function PackagesPage() {
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{tour.duration || 'Multiple days'}</span>
                               </div>
-                              <div className="flex items-center text-sm text-gray-500">
+                              <div className="flex items-center text-sm text-gray-500 mb-1">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                <span>{tour.location || tour.class || 'Africa'}</span>
+                                <span>{tour.location || 'Africa'}</span>
                               </div>
+                              {tour.class && (
+                                <div className="flex items-center text-sm text-gray-500 mb-1">
+                                  <span>{tour.class}</span>
+                                </div>
+                              )}
+                              {tour.comment && (
+                                <div className="text-sm text-blue-600">
+                                  {tour.comment}
+                                </div>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">From</p>

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     children
   });
   
-  console.log('🚨 PACKAGES PAGE API ROUTE HIT!');
+  console.log('⚠️  Legacy API route hit - consider using /api/tourplan/search-fast instead');
 
   try {
     const result = await searchProducts({
