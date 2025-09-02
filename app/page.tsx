@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search } from "lucide-react"
+import { Search, Play } from "lucide-react"
 import FeaturedSpecials from "@/components/homepage/FeaturedSpecials"
+import VideoModal from "@/components/homepage/VideoModal"
 
 export default function Home() {
   const router = useRouter()
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero Section with Lion Image - Made Taller */}
@@ -34,8 +36,10 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-black px-8 bg-transparent"
+                className="border-white text-white hover:bg-white hover:text-black px-8 bg-transparent flex items-center gap-2"
+                onClick={() => setIsVideoOpen(true)}
               >
+                <Play className="h-5 w-5" />
                 Watch Video
               </Button>
             </div>
@@ -384,6 +388,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* Video Modal */}
+      <VideoModal 
+        isOpen={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        videoUrl="https://tia-promo.b-cdn.net/tia-promo.mp4"
+      />
     </main>
   )
 }

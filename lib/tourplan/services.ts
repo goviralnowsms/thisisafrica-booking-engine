@@ -707,10 +707,9 @@ function applyGroupToursFiltering(products: any[], destination: string, classFil
     // Use API-based dynamic filtering
     const dynamicallyFiltered = applyDynamicDestinationFiltering(products, destination, classFilter);
     
-    if (dynamicallyFiltered.length > 0) {
-      console.log(`${filterLabel} API-based filtering successful: ${products.length} → ${dynamicallyFiltered.length} products`);
-      return dynamicallyFiltered;
-    }
+    console.log(`${filterLabel} API-based filtering: ${products.length} → ${dynamicallyFiltered.length} products`);
+    // Return the filtered result even if empty (0 results is valid)
+    return dynamicallyFiltered;
   }
   
   // Fallback: return all products if no filtering was applied successfully
@@ -1466,15 +1465,22 @@ export async function searchProducts(criteria: {
     }
     
     if (needsDestinationFiltering) {
-      // If only destination is provided (no class), we still need to filter by destination
-      if (!criteria.class) {
-        console.log('✅ Applying destination-only filtering (no class specified)');
+      // Check if destination is just a country name
+      const countryNames = ['kenya', 'botswana', 'namibia', 'south africa', 'tanzania', 'zambia', 'zimbabwe', 'uganda', 'rwanda'];
+      const isCountryOnlySearch = criteria.destination && countryNames.includes(criteria.destination.toLowerCase().trim());
+      
+      // If only destination is provided (no class), we still need to filter by destination UNLESS it's a country-only search
+      if (!criteria.class && !isCountryOnlySearch) {
+        console.log('✅ Applying destination-only filtering (no class specified, specific destination)');
         // Pass empty string for class to filter by destination only
         const filteredByDestination = applyDynamicDestinationFiltering(finalProducts, criteria.destination, '');
         if (filteredByDestination.length !== finalProducts.length) {
           console.log(`🎯 Applied destination-only filtering: ${finalProducts.length} → ${filteredByDestination.length} products`);
           finalProducts = filteredByDestination;
         }
+      } else if (!criteria.class && isCountryOnlySearch) {
+        console.log(`✅ Country-only search for ${criteria.destination} - no filtering needed, returning all ${finalProducts.length} products`);
+        // Don't filter - products are already filtered by country from the API
       } else {
         console.log('✅ Applying client-side destination/class filtering to preserve "On request" products');
         
@@ -2574,6 +2580,27 @@ function checkDestinationMatchFromAPI(apiLocation: string, searchDestination: st
     console.log(`   destLower.includes('airport'): ${destLower.includes('airport')}`);
   }
   
+  // Special handling for Maun - distinguish between Maun city and Maun Airport
+  if (destLower.includes('maun')) {
+    const isSearchingForAirport = destLower.includes('airport');
+    const isLocationAirport = locationLower.includes('airport');
+    
+    console.log(`🔍 Maun matching: Searching for "${searchDestination}" (airport=${isSearchingForAirport}), Location is "${apiLocation}" (airport=${isLocationAirport})`);
+    
+    // If searching for "Maun Airport", match products with "Maun Airport" location
+    if (isSearchingForAirport) {
+      const match = locationLower.includes('maun') && isLocationAirport;
+      console.log(`   → Airport search result: ${match}`);
+      return match;
+    }
+    // If searching for just "Maun" (city), only match non-airport Maun locations
+    else {
+      const match = locationLower.includes('maun') && !isLocationAirport;
+      console.log(`   → City search result: ${match}`);
+      return match;
+    }
+  }
+  
   // Special handling for Rail stations - map API location to station names
   if (destLower.includes('rail station') || destLower.includes('rail-station')) {
     // For rail station searches, check if API location matches the city
@@ -2738,11 +2765,12 @@ function applyDynamicDestinationFiltering(products: any[], destination: string, 
     const classLower = classFilter.toLowerCase();
     
     // Debug logging for Maun products to understand location/class data
-    if (productCode === 'MUBGTJENMANJENBSE' || productCode === 'MUBGTSUNWAYSUBT13') {
+    if (productCode === 'MUBGTJENMANJENBSE' || productCode === 'MUBGTSUNWAYSUBT13' || productCode === 'MUBGTSUNWAYSUNA13') {
       console.log(`🏢 MAUN DEBUG product: ${productCode} - Location: "${product.location}" - Class: "${product.class}"`);
       console.log(`🏢 MAUN DEBUG productLocation: "${productLocation}" - productClass: "${productClass}"`);
       console.log(`🏢 MAUN DEBUG destination search: "${destination}"`);
       console.log(`🏢 MAUN DEBUG destLower: "${destLower}"`);
+      console.log(`🏢 MAUN DEBUG has location data: ${!!productLocation && !!productLocation.trim()}`);
     }
     
     // DESTINATION MATCHING - Use API location field first, then fall back to patterns
@@ -3010,17 +3038,9 @@ function applyDynamicDestinationFiltering(products: any[], destination: string, 
       return [];
     }
     
-    // Otherwise apply the hybrid fallback
-    console.log(`🔄 HYBRID FALLBACK: Filtering produced 0 results but ${products.length} products exist at country level`);
-    console.log(`🔄 Returning all country results for destination: "${destination}", class: "${classFilter}"`);
-    console.log(`🔄 This indicates pattern matching needs fixing for this combination`);
-    
-    // Add a flag to each product indicating this is a fallback result
-    return products.map(product => ({
-      ...product,
-      _isHybridFallback: true,
-      _fallbackReason: `Showing all results for ${destination}/${classFilter} - specific filtering needs improvement`
-    }));
+    // Return empty array - 0 results is a valid outcome
+    console.log(`✅ Filtering correctly returned 0 results for ${destination}/${classFilter}`);
+    return [];
   }
   
   return filteredProducts;
