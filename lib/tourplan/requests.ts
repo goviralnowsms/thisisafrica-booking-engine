@@ -433,10 +433,10 @@ export function buildGroupTourProperSearchRequest(buttonName: string, destinatio
     }
   }
   
-  // PERFORMANCE: Use "GM" (General + Multimedia) for search results
-  // This gets rates for "Book Now" but avoids massive detailed itineraries (FTD)
+  // Use "GMFTD" to get rates and availability for search results
+  // G = General info, M = Multimedia, F = Full descriptions, T = Tour info, D = Date ranges with rates
   xml += `
-    <Info>GM</Info>`;
+    <Info>GMFTD</Info>`;
 
   if (dateFrom) {
     xml += `
