@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     
     let xmlRequest;
     if (isNumeric) {
-      // Use BookingId for pure numeric values
+      // Use GetBookingRequest for numeric BookingId
       xmlRequest = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
@@ -33,26 +33,22 @@ export async function GET(request: NextRequest) {
   </GetBookingRequest>
 </Request>`;
     } else {
-      // TourPlan's GetBookingRequest only accepts numeric BookingIds, not alphanumeric references
-      return errorResponse(
-        `Unfortunately, TourPlan's booking lookup system only works with numeric Booking IDs, not booking references like "${bookingId}".
-
-📋 **What this means:**
-• Reference numbers (like ${bookingId}) cannot be used for online booking lookup
-• Only internal numeric Booking IDs work with the automated system
-• This is a limitation of TourPlan's API system
-
-📞 **To access your booking details:**
-• Call us at +61 2 9664 9187 during business hours
-• Email us at sales@thisisafrica.com.au with your reference "${bookingId}"
-• Our team can manually look up your booking and provide all details
-
-We apologize for this limitation and are working to provide better self-service options in the future.`,
-        400
-      );
+      // Use ListBookingsRequest for alphanumeric booking references
+      // This allows searching by booking reference and surname
+      xmlRequest = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <ListBookingsRequest>
+    <AgentID>${process.env.TOURPLAN_AGENT_ID || 'SAMAGT'}</AgentID>
+    <Password>${process.env.TOURPLAN_PASSWORD || 'S@MAgt01'}</Password>
+    <Ref>${bookingId}</Ref>
+    <NameContains>${surname}</NameContains>
+  </ListBookingsRequest>
+</Request>`;
     }
 
     console.log('📤 TourPlan XML Request:', xmlRequest);
+    console.log(`🔍 Request type: ${isNumeric ? 'GetBookingRequest (numeric)' : 'ListBookingsRequest (reference)'}`);
     
     // Make request to TourPlan API
     const response = await fetch(process.env.TOURPLAN_API_URL!, {
@@ -108,8 +104,10 @@ If you're still having issues, contact support at sales@thisisafrica.com.au`;
       return errorResponse(errorMessage, 400);
     }
 
-    // Check if booking exists
-    if (!parsedResponse.Reply?.GetBookingReply) {
+    // Check if booking exists - handle both GetBookingReply and ListBookingsReply
+    const bookingReply = parsedResponse.Reply?.GetBookingReply || parsedResponse.Reply?.ListBookingsReply;
+    
+    if (!bookingReply) {
       // Better error message based on what type of ID was used
       const errorMsg = isNumeric 
         ? `Booking ID "${bookingId}" not found. Please verify the booking ID and try again.`
@@ -127,8 +125,19 @@ Please try:
       return errorResponse(errorMsg, 404);
     }
 
-    const bookingReply = parsedResponse.Reply.GetBookingReply;
-    const booking = bookingReply.Booking || bookingReply;
+    // Handle different response structures
+    let booking;
+    if (parsedResponse.Reply?.GetBookingReply) {
+      // GetBookingReply response
+      booking = bookingReply.Booking || bookingReply;
+    } else if (parsedResponse.Reply?.ListBookingsReply) {
+      // ListBookingsReply response - get first booking from list
+      const bookings = bookingReply.Booking || bookingReply.Bookings?.Booking;
+      if (!bookings || (Array.isArray(bookings) && bookings.length === 0)) {
+        return errorResponse(`No bookings found for reference "${bookingId}" with surname "${surname}".`, 404);
+      }
+      booking = Array.isArray(bookings) ? bookings[0] : bookings;
+    }
     
     // Check for TourPlan errors
     if (bookingReply?.ErrorMessage) {
@@ -181,15 +190,106 @@ For confirmed bookings, please ensure you're using the booking reference provide
     );
     console.log('🔍 Passenger-related fields:', passengerFields);
     
+    // Extract service/tour details from Services section
+    let tourName = 'Tour Package';
+    let tourDestination = 'Africa';
+    let tourDuration = 'Multiple days';
+    let travelDateFrom = '';
+    let travelDateTo = '';
+    
+    // Check for Services or ServiceLines
+    const services = booking.Services?.Service || booking.ServiceLines?.ServiceLine;
+    if (services) {
+      const firstService = Array.isArray(services) ? services[0] : services;
+      if (firstService) {
+        console.log('🎯 Service details found:', firstService);
+        console.log('🔍 All service fields:', Object.keys(firstService));
+        
+        // Extract tour name
+        tourName = firstService.Description || firstService.ProductDescription || firstService.ServiceDescription || firstService.OptDescription || 'Tour Package';
+        
+        // Extract destination - use LocationCode and tour description to infer location
+        tourDestination = firstService.LocalityDescription || firstService.LocationDescription || firstService.Locality || firstService.Location || firstService.Destination;
+        
+        // If no explicit destination, infer from LocationCode and tour name
+        if (!tourDestination || tourDestination === 'Africa') {
+          const locationCode = firstService.LocationCode || '';
+          
+          // Map common location codes to destinations
+          const locationMap = {
+            'NBO': 'Kenya',
+            'JNB': 'South Africa', 
+            'CPT': 'Cape Town',
+            'BOT': 'Botswana',
+            'VFA': 'Victoria Falls',
+            'LUN': 'Zambia'
+          };
+          
+          tourDestination = locationMap[locationCode] || 'Africa';
+          
+          // For tours mentioning specific places, extract from tour name
+          if (tourName.toLowerCase().includes('kenya')) {
+            tourDestination = 'Kenya';
+          } else if (tourName.toLowerCase().includes('cape town')) {
+            tourDestination = 'Cape Town';
+          } else if (tourName.toLowerCase().includes('pretoria')) {
+            tourDestination = 'South Africa';
+          }
+        }
+        
+        // For Rail tours, the destination is often in the tour name itself (e.g., "Cape Town to Pretoria")
+        if (tourName.includes(' to ')) {
+          // Extract route from tour name
+          const routeMatch = tourName.match(/([A-Za-z\s]+)\sto\s([A-Za-z\s]+)/);
+          if (routeMatch) {
+            tourDestination = `${routeMatch[1].trim()} to ${routeMatch[2].trim()}`;
+          }
+        }
+        
+        // Extract dates - check TourPlan-specific fields first
+        travelDateFrom = firstService.Pickup_Date || firstService.Date || firstService.DateFrom || firstService.StartDate || firstService.TravelDate || '';
+        travelDateTo = firstService.Dropoff_Date || firstService.DateTo || firstService.EndDate || '';
+        
+        // If DateTo is missing but we have Nights, calculate it
+        if (travelDateFrom && !travelDateTo && firstService.Nights) {
+          const nights = parseInt(firstService.Nights);
+          if (nights > 0) {
+            const startDate = new Date(travelDateFrom);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + nights);
+            travelDateTo = endDate.toISOString().split('T')[0];
+          }
+        }
+        
+        // If still no DateTo, use DateFrom
+        if (!travelDateTo) {
+          travelDateTo = travelDateFrom;
+        }
+        
+        // Calculate duration if dates are available
+        if (travelDateFrom && travelDateTo) {
+          const start = new Date(travelDateFrom);
+          const end = new Date(travelDateTo);
+          const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          tourDuration = days > 1 ? `${days} days` : '1 day';
+        } else if (firstService.Nights) {
+          const nights = parseInt(firstService.Nights);
+          tourDuration = nights > 0 ? `${nights + 1} days / ${nights} nights` : 'Multiple days';
+        }
+      }
+    }
+    
     // Extract and format booking data
     const bookingData = {
       id: booking.BookingId || bookingId,
       reference: booking.Reference || booking.Ref || bookingId,
       customerName: booking.CustomerName || booking.Name || '',
-      tourName: booking.ProductDescription || booking.Description || booking.ServiceDescription || 'Tour Package',
-      destination: booking.Location || booking.Locality || booking.Destination || 'Africa',
+      tourName: tourName,
+      destination: tourDestination,
       supplier: booking.SupplierName || booking.Supplier || '',
-      travelDate: booking.TravelDate || booking.DateFrom || booking.StartDate || '',
+      travelDate: travelDateFrom || booking.TravelDate || booking.DateFrom || booking.StartDate || '',
+      travelDateTo: travelDateTo || booking.DateTo || booking.EndDate || '',
+      duration: tourDuration,
       status: booking.Status || booking.BookingStatus || 'pending',
       totalAmount: booking.TotalAmount || booking.Amount || booking.TotalCost || booking.Price || 0,
       currency: booking.Currency || 'AUD',

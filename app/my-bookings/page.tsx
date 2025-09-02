@@ -179,7 +179,7 @@ export default function MyBookingsPage() {
           tourName: booking.tourName || booking.customerName || 'Your Booking',
           destination: booking.destination || 'Africa',
           startDate: booking.travelDate || 'TBD',
-          endDate: booking.travelDate || 'TBD', // TourPlan might have separate end date
+          endDate: booking.travelDateTo || booking.travelDate || 'TBD', // Use travelDateTo if available
           duration: booking.duration || 'Multiple days',
           travelers: booking.travelers || 1,
           roomType: roomTypeText,
@@ -209,19 +209,68 @@ export default function MyBookingsPage() {
     setLoginError("")
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
 
-    setIsSearching(true)
+    // Need surname for search - prompt user if not available
+    if (!loginForm.surname) {
+      setLoginError("Please enter your surname to search for bookings.")
+      return
+    }
 
-    // TODO: Replace with actual API call to search for bookings
-    setTimeout(() => {
-      // In a real implementation, this would make an API call to search for bookings
-      // For now, just clear the results if no bookings are found
+    setIsSearching(true)
+    setLoginError("")
+
+    try {
+      console.log(`🔍 Searching for booking: "${searchQuery}" with surname: "${loginForm.surname}"`);
+      
+      // Try to search using the booking lookup API
+      // The search query could be a booking reference, so try it
+      const response = await fetch(`/api/tourplan/booking/lookup?bookingId=${encodeURIComponent(searchQuery.trim())}&surname=${encodeURIComponent(loginForm.surname)}`)
+      
+      console.log('📡 Search response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.log('❌ Search error response:', errorText)
+        throw new Error(`Search failed: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log('📋 Search result:', result)
+      
+      if (result.success && result.data?.booking) {
+        // Found a booking - convert to display format
+        const booking = result.data.booking
+        const bookingForDisplay = {
+          id: booking.id,
+          reference: booking.reference,
+          tourName: booking.tourName || 'Your Booking',
+          destination: booking.destination || 'Africa',
+          startDate: booking.travelDate || 'TBD',
+          endDate: booking.travelDateTo || booking.travelDate || 'TBD',
+          duration: booking.duration || 'Multiple days',
+          travelers: booking.travelers || 1,
+          roomType: '1 Room',
+          status: (booking.status || 'confirmed').toLowerCase().replace(' ', '-'),
+          totalAmount: booking.totalPrice ? Math.round(booking.totalPrice / 100) : (booking.totalAmount || 0),
+          image: "/images/safari-lion.png",
+          supplier: booking.supplier || ''
+        }
+        setBookings([bookingForDisplay])
+      } else {
+        // No booking found
+        setBookings([])
+        setLoginError(result.message || `No booking found for "${searchQuery}". Please check the booking reference and try again.`)
+      }
+    } catch (error) {
+      console.error('Search error:', error)
       setBookings([])
+      setLoginError(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or contact support.`)
+    } finally {
       setIsSearching(false)
-    }, 1000)
+    }
   }
 
   const handleCancelBooking = (bookingId: string) => {
@@ -288,19 +337,19 @@ export default function MyBookingsPage() {
 
               <div>
                 <Label htmlFor="bookingId" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Numeric Booking ID
+                  Booking ID
                 </Label>
                 <Input
                   id="bookingId"
                   type="text"
-                  placeholder="Enter numeric booking ID (e.g. 1474)"
+                  placeholder="Enter booking ID (e.g. 1474)"
                   value={loginForm.bookingId}
                   onChange={(e) => setLoginForm(prev => ({ ...prev, bookingId: e.target.value }))}
                   className="w-full"
                   disabled={isLoggingIn}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Must be a numeric ID, not an alphanumeric reference
+                  Must be a numeric booking ID
                 </p>
               </div>
 
@@ -359,11 +408,11 @@ export default function MyBookingsPage() {
           <form onSubmit={handleSearch} className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="search-booking" className="sr-only">
-                Search by booking reference or tour name
+                Search by booking ID
               </Label>
               <Input
                 id="search-booking"
-                placeholder="Enter booking reference or tour name"
+                placeholder="Enter booking ID"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -415,13 +464,17 @@ export default function MyBookingsPage() {
                         <div className="flex items-center">
                           <Calendar className="h-5 w-5 mr-2 text-amber-500" />
                           <span>
-                            {booking.startDate} - {booking.endDate}
+                            {booking.duration === 'Multiple days' || booking.duration === '1 day' 
+                              ? `Departing ${booking.startDate}` 
+                              : `${booking.startDate} - ${booking.endDate}`}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="h-5 w-5 mr-2 text-amber-500" />
                           <span>
-                            {booking.duration} / {booking.roomType || '1 room'}
+                            {booking.duration === 'Multiple days' || booking.duration === '1 day' 
+                              ? booking.roomType || '1 room'
+                              : `${booking.duration} / ${booking.roomType || '1 room'}`}
                           </span>
                         </div>
                       </div>
@@ -515,13 +568,17 @@ export default function MyBookingsPage() {
                         <div className="flex items-center">
                           <Calendar className="h-5 w-5 mr-2 text-amber-500" />
                           <span>
-                            {booking.startDate} - {booking.endDate}
+                            {booking.duration === 'Multiple days' || booking.duration === '1 day' 
+                              ? `Departing ${booking.startDate}` 
+                              : `${booking.startDate} - ${booking.endDate}`}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="h-5 w-5 mr-2 text-amber-500" />
                           <span>
-                            {booking.duration} / {booking.roomType || '1 room'}
+                            {booking.duration === 'Multiple days' || booking.duration === '1 day' 
+                              ? booking.roomType || '1 room'
+                              : `${booking.duration} / ${booking.roomType || '1 room'}`}
                           </span>
                         </div>
                       </div>
