@@ -17,6 +17,7 @@ const envSchema = z.object({
   TOURPLAN_PASSWORD: z.string().optional(),
   TOURPLAN_AGENT_ID: z.string().optional(),
   TOURPLAN_PROXY_URL: z.string().url().optional(),
+  TOURPLAN_PROXY_API_KEY: z.string().optional(),
   USE_TOURPLAN_PROXY: z.string().optional(),
 
   // App URLs
@@ -72,6 +73,7 @@ export const env = {
   TOURPLAN_PASSWORD: process.env.TOURPLAN_PASSWORD,
   TOURPLAN_AGENT_ID: process.env.TOURPLAN_AGENT_ID,
   TOURPLAN_PROXY_URL: process.env.TOURPLAN_PROXY_URL,
+  TOURPLAN_PROXY_API_KEY: process.env.TOURPLAN_PROXY_API_KEY,
   USE_TOURPLAN_PROXY: process.env.USE_TOURPLAN_PROXY === "true",
 
   // App URLs

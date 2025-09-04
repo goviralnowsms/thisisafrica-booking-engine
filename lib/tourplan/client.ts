@@ -71,7 +71,8 @@ export class TourPlanClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         // Use proxy if available (for Vercel deployment)
-        const proxyUrl = process.env.PROXY_URL;
+        const proxyUrl = process.env.TOURPLAN_PROXY_URL || process.env.PROXY_URL;
+        const proxyApiKey = process.env.TOURPLAN_PROXY_API_KEY;
         
         let fetchUrl = this.endpoint;
         let headers: Record<string, string> = {
@@ -81,7 +82,11 @@ export class TourPlanClient {
         // If proxy is configured, route through it
         if (proxyUrl && typeof window === 'undefined') {
           fetchUrl = proxyUrl;
-          headers['X-Target-URL'] = this.endpoint;
+          if (proxyApiKey) {
+            headers['x-api-key'] = proxyApiKey;
+          } else {
+            headers['X-Target-URL'] = this.endpoint;
+          }
         }
 
         const response = await fetch(fetchUrl, {
