@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Check if proxy is configured (EC2 or FixieIP)
-    const proxyUrl = process.env.PROXY_URL || process.env.FIXIE_URL;
+    // Check if proxy is configured (UpCloud, EC2, or FixieIP)
+    const proxyUrl = process.env.TOURPLAN_PROXY_URL || process.env.PROXY_URL || process.env.FIXIE_URL;
+    const proxyApiKey = process.env.TOURPLAN_PROXY_API_KEY;
     const hasProxy = !!proxyUrl;
-    const proxyType = process.env.PROXY_URL ? 'EC2' : (process.env.FIXIE_URL ? 'FixieIP' : 'None');
+    const proxyType = process.env.TOURPLAN_PROXY_URL ? 'UpCloud' : (process.env.PROXY_URL ? 'EC2' : (process.env.FIXIE_URL ? 'FixieIP' : 'None'));
     
     // Make a request to an IP checking service
     let outboundIp = 'Unknown';
@@ -15,8 +16,14 @@ export async function GET() {
       // Use ipify to check our outbound IP
       let response: Response;
       
-      // If Fixie URL is available, use it for proxy
-      if (proxyUrl) {
+      // If UpCloud proxy with API key, make direct request through proxy
+      if (proxyType === 'UpCloud' && proxyApiKey) {
+        response = await fetch('https://api.ipify.org?format=json', {
+          method: 'GET',
+        });
+        // For UpCloud proxy, we'll check IP in TourPlan test instead
+      } else if (proxyUrl && proxyType !== 'UpCloud') {
+        // Use node-fetch with proxy agent for EC2/FixieIP
         const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
         const agent = new HttpsProxyAgent(proxyUrl);
@@ -35,8 +42,15 @@ export async function GET() {
       
       // Check if this matches known proxy IPs
       const fixieIps = ['52.5.155.132', '52.87.82.133'];
-      // For EC2 proxy, check if it's not a Vercel IP (starts with 3.)
-      proxyWorking = process.env.PROXY_URL ? !outboundIp.startsWith('3.') : fixieIps.includes(outboundIp);
+      const upcloudIp = '95.111.223.107';
+      
+      if (proxyType === 'UpCloud') {
+        proxyWorking = outboundIp === upcloudIp;
+      } else if (proxyType === 'EC2') {
+        proxyWorking = !outboundIp.startsWith('3.'); // Not a Vercel IP
+      } else if (proxyType === 'FixieIP') {
+        proxyWorking = fixieIps.includes(outboundIp);
+      }
     } catch (error) {
       console.error('Error checking IP:', error);
     }
@@ -56,34 +70,39 @@ export async function GET() {
 </Request>`;
       
       let response: Response;
+      let fetchUrl = 'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi';
+      let headers: Record<string, string> = {
+        'Content-Type': 'text/xml; charset=utf-8',
+      };
       
-      if (proxyUrl) {
+      // Use UpCloud proxy if configured
+      if (proxyType === 'UpCloud' && proxyApiKey) {
+        fetchUrl = proxyUrl;
+        headers['x-api-key'] = proxyApiKey;
+        
+        response = await fetch(fetchUrl, {
+          method: 'POST',
+          headers,
+          body: testXml,
+        });
+      } else if (proxyUrl && proxyType !== 'UpCloud') {
+        // Use node-fetch with proxy agent for EC2/FixieIP
         const nodeFetch = (await import('node-fetch')).default;
         const { HttpsProxyAgent } = await import('https-proxy-agent');
         const agent = new HttpsProxyAgent(proxyUrl);
         // @ts-ignore
-        response = await nodeFetch(
-          'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/xml; charset=utf-8',
-            },
-            body: testXml,
-            agent,
-          }
-        ) as unknown as Response;
+        response = await nodeFetch(fetchUrl, {
+          method: 'POST',
+          headers,
+          body: testXml,
+          agent,
+        }) as unknown as Response;
       } else {
-        response = await fetch(
-          'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/xml; charset=utf-8',
-            },
-            body: testXml,
-          }
-        );
+        response = await fetch(fetchUrl, {
+          method: 'POST',
+          headers,
+          body: testXml,
+        });
       }
       
       tourplanReachable = response.ok;
@@ -103,7 +122,8 @@ export async function GET() {
         outboundIp,
         isUsingProxy: proxyWorking,
         expectedFixieIps: proxyType === 'FixieIP' ? ['52.5.155.132', '52.87.82.133'] : 'N/A',
-        expectedEC2IP: process.env.PROXY_URL ? 'Your EC2 IP' : 'N/A',
+        expectedEC2IP: proxyType === 'EC2' ? 'Your EC2 IP' : 'N/A',
+        expectedUpCloudIP: proxyType === 'UpCloud' ? '95.111.223.107' : 'N/A',
         tourplanApiReachable: tourplanReachable,
         tourplanError: tourplanError || 'None',
       },
