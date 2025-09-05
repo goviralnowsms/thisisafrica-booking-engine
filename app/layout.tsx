@@ -1,8 +1,5 @@
 import type React from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Toaster } from "@/components/ui/toaster"
-import { EnhancedRecommendationAssistant } from "@/components/enhanced-recommendation-assistant"
+import { ClientLayout } from "@/components/layout/client-layout"
 import "./globals.css"
 
 export const metadata = {
@@ -20,11 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
-        {children}
-        <Footer />
-        <EnhancedRecommendationAssistant />
-        <Toaster />
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   )
