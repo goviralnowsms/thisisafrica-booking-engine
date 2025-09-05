@@ -81,6 +81,7 @@ export async function GET() {
       if (proxyType === 'UpCloud' && proxyApiKey) {
         fetchUrl = proxyUrl;
         headers['x-api-key'] = proxyApiKey;
+        headers['X-Target-URL'] = 'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi';
         
         response = await fetch(fetchUrl, {
           method: 'POST',

@@ -84,6 +84,7 @@ export class TourPlanClient {
           fetchUrl = proxyUrl;
           if (proxyApiKey) {
             headers['x-api-key'] = proxyApiKey;
+            headers['X-Target-URL'] = this.endpoint;
           } else {
             headers['X-Target-URL'] = this.endpoint;
           }
