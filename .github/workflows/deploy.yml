@@ -99,3 +99,31 @@ jobs:
               echo "Nginx already configured, reloading..."
               nginx -t && systemctl reload nginx
             fi
+            
+            # Setup SSL certificate if not already configured
+            if [ ! -d /etc/letsencrypt/live/book.thisisafrica.com.au ]; then
+              echo "Setting up SSL certificate..."
+              
+              # Install certbot
+              apt update
+              apt install -y certbot python3-certbot-nginx
+              
+              # Get SSL certificate (non-interactive mode)
+              certbot --nginx \
+                --non-interactive \
+                --agree-tos \
+                --email sales@thisisafrica.com.au \
+                -d book.thisisafrica.com.au \
+                --redirect
+              
+              # Setup auto-renewal
+              systemctl enable certbot.timer
+              systemctl start certbot.timer
+              
+              echo "SSL certificate installed successfully!"
+              echo "Your site is now available at https://book.thisisafrica.com.au"
+            else
+              echo "SSL certificate already configured"
+              # Test renewal
+              certbot renew --dry-run
+            fi
