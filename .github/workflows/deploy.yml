@@ -19,9 +19,16 @@ jobs:
           key: ${{ secrets.VULTR_SSH_KEY }}
           port: 22
           script: |
-            # Pull latest code and build
-            cd /root/updated-tia
-            git pull origin main
+            # Ensure the repository exists
+            if [ ! -d /root/updated-tia ]; then
+              echo "Repository not found, cloning..."
+              cd /root
+              git clone https://github.com/goviralnowsms/updated-tia.git
+              cd /root/updated-tia
+            else
+              cd /root/updated-tia
+              git pull origin main || (cd /root && rm -rf updated-tia && git clone https://github.com/goviralnowsms/updated-tia.git && cd updated-tia)
+            fi
             
             # Run the env update script if it exists
             if [ -f update-env-production.sh ]; then
