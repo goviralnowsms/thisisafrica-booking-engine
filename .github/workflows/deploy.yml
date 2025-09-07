@@ -1,0 +1,27 @@
+name: Deploy to Vultr
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to Vultr Server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: 139.180.164.190
+          username: root
+          key: ${{ secrets.VULTR_SSH_KEY }}
+          port: 22
+          script: |
+            cd /root/updated-tia
+            git pull origin main
+            pnpm install
+            pnpm build
+            pm2 restart updated-tia
+            pm2 save
