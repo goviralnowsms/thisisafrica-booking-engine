@@ -20,6 +20,58 @@ export async function GET(
     
     console.log(`🔍 Fetching full product details for code: ${productCode}`);
     
+    // Handle mock product NBOGTSAFHQEAETIA
+    if (productCode === 'NBOGTSAFHQEAETIA') {
+      console.log('🎭 Returning mock data for NBOGTSAFHQEAETIA');
+      const mockProductData = {
+        id: 'NBOGTSAFHQEAETIA',
+        code: 'NBOGTSAFHQEAETIA',
+        name: 'East Africa Explored - Intimate Properties',
+        description: 'Kenya and Tanzania',
+        supplierName: 'This Is Africa',
+        location: 'Nairobi, Kenya',
+        duration: '13 days',
+        periods: 13,
+        rates: [{
+          currency: 'AUD',
+          singleRate: 0,
+          doubleRate: 0,
+          twinRate: 0,
+          twinRateTotal: 0,
+          twinRateFormatted: 'Contact for pricing',
+          dateRange: 'Year Round',
+          rateName: 'Small Group Safari'
+        }],
+        notes: [{
+          category: 'PDW',
+          text: 'EAST AFRICA EXPLORED - INTIMATE PROPERTIES\n\nKENYA AND TANZANIA - 13 DAY SMALL GROUP SAFARI\n\nExperience the magic of East Africa on this intimate 13-day safari adventure through Kenya and Tanzania. Stay at carefully selected intimate properties that offer personalized service and authentic wildlife experiences.\n\nThis small group safari takes you through some of East Africa\'s most renowned national parks and reserves, providing opportunities to witness the Great Migration, encounter the Big Five, and experience the rich cultures of the Maasai and other local communities.\n\nHighlights include game drives in the Serengeti, visits to the Ngorongoro Crater, and wildlife viewing in Kenya\'s premier parks including the Maasai Mara, Amboseli, and Tsavo.\n\nAccommodation is in intimate lodges and camps that provide a more personal and exclusive safari experience, with expert guides ensuring exceptional wildlife encounters and cultural interactions.'
+        }],
+        content: {
+          introduction: 'EAST AFRICA EXPLORED - INTIMATE PROPERTIES\n\nKENYA AND TANZANIA - 13 DAY SMALL GROUP SAFARI\n\nExperience the magic of East Africa on this intimate 13-day safari adventure through Kenya and Tanzania. Stay at carefully selected intimate properties that offer personalized service and authentic wildlife experiences.',
+          details: 'This small group safari takes you through some of East Africa\'s most renowned national parks and reserves, providing opportunities to witness the Great Migration, encounter the Big Five, and experience the rich cultures of the Maasai and other local communities.\n\nHighlights include game drives in the Serengeti, visits to the Ngorongoro Crater, and wildlife viewing in Kenya\'s premier parks including the Maasai Mara, Amboseli, and Tsavo.',
+          inclusions: 'Accommodation in intimate lodges and camps\nAll meals during safari\nProfessional safari guide\nGame drives and park fees\nAirport transfers\nGround transportation in 4WD vehicles\nBottled water during game drives',
+          mapImage: '/images/products/NBOGTSAFHQ-EAETIA-Map.jpg'
+        },
+        localAssets: {
+          images: [
+            { url: '/images/products/NBOGTSAFHEQ-AETIA-1.jpg', type: 'image', category: 'product', originalName: 'NBOGTSAFHEQ-AETIA-1.jpg', status: 'exists' },
+            { url: '/images/products/NBOGTSAFHQ-EAETIA-2.jpg', type: 'image', category: 'product', originalName: 'NBOGTSAFHQ-EAETIA-2.jpg', status: 'exists' },
+            { url: '/images/products/NBOGTSAFHQ-EAETIA-3.jpg', type: 'image', category: 'product', originalName: 'NBOGTSAFHQ-EAETIA-3.jpg', status: 'exists' },
+            { url: '/images/products/NBOGTSAFHQ-EAETIA-4.jpg', type: 'image', category: 'product', originalName: 'NBOGTSAFHQ-EAETIA-4.jpg', status: 'exists' },
+            { url: '/images/products/NBOGTSAFHQ-EAETIA-5.jpg', type: 'image', category: 'product', originalName: 'NBOGTSAFHQ-EAETIA-5.jpg', status: 'exists' }
+          ],
+          pdfs: [
+            { url: '/pdfs/products/NBOGTS AFHQ EAETIA-PDF.pdf', name: 'Tour Brochure', originalName: 'NBOGTS AFHQ EAETIA-PDF.pdf', status: 'exists' }
+          ]
+        },
+        locality: 'Nairobi, Kenya',
+        class: 'Intimate Properties',
+        countries: ['Kenya', 'Tanzania']
+      };
+      
+      return successResponse(mockProductData);
+    }
+    
     // Get product details with images and structured content
     let productData;
     try {

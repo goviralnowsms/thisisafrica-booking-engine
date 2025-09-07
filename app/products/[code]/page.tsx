@@ -106,11 +106,11 @@ export default function ProductDetailsPage() {
     // Check for NBOGTSAFHQEAETIA specific images (East Africa tour)
     if (productCode === 'NBOGTSAFHQEAETIA') {
       return [
-        '/images/products/NBOGTS AFHQ EAETIA-1.jpg',
-        '/images/products/NBOGTS AFHQ EAETIA-2.jpg',
-        '/images/products/NBOGTS AFHQ EAETIA-3.jpg',
-        '/images/products/NBOGTS AFHQ EAETIA-4.jpg',
-        '/images/products/NBOGTS AFHQ EAETIA-5.jpg'
+        '/images/products/NBOGTSAFHEQ-AETIA-1.jpg',
+        '/images/products/NBOGTSAFHQ-EAETIA-2.jpg',
+        '/images/products/NBOGTSAFHQ-EAETIA-3.jpg',
+        '/images/products/NBOGTSAFHQ-EAETIA-4.jpg',
+        '/images/products/NBOGTSAFHQ-EAETIA-5.jpg'
       ]
     }
     
@@ -144,7 +144,7 @@ export default function ProductDetailsPage() {
   const leftSideImage = useMemo(() => {
     // Check for NBOGTSAFHQEAETIA specific map
     if (productCode === 'NBOGTSAFHQEAETIA') {
-      return '/images/products/NBOGTS AFHQ EAETIA-Map.jpg'
+      return '/images/products/NBOGTSAFHQ-EAETIA-Map.jpg'
     }
     
     // Check for Classic Kruger Package specific left side image
