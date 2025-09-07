@@ -103,6 +103,17 @@ export default function ProductDetailsPage() {
   const realImages = useMemo(() => {
     if (!product) return []
     
+    // Check for NBOGTSAFHQEAETIA specific images (East Africa tour)
+    if (productCode === 'NBOGTSAFHQEAETIA') {
+      return [
+        '/images/products/NBOGTS AFHQ EAETIA-1.jpg',
+        '/images/products/NBOGTS AFHQ EAETIA-2.jpg',
+        '/images/products/NBOGTS AFHQ EAETIA-3.jpg',
+        '/images/products/NBOGTS AFHQ EAETIA-4.jpg',
+        '/images/products/NBOGTS AFHQ EAETIA-5.jpg'
+      ]
+    }
+    
     // Check for Classic Kruger Package specific images
     if (productCode === 'HDSSPMAKUTSMSSCLS') {
       return [
@@ -131,6 +142,11 @@ export default function ProductDetailsPage() {
   
   // Determine left side image and remaining carousel images
   const leftSideImage = useMemo(() => {
+    // Check for NBOGTSAFHQEAETIA specific map
+    if (productCode === 'NBOGTSAFHQEAETIA') {
+      return '/images/products/NBOGTS AFHQ EAETIA-Map.jpg'
+    }
+    
     // Check for Classic Kruger Package specific left side image
     if (productCode === 'HDSSPMAKUTSMSSCLS') {
       return '/images/products/cheetah.jpeg'
@@ -467,13 +483,13 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* Gallery and Map Section */}
-        <div className="relative h-[60vh] flex">
+        <div className={`relative ${productCode === 'NBOGTSAFHQEAETIA' ? 'h-[70vh]' : 'h-[60vh]'} flex`}>
           {/* Left Side - Map or Alternative Image */}
           <div className="hidden lg:block w-1/3 h-full bg-white relative border-r">
             {leftSideImage ? (
               <Image
                 src={leftSideImage}
-                alt={leftSideImage.includes('/maps/') ? "Tour Route Map" : "Tour Image"}
+                alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : "Tour Image"}
                 fill
                 className="object-contain pl-4 pr-4 py-4"
                 quality={95}
@@ -492,7 +508,7 @@ export default function ProductDetailsPage() {
           
           {/* Image Gallery - Right Side */}
           <div 
-            className="relative flex-1 h-full bg-white"
+            className={`relative flex-1 h-full bg-white ${productCode === 'NBOGTSAFHQEAETIA' ? 'max-w-[1200px] mx-auto' : ''}`}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -502,10 +518,10 @@ export default function ProductDetailsPage() {
               src={carouselImages[selectedImageIndex] || carouselImages[0]}
               alt={product.name}
               fill
-              className="object-contain p-4"
+              className={`${productCode === 'NBOGTSAFHQEAETIA' ? 'object-cover' : 'object-contain'} p-4`}
               priority
               quality={95}
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"
+              sizes={productCode === 'NBOGTSAFHQEAETIA' ? "1200px" : "(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"}
             />
             
             {/* Navigation buttons - only show if more than 1 real image */}
