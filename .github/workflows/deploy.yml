@@ -19,9 +19,83 @@ jobs:
           key: ${{ secrets.VULTR_SSH_KEY }}
           port: 22
           script: |
+            # Pull latest code and build
             cd /root/updated-tia
             git pull origin main
             pnpm install
             pnpm build
             pm2 restart updated-tia
             pm2 save
+            
+            # Setup nginx if not already configured
+            if [ ! -f /etc/nginx/sites-available/book.thisisafrica.com.au ]; then
+              echo "Setting up nginx for the first time..."
+              
+              # Install nginx
+              apt update
+              apt install -y nginx
+              
+              # Create nginx configuration
+              cat > /etc/nginx/sites-available/book.thisisafrica.com.au << 'EOF'
+            server {
+                listen 80;
+                listen [::]:80;
+                
+                server_name book.thisisafrica.com.au 139.180.164.190;
+                
+                # Security headers
+                add_header X-Frame-Options "SAMEORIGIN" always;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+                
+                # Proxy settings
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_cache_bypass $http_upgrade;
+                    
+                    # Timeouts
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                }
+                
+                # Static file caching
+                location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+                    proxy_pass http://localhost:3000;
+                    expires 30d;
+                    add_header Cache-Control "public, immutable";
+                }
+                
+                # Increase max body size for file uploads
+                client_max_body_size 10M;
+            }
+            EOF
+              
+              # Enable the site
+              ln -sf /etc/nginx/sites-available/book.thisisafrica.com.au /etc/nginx/sites-enabled/
+              
+              # Remove default nginx site
+              rm -f /etc/nginx/sites-enabled/default
+              
+              # Test and restart nginx
+              nginx -t
+              systemctl restart nginx
+              systemctl enable nginx
+              
+              # Update firewall
+              ufw allow 'Nginx Full'
+              ufw allow 80/tcp
+              ufw allow 443/tcp
+              
+              echo "Nginx setup complete!"
+            else
+              echo "Nginx already configured, reloading..."
+              nginx -t && systemctl reload nginx
+            fi
