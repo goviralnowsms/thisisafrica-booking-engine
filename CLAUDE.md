@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Current State**: Migrating from WordPress to Next.js with integrated TourPlan booking engine
 - **Goal**: Unified platform on thisisafrica.com.au (no subdomain separation)
 - **Status**: Booking engine previously built and tested - now rebuilding with cleaner architecture
-- **Repository**: https://github.com/goviralnowsms/updated-tia (use `git push vercel main`)
+- **Repository**: https://github.com/goviralnowsms/updated-tia (use `git push github-vultr main`)
+- **Live Site**: https://book.thisisafrica.com.au
 
 ## Tech Stack
 
@@ -17,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Forms**: React Hook Form + Zod validation
 - **API**: TourPlan HostConnect XML API v5.05.000
-- **Hosting**: Vercel with FixieIP for static IP (required by TourPlan)
+- **Hosting**: Vultr with static IP (TourPlan API accessible with static IP configuration)
 
 ## Commands
 
@@ -560,8 +561,8 @@ When implemented:
 
 ## Deployment Notes
 
-- Vercel deployment requires FixieIP setup
-- Environment variables in Vercel dashboard
+- Vultr deployment with static IP (awaiting TourPlan whitelisting)
+- Environment variables configured on Vultr server
 - Monitor API rate limits
 - Set up error tracking (Sentry)
 
