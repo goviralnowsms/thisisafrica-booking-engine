@@ -38,7 +38,15 @@ jobs:
             
             pnpm install
             pnpm build
-            pm2 restart updated-tia
+            
+            # Handle PM2 process - restart if exists, start if not
+            if pm2 describe updated-tia > /dev/null 2>&1; then
+              echo "Restarting existing PM2 process..."
+              pm2 restart updated-tia
+            else
+              echo "Starting new PM2 process..."
+              pm2 start pnpm --name updated-tia -- start
+            fi
             pm2 save
             
             # Setup nginx if not already configured

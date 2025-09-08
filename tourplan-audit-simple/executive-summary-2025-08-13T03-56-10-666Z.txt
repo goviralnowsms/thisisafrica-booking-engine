@@ -2,13 +2,13 @@
 TOURPLAN CONFIGURATION AUDIT - EXECUTIVE SUMMARY
 Generated: 8/13/2025, 1:56:10 PM
 
-INFRASTRUCTURE STATUS: ✅ WORKING
+INFRASTRUCTURE STATUS:  WORKING
 ✓ API connectivity established
 ✓ Group Tours returning 21 results for Kenya
 ✓ Product details loading successfully
 ✓ Pricing calendars working
 
-BOOKING AUTOMATION STATUS: ⚠️ PARTIALLY WORKING
+BOOKING AUTOMATION STATUS:  PARTIALLY WORKING
 Current booking success rate varies by product type due to TourPlan configuration issues.
 
 IMMEDIATE PRIORITIES:

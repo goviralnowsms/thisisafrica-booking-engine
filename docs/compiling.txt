@@ -1,0 +1,27 @@
+ ○ Compiling /products/[code] ...
+ ⨯ ./app/products/[code]/page.tsx:12:1
+Module not found: Can't resolve '@/components/ui/tabs'
+  10 | // Temporary fix for lucide-react module resolution issue
+  11 | // import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
+> 12 | import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+     | ^
+  13 | import PricingCalendar from "@/components/booking/PricingCalendar"
+  14 |
+  15 | // CSS for tour content styling
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/products/[code]/page.tsx:12:1
+Module not found: Can't resolve '@/components/ui/tabs'
+  10 | // Temporary fix for lucide-react module resolution issue
+  11 | // import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
+> 12 | import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+     | ^
+  13 | import PricingCalendar from "@/components/booking/PricingCalendar"
+  14 |
+  15 | // CSS for tour content styling
+
+https://nextjs.org/docs/messages/module-not-found
+ GET /_next/static/webpack/3c4540aa85ed6cc5.webpack.hot-update.json 500 in 12912ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /products/NBOGTSAFHQ%20EAETIA 500 in 27ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\.next\cache\webpack\client-development-fallback\0.pack.gz_' -> 'D:\drive\My Drive\thisisafrica\updated-tia\updated-tia\.next\cache\webpack\client-development-fallback\0.pack.gz'

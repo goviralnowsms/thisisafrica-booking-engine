@@ -822,9 +822,32 @@ export async function searchProducts(criteria: {
         break;
         
       case 'Accommodation':
-        // Since TourPlan ButtonName="Accommodation" returns empty, use catalog approach
-        console.log('🏨 Using curated accommodation catalog (ButtonName search returns empty)');
-        return searchAccommodationFromCatalog(criteria);
+        // Test multiple TourPlan API accommodation configurations
+        console.log('🏨 Testing TourPlan API accommodation search (bypassing catalog)');
+        const roomConfigs = [{
+          Adults: criteria.adults || 2,
+          Children: criteria.children || 0,
+          Type: 'DB', // Default to double room
+          Quantity: 1
+        }];
+        
+        // Try different approaches based on research
+        console.log('🏨 Trying ButtonName="Accommodation" with Info="GS"');
+        const accomRequest = new OptionInfoRequest()
+          .setButtonName('Accommodation')
+          .setInfo('GS') // Try GS instead of S
+          .setDateRange(criteria.dateFrom || '', criteria.dateTo || '')
+          .setRateConvert(true)
+          .setRoomConfigs(roomConfigs);
+        
+        if (criteria.destination && criteria.destination.trim()) {
+          // Try regular DestinationName instead of ButtonDestinations
+          accomRequest.setDestination(criteria.destination);
+        }
+        
+        xml = accomRequest.build();
+        console.log('🏨 Built accommodation XML with regular DestinationName and Info="GS"');
+        break;
         
       case 'Hotels':
         // Test Hotels ButtonName as alternative to Accommodation
