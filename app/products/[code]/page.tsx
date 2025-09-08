@@ -324,12 +324,14 @@ export default function ProductDetailsPage() {
         const result = await response.json();
 
         if (result.success && result.data?.calendar) {
-          // Check if there are any valid/available days in the calendar
-          const hasValidDays = result.data.calendar.some((day: any) => day.validDay && day.available);
+          // Check if there are any days with pricing data (since all tours are now bookable)
+          const hasValidDays = result.data.calendar.some((day: any) => 
+            day.validDay || day.available || (day.rates && day.rates.length > 0)
+          );
           setHasAvailableDates(hasValidDays);
         } else {
-          // If we can't get calendar data, assume no availability
-          setHasAvailableDates(false);
+          // Since all tours are now bookable, assume availability if we have basic product rates
+          setHasAvailableDates(hasRates);
         }
       } catch (error) {
         console.warn('Error checking availability:', error);
