@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
       hasResend: !!process.env.RESEND_API_KEY,
       hasTourplan: !!process.env.TOURPLAN_PASSWORD,
       timestamp: new Date().toISOString(),
+      deploymentCheck: 'Payment system fix deployment - v1.0',
     };
 
     // Test basic Stripe import
