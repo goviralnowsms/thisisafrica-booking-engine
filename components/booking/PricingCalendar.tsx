@@ -72,18 +72,22 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
   const fetchPricingData = async () => {
     setLoading(true)
     try {
-      // Get 6 months of data starting from current month
-      const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-      const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 6, 0)
-      
+      // For initial load, don't limit date range - let API return all available dates
+      // For subsequent navigation, use month-based filtering on the frontend
       const params = new URLSearchParams({
-        dateFrom: startDate.toISOString().split('T')[0],
-        dateTo: endDate.toISOString().split('T')[0],
         adults: adults.toString(),
         children: children.toString(),
         roomType,
         _t: Date.now().toString() // Cache busting parameter
       })
+      
+      // Only add date filtering for month navigation if we have existing data
+      if (calendarData?.calendar && calendarData.calendar.length > 0) {
+        const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
+        const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 6, 0)
+        params.set('dateFrom', startDate.toISOString().split('T')[0])
+        params.set('dateTo', endDate.toISOString().split('T')[0])
+      }
 
       const response = await fetch(`/api/tourplan/pricing/${productCode}?${params}`, {
         cache: 'no-store' // Ensure no caching
@@ -107,13 +111,32 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
         
         if (result.data?.calendar) {
           console.log('📅 Processed calendar data:', result.data.calendar.length, 'days')
+          
+          // Find the first available date and set currentMonth to that month
+          const availableDates = result.data.calendar.filter((day: any) => 
+            (day.available || day.validDay) && day.date
+          )
+          
+          if (availableDates.length > 0) {
+            const firstAvailableDate = availableDates[0].date
+            const [year, month] = firstAvailableDate.split('-').map(Number)
+            const newCurrentMonth = new Date(year, month - 1, 1) // First day of that month
+            
+            console.log('📅 Setting calendar to first available month:', {
+              firstAvailableDate,
+              newCurrentMonth: newCurrentMonth.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+            })
+            
+            setCurrentMonth(newCurrentMonth)
+          }
+          
           result.data.calendar.forEach((day: any) => {
-            if (day.validDay && day.available) {
+            if (day.validDay || day.available) {
               // Create date in local timezone to avoid UTC conversion issues
               const [year, month, dayNum] = day.date.split('-').map(Number)
               const localDate = new Date(year, month - 1, dayNum)
               const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long' })
-              console.log('📅 Valid date found:', day.date, dayOfWeek, 'validDay:', day.validDay, 'available:', day.available)
+              console.log('📅 Available date found:', day.date, dayOfWeek, 'validDay:', day.validDay, 'available:', day.available)
             }
           })
         }
@@ -130,7 +153,8 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
   }
 
   const handleDateClick = (day: CalendarDay) => {
-    if (day.validDay && onDateSelect) {
+    // Use flexible availability logic - accept available OR validDay
+    if ((day.available || day.validDay) && onDateSelect) {
       onDateSelect(day.date, day)
     }
   }
@@ -281,7 +305,7 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
               <div
                 key={`${weekIndex}-${dayIndex}`}
                 className={`p-2 min-h-[80px] border border-gray-200 ${
-                  day?.validDay 
+                  (day?.available || day?.validDay)
                     ? 'cursor-pointer hover:bg-amber-50 hover:border-amber-300' 
                     : 'bg-gray-50'
                 }`}
@@ -298,11 +322,11 @@ export default function PricingCalendar({ productCode, onDateSelect }: PricingCa
                       })()}
                     </div>
                     <div className={`text-xs mt-1 ${
-                      day.validDay ? 'text-green-600 font-medium' : 'text-gray-400'
+                      (day.available || day.validDay) ? 'text-green-600 font-medium' : 'text-gray-400'
                     }`}>
                       {day.displayPrice}
                     </div>
-                    {day.validDay && (
+                    {(day.available || day.validDay) && (
                       <div className="text-xs text-green-500 mt-auto">Available</div>
                     )}
                   </div>

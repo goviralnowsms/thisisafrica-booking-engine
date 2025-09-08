@@ -167,18 +167,14 @@ export default function BookingCreatePage() {
     
     try {
       setIsLoadingDates(true)
-      // Use same date range logic as PricingCalendar to ensure consistency
-      const currentDate = new Date()
-      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1) // First day of month
-      const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 6, 0) // 6 months ahead
-      
+      // For initial load, don't limit date range - let API return all available dates
       const params = new URLSearchParams({
-        dateFrom: startDate.toISOString().split('T')[0],
-        dateTo: endDate.toISOString().split('T')[0],
         adults: (adults || formData.adults).toString(),
         children: (childrenCount !== undefined ? childrenCount : formData.children.length).toString(),
         roomType: 'DB'
       })
+      
+      console.log('📅 Fetching available dates for booking calendar:', { tourId, adults: adults || formData.adults, children: childrenCount !== undefined ? childrenCount : formData.children.length })
 
 
       const response = await fetch(`/api/tourplan/pricing/${tourId}?${params}`)
@@ -188,15 +184,29 @@ export default function BookingCreatePage() {
       if (result.success && result.data?.calendar) {
         const validDates = new Set<string>()
         result.data.calendar.forEach((day: any) => {
-          if (day.validDay && day.available) {
+          // Use flexible availability logic - accept available OR validDay
+          if (day.available || day.validDay) {
             validDates.add(day.date)
             // Create date in local timezone to avoid UTC conversion issues
             const [year, month, dayNum] = day.date.split('-').map(Number)
             const localDate = new Date(year, month - 1, dayNum)
             const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long' })
+            console.log('📅 Available booking date:', day.date, dayOfWeek, 'available:', day.available, 'validDay:', day.validDay)
           }
         })
         setAvailableDates(validDates)
+        
+        // Auto-navigate calendar to first available month if no date is pre-selected
+        if (validDates.size > 0 && !formData.departureDate && !preSelectedDate) {
+          const sortedDates = Array.from(validDates).sort()
+          const firstAvailableDate = sortedDates[0]
+          const [year, month] = firstAvailableDate.split('-').map(Number)
+          
+          console.log('📅 Auto-navigating booking calendar to first available month:', {
+            firstAvailableDate,
+            month: new Date(year, month - 1, 1).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+          })
+        }
       }
     } catch (error) {
     } finally {
@@ -887,6 +897,16 @@ export default function BookingCreatePage() {
                           selected={formData.departureDate || undefined}
                           onSelect={handleDateSelect}
                           initialFocus
+                          defaultMonth={(() => {
+                            // Start calendar at first available month if available dates exist
+                            if (availableDates.size > 0 && !formData.departureDate && !preSelectedDate) {
+                              const sortedDates = Array.from(availableDates).sort()
+                              const firstAvailableDate = sortedDates[0]
+                              const [year, month] = firstAvailableDate.split('-').map(Number)
+                              return new Date(year, month - 1, 1) // First day of that month
+                            }
+                            return undefined // Use default behavior
+                          })()}
                           disabled={(date) => {
                             // Disable past dates
                             if (date < new Date()) return true
