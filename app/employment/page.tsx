@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { MapPin, Briefcase, Calendar, DollarSign, CheckCircle, Mail } from "lucide-react"
+import { MapPin, Briefcase, Calendar, DollarSign, CheckCircle, Mail, Users, GraduationCap, Globe, Heart } from "lucide-react"
 
 export default function EmploymentPage() {
   return (
@@ -24,6 +24,9 @@ export default function EmploymentPage() {
             <div className="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl">
               Join our passionate team of African travel specialists
+            </p>
+            <p className="text-lg md:text-xl text-white/80 max-w-2xl mt-4">
+              Experience the rewarding career of sharing Africa's magic with fellow travelers while building your expertise in specialized travel consulting
             </p>
           </div>
         </div>
@@ -51,6 +54,53 @@ export default function EmploymentPage() {
                 we are regularly seeking staff members to join our friendly team. Our office is situated in 
                 Randwick NSW and is close to public transport links.
               </p>
+            </div>
+
+            {/* Why Choose This Career */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                Why Choose a Career in African Travel?
+              </h2>
+              <div className="bg-white rounded-lg shadow-md p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Turn your African travel experiences into meaningful career expertise
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Work with clients who share your passion for adventure and discovery
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Continuous learning through educational trips and industry training
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Build lasting relationships with suppliers and travel partners across Africa
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Contribute to sustainable tourism that benefits local African communities
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">
+                      Develop specialized skills in luxury travel, safari planning, and cultural experiences
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Position Details */}
@@ -145,6 +195,61 @@ export default function EmploymentPage() {
               </div>
             </div>
 
+            {/* Career Development & Culture */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              {/* Career Development */}
+              <div className="bg-white rounded-lg shadow-md p-8">
+                <div className="flex items-center mb-4">
+                  <GraduationCap className="h-8 w-8 text-amber-500 mr-3" />
+                  <h4 className="text-xl font-bold text-gray-900">Career Development</h4>
+                </div>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Advanced Galileo and booking system training
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Marketing and product sourcing skill development
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    First-hand destination knowledge through educational trips
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Airline ticketing and industry certification opportunities
+                  </li>
+                </ul>
+              </div>
+
+              {/* Team & Culture */}
+              <div className="bg-white rounded-lg shadow-md p-8">
+                <div className="flex items-center mb-4">
+                  <Heart className="h-8 w-8 text-amber-500 mr-3" />
+                  <h4 className="text-xl font-bold text-gray-900">Team & Culture</h4>
+                </div>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Friendly, collaborative team environment
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Share your passion for Africa with like-minded colleagues
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Contribute to inspiring life-changing travel experiences
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>
+                    Build expertise in luxury and adventure travel markets
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             {/* Location */}
             <div className="bg-gray-100 rounded-lg p-6 mb-12 flex items-center">
               <MapPin className="h-6 w-6 text-amber-500 mr-3 flex-shrink-0" />
@@ -154,17 +259,21 @@ export default function EmploymentPage() {
             </div>
 
             {/* Application CTA */}
-            <div className="bg-amber-500 text-white rounded-lg p-8 text-center">
-              <h3 className="text-2xl font-bold mb-4">Ready to Join Our Team?</h3>
-              <p className="mb-6 text-lg">
-                Please email your resume along with a covering letter and list of countries you have travelled to:
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg p-10 text-center shadow-lg">
+              <h3 className="text-3xl font-bold mb-2">Start Your African Travel Career</h3>
+              <p className="text-xl mb-4 text-amber-100">
+                Join the leading specialists in African adventure travel
+              </p>
+              <p className="mb-8 text-lg leading-relaxed max-w-2xl mx-auto">
+                Take the next step in your travel career by joining our passionate team. Send us your resume, 
+                covering letter, and a list of African countries you've experienced firsthand.
               </p>
               <a 
                 href="mailto:employment@thisisafrica.com.au"
-                className="inline-flex items-center bg-white text-amber-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-bold transition-colors"
+                className="inline-flex items-center bg-white text-amber-600 hover:bg-gray-50 px-10 py-4 rounded-lg font-bold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
               >
-                <Mail className="h-5 w-5 mr-2" />
-                employment@thisisafrica.com.au
+                <Mail className="h-6 w-6 mr-3" />
+                Apply Now - employment@thisisafrica.com.au
               </a>
             </div>
           </div>

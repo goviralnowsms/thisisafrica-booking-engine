@@ -82,7 +82,7 @@ interface ProductDetails {
 export default function ProductDetailsPage() {
   const params = useParams()
   const router = useRouter()
-  const productCode = params.code as string
+  const productCode = decodeURIComponent(params.code as string)
   
   const [product, setProduct] = useState<ProductDetails | null>(null)
   const [loading, setLoading] = useState(true)
@@ -103,8 +103,11 @@ export default function ProductDetailsPage() {
   const realImages = useMemo(() => {
     if (!product) return []
     
-    // Check for NBOGTSAFHQEAETIA specific images (East Africa tour)
-    if (productCode === 'NBOGTSAFHQEAETIA') {
+    console.log('Checking product code:', productCode, 'against NBOGTSAFHQ EAETIA')
+    
+    // Check for NBOGTSAFHQ EAETIA specific images (East Africa tour)
+    if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
+      console.log('Matched NBOGTSAFHQ EAETIA - returning custom images')
       return [
         '/images/products/NBOGTSAFHEQ-AETIA-1.jpg',
         '/images/products/NBOGTSAFHQ-EAETIA-2.jpg',
@@ -142,8 +145,8 @@ export default function ProductDetailsPage() {
   
   // Determine left side image and remaining carousel images
   const leftSideImage = useMemo(() => {
-    // Check for NBOGTSAFHQEAETIA specific map
-    if (productCode === 'NBOGTSAFHQEAETIA') {
+    // Check for NBOGTSAFHQ EAETIA specific map
+    if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
       return '/images/products/NBOGTSAFHQ-EAETIA-Map.jpg'
     }
     
@@ -378,6 +381,24 @@ export default function ProductDetailsPage() {
           
           if (productData && productData.id) {
             console.log('Setting product data:', productData)
+            
+            // Add PDF for NBOGTSAFHQ EAETIA product
+            if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
+              if (!productData.localAssets) {
+                productData.localAssets = { images: [], pdfs: [] }
+              }
+              if (!productData.localAssets.pdfs) {
+                productData.localAssets.pdfs = []
+              }
+              // Add the PDF with space in filename
+              productData.localAssets.pdfs = [{
+                url: '/pdfs/products/NBOGTSAFHQ EAETIA-PDF.pdf',
+                name: 'Tour Brochure',
+                originalName: 'NBOGTSAFHQ EAETIA-PDF.pdf',
+                status: 'available'
+              }]
+            }
+            
             setProduct(productData)
             // Reset image carousel to first image when product changes
             setSelectedImageIndex(0)
@@ -483,17 +504,17 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* Gallery and Map Section */}
-        <div className={`relative ${productCode === 'NBOGTSAFHQEAETIA' ? 'h-[70vh]' : 'h-[60vh]'} flex`}>
+        <div className={`relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'h-[70vh] flex justify-center gap-4' : 'h-[60vh] flex justify-center'}`}>
           {/* Left Side - Map or Alternative Image */}
-          <div className="hidden lg:block w-1/3 h-full bg-white relative border-r">
+          <div className={`hidden lg:block ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'w-[40vw] h-full' : 'w-1/3 h-full'} bg-white relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? '' : 'border-r'}`}>
             {leftSideImage ? (
               <Image
                 src={leftSideImage}
                 alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : "Tour Image"}
                 fill
-                className="object-contain pl-4 pr-4 py-4"
+                className={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "object-cover" : "object-contain p-4"}
                 quality={95}
-                sizes="(max-width: 1024px) 0vw, 500px"
+                sizes={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "40vw" : "(max-width: 1024px) 0vw, 500px"}
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-gray-500">
@@ -508,7 +529,7 @@ export default function ProductDetailsPage() {
           
           {/* Image Gallery - Right Side */}
           <div 
-            className={`relative flex-1 h-full bg-white ${productCode === 'NBOGTSAFHQEAETIA' ? 'max-w-[1200px] mx-auto' : ''}`}
+            className={`relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'w-[60vw] h-full' : 'flex-1 h-full'} bg-white`}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -518,10 +539,10 @@ export default function ProductDetailsPage() {
               src={carouselImages[selectedImageIndex] || carouselImages[0]}
               alt={product.name}
               fill
-              className={`${productCode === 'NBOGTSAFHQEAETIA' ? 'object-cover' : 'object-contain'} p-4`}
+              className={`${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'object-cover' : 'object-contain'}`}
               priority
               quality={95}
-              sizes={productCode === 'NBOGTSAFHQEAETIA' ? "1200px" : "(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"}
+              sizes={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "1200px" : "(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"}
             />
             
             {/* Navigation buttons - only show if more than 1 real image */}
@@ -867,7 +888,7 @@ export default function ProductDetailsPage() {
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: 'url(/products/rsz_leopard-in-tree.jpg)',
+            backgroundImage: 'url(/images/products/rsz_leopard-in-tree.jpg)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -878,7 +899,7 @@ export default function ProductDetailsPage() {
         
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Discover More African Adventures
+            Discover more African adventures
           </h2>
           <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Download our comprehensive 2025 brochure featuring all our tours, 
@@ -892,14 +913,14 @@ export default function ProductDetailsPage() {
               className="inline-flex items-center justify-center px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors"
             >
               <span className="mr-2">📥</span>
-              Download 2025 Brochure
+              Download 2025 brochure
             </a>
             <Link
               href="/contact?subject=brochure-request"
               className="inline-flex items-center justify-center px-8 py-3 bg-white hover:bg-gray-100 text-gray-800 font-bold rounded-lg transition-colors"
             >
               <span className="mr-2">✉️</span>
-              Request Printed Copy
+              Request printed copy
             </Link>
           </div>
         </div>
