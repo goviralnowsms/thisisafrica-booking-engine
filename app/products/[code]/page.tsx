@@ -93,20 +93,65 @@ export default function ProductDetailsPage() {
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [hasAvailableDates, setHasAvailableDates] = useState<boolean | null>(null)
+  const [sanityImages, setSanityImages] = useState<any>(null)
+  const [sanityImagesLoaded, setSanityImagesLoaded] = useState(false)
 
   // Client-side hydration effect
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Calculate product images - simplified without heavy operations
+  // Fetch Sanity images effect
+  useEffect(() => {
+    const fetchSanityImages = async () => {
+      if (!productCode) return
+
+      try {
+        console.log('Fetching Sanity images for:', productCode)
+        const response = await fetch(`/api/sanity/product-images/${productCode}`)
+        const result = await response.json()
+        
+        if (result.success && result.data) {
+          console.log('Sanity images loaded:', result.data)
+          setSanityImages(result.data)
+        } else {
+          console.log('No Sanity images found for product:', productCode)
+          setSanityImages(null)
+        }
+      } catch (error) {
+        console.warn('Error fetching Sanity images:', error)
+        setSanityImages(null)
+      } finally {
+        setSanityImagesLoaded(true)
+      }
+    }
+
+    if (productCode) {
+      fetchSanityImages()
+    }
+  }, [productCode])
+
+  // Calculate product images - now checks Sanity first, then falls back to hardcoded
   const realImages = useMemo(() => {
     if (!product) return []
     
-    console.log('Checking product code:', productCode, 'against NBOGTSAFHQ EAETIA')
+    console.log('Checking product images for:', productCode)
+    console.log('Sanity images loaded:', sanityImagesLoaded, 'Sanity images:', sanityImages)
+    
+    // First check Sanity images if loaded
+    if (sanityImagesLoaded && sanityImages?.gallery && sanityImages.gallery.length > 0) {
+      console.log('Using Sanity images for', productCode)
+      return sanityImages.gallery
+        .map((img: any) => img.url)
+        .filter((url: string) => url && url.trim() !== '')
+        .slice(0, 5) // Limit to 5 images
+    }
+    
+    // Fallback to hardcoded images for specific products
+    console.log('No Sanity images, checking hardcoded images for:', productCode)
     
     // Check for NBOGTSAFHQ EAETIA specific images (East Africa tour)
-    if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
+    if (productCode === 'NBOGTSAFHQ EAETIA') {
       console.log('Matched NBOGTSAFHQ EAETIA - returning custom images')
       return [
         '/images/products/NBOGTSAFHEQ-AETIA-1.jpg',
@@ -125,7 +170,7 @@ export default function ProductDetailsPage() {
       ]
     }
     
-    // Return product images if available
+    // Return TourPlan product images if available
     if (product.localAssets?.images && product.localAssets.images.length > 0) {
       return product.localAssets.images
         .map(img => img.url)
@@ -134,7 +179,7 @@ export default function ProductDetailsPage() {
     }
     
     return []
-  }, [product, productCode])
+  }, [product, productCode, sanityImages, sanityImagesLoaded])
   
   // Use real images if available, otherwise fallback images
   const productImages = useMemo(() => {
@@ -145,8 +190,14 @@ export default function ProductDetailsPage() {
   
   // Determine left side image and remaining carousel images
   const leftSideImage = useMemo(() => {
+    // First check Sanity map image
+    if (sanityImages?.mapImage) {
+      console.log('Using Sanity map image for', productCode)
+      return sanityImages.mapImage
+    }
+    
     // Check for NBOGTSAFHQ EAETIA specific map
-    if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
+    if (productCode === 'NBOGTSAFHQ EAETIA') {
       return '/images/products/NBOGTSAFHQ-EAETIA-Map.jpg'
     }
     
@@ -165,7 +216,7 @@ export default function ProductDetailsPage() {
     }
     // If only one real image or no real images, use first image
     return productImages[0]
-  }, [mapImage, realImages, productImages, productCode])
+  }, [mapImage, realImages, productImages, productCode, sanityImages])
   
   // Remaining images for carousel (excluding the one used on left side)
   const carouselImages = useMemo(() => {
@@ -385,7 +436,7 @@ export default function ProductDetailsPage() {
             console.log('Setting product data:', productData)
             
             // Add PDF for NBOGTSAFHQ EAETIA product
-            if (productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') {
+            if (productCode === 'NBOGTSAFHQ EAETIA') {
               if (!productData.localAssets) {
                 productData.localAssets = { images: [], pdfs: [] }
               }
@@ -506,7 +557,7 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* Gallery and Map Section */}
-        <div className={`relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'h-[70vh] flex justify-center gap-4' : 'h-[60vh] flex justify-center'}`}>
+        <div className={`relative ${productCode === 'NBOGTSAFHQ EAETIA' ? 'h-[70vh] flex justify-center gap-4' : 'h-[60vh] flex justify-center'}`}>
           {/* Left Side - Map or Alternative Image */}
           <div className={`hidden lg:block ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'w-[40vw] h-full' : 'w-1/3 h-full'} bg-white relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? '' : 'border-r'}`}>
             {leftSideImage ? (

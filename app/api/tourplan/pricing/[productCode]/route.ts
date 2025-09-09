@@ -67,14 +67,26 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                             productCode.includes('LODGE') ||
                             productCode.includes('HOTEL')
     
-    // FORCE extended date range to match WordPress behavior (goes to 2027+)
-    // WordPress searches much further ahead to show all available dates
-    // IGNORE any dateTo parameter - always use extended range
-    const currentDate = new Date()
-    const extendedDateTo = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate())
+    // Special date handling for specific products
+    let dateFrom: string
+    let dateTo: string
     
-    const dateFrom = dateFromParam || currentDate.toISOString().split('T')[0]
-    const dateTo = extendedDateTo.toISOString().split('T')[0] // Always use 5-year extension
+    // Handle NBOGTSAFHQ EAETIA which starts in July 2026
+    if (productCode === 'NBOGTSAFHQ EAETIA') {
+      console.log('🦁 Special date handling for NBOGTSAFHQ EAETIA - starting from July 2026')
+      dateFrom = dateFromParam || '2026-07-01' // Start from July 2026
+      const extendedDateTo = new Date(2028, 11, 31) // Extend to end of 2028
+      dateTo = extendedDateTo.toISOString().split('T')[0]
+    } else {
+      // FORCE extended date range to match WordPress behavior (goes to 2027+)
+      // WordPress searches much further ahead to show all available dates
+      // IGNORE any dateTo parameter - always use extended range
+      const currentDate = new Date()
+      const extendedDateTo = new Date(currentDate.getFullYear() + 5, currentDate.getMonth(), currentDate.getDate())
+      
+      dateFrom = dateFromParam || currentDate.toISOString().split('T')[0]
+      dateTo = extendedDateTo.toISOString().split('T')[0] // Always use 5-year extension
+    }
     
     console.log(`📅 FORCING extended date range to match WordPress:`, { 
       dateFrom, 

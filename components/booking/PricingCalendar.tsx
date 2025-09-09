@@ -29,7 +29,15 @@ interface CalendarData {
 }
 
 export default function PricingCalendar({ productCode, onDateSelect }: PricingCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  // Set initial month based on product - NBOGTSAFHQ EAETIA starts in July 2026
+  const getInitialMonth = () => {
+    if (productCode === 'NBOGTSAFHQ EAETIA') {
+      return new Date(2026, 6, 1) // July 2026 (month is 0-indexed)
+    }
+    return new Date()
+  }
+  
+  const [currentMonth, setCurrentMonth] = useState(getInitialMonth())
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null)
   const [loading, setLoading] = useState(false)
   const [adults, setAdults] = useState(2)
