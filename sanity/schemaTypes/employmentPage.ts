@@ -130,6 +130,7 @@ export default defineType({
           of: [
             {
               type: 'object',
+              name: 'benefit',
               fields: [
                 {
                   name: 'text',
@@ -187,6 +188,7 @@ export default defineType({
           of: [
             {
               type: 'object',
+              name: 'requirement',
               fields: [
                 {
                   name: 'text',
@@ -238,7 +240,7 @@ export default defineType({
               name: 'benefits',
               title: 'Package Benefits',
               type: 'array',
-              of: [{type: 'string'}],
+              of: [{type: 'string', name: 'benefit'}],
               validation: (Rule) => Rule.max(5),
             },
           ],
@@ -265,7 +267,7 @@ export default defineType({
               name: 'schedule',
               title: 'Work Schedule',
               type: 'array',
-              of: [{type: 'string'}],
+              of: [{type: 'string', name: 'scheduleItem'}],
               validation: (Rule) => Rule.max(5),
             },
           ],
@@ -301,7 +303,7 @@ export default defineType({
               name: 'points',
               title: 'Development Points',
               type: 'array',
-              of: [{type: 'string'}],
+              of: [{type: 'string', name: 'developmentPoint'}],
               validation: (Rule) => Rule.max(6),
             },
           ],
@@ -328,7 +330,7 @@ export default defineType({
               name: 'points',
               title: 'Culture Points',
               type: 'array',
-              of: [{type: 'string'}],
+              of: [{type: 'string', name: 'culturePoint'}],
               validation: (Rule) => Rule.max(6),
             },
           ],
@@ -410,6 +412,7 @@ export default defineType({
           of: [
             {
               type: 'object',
+              name: 'featureCard',
               fields: [
                 {
                   name: 'icon',

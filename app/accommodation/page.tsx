@@ -23,11 +23,41 @@ import {
   Hotel,
   Mail,
   Phone,
-  Filter
+  Filter,
+  Loader2,
+  Eye,
+  ArrowRight
 } from "lucide-react"
 
-// Sample accommodation data - this would come from your API
-const accommodations = [
+// Generic accommodation images for different types
+const genericImages = {
+  lodge: [
+    "/images/products/safari-jeep.jpg",
+    "/images/products/lion-pride.jpg",
+    "/images/products/elephants.jpg"
+  ],
+  hotel: [
+    "/images/products/cape-town.jpg",
+    "/images/products/victoria-falls.jpg"
+  ],
+  camp: [
+    "/images/products/sunrise-tour.jpg",
+    "/images/products/leopard.jpg"
+  ],
+  resort: [
+    "/images/products/chobe-river.jpg",
+    "/images/products/namibia-desert.jpg"
+  ]
+}
+
+// Get a random generic image for accommodation type
+const getGenericImage = (type: string): string => {
+  const typeImages = genericImages[type as keyof typeof genericImages] || genericImages.lodge
+  return typeImages[Math.floor(Math.random() * typeImages.length)]
+}
+
+// Sample static data for initial display (will be replaced by API data)
+const fallbackAccommodations = [
   // Kenya Accommodations
   {
     id: "NBOHTL001",
@@ -171,6 +201,27 @@ const accommodations = [
   }
 ]
 
+interface Accommodation {
+  id: string
+  code: string
+  name: string
+  supplier?: string
+  description?: string
+  destination?: string
+  location?: string
+  country: string
+  type: string
+  category: string
+  image: string
+  roomType?: string
+  rates?: any[]
+  hasAvailability?: boolean
+  features?: string[]
+  capacity?: string
+  highlights?: string[]
+  displayName?: string
+}
+
 const countries = [
   { value: "all", label: "All Destinations" },
   { value: "kenya", label: "Kenya" },
@@ -191,8 +242,74 @@ const types = [
 export default function AccommodationPage() {
   const [selectedCountry, setSelectedCountry] = useState("all")
   const [selectedType, setSelectedType] = useState("all")
-  const [filteredAccommodations, setFilteredAccommodations] = useState(accommodations)
+  const [accommodations, setAccommodations] = useState<Accommodation[]>(fallbackAccommodations)
+  const [filteredAccommodations, setFilteredAccommodations] = useState<Accommodation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  // Fetch accommodations from TourPlan API
+  useEffect(() => {
+    const fetchAccommodations = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        const params = new URLSearchParams()
+        if (selectedCountry !== "all") {
+          params.append("destination", selectedCountry)
+        }
+        
+        const response = await fetch(`/api/accommodation/search?${params}`)
+        const data = await response.json()
+        
+        if (data.success && data.accommodations) {
+          // Merge API data with fallback data features
+          const enrichedAccommodations = data.accommodations.map((acc: any) => {
+            // Find matching fallback data for additional features
+            const fallback = fallbackAccommodations.find(
+              fb => fb.location?.toLowerCase().includes(acc.destination?.toLowerCase() || '')
+            )
+            
+            return {
+              ...acc,
+              // Ensure we have an image
+              image: acc.image || getGenericImage(acc.type),
+              // Add features from fallback if not present
+              features: acc.features || fallback?.features || [
+                'Wi-Fi', 'Restaurant', 'Bar', 'Pool'
+              ],
+              capacity: acc.capacity || `${acc.roomType || 'Room'}`,
+              highlights: acc.highlights || [
+                acc.supplier ? `Operated by ${acc.supplier}` : 'Premium accommodation',
+                acc.hasAvailability ? 'Available for booking' : 'On request'
+              ],
+              // Properly format the name to show room type
+              displayName: acc.roomType && acc.name ? 
+                `${acc.name} - ${acc.roomType}` : 
+                acc.name
+            }
+          })
+          
+          setAccommodations(enrichedAccommodations)
+        } else {
+          // If API fails, use fallback data
+          console.log('Using fallback accommodation data')
+          setAccommodations(fallbackAccommodations)
+        }
+      } catch (err) {
+        console.error('Failed to fetch accommodations:', err)
+        setError('Failed to load accommodations. Showing sample data.')
+        // Use fallback data on error
+        setAccommodations(fallbackAccommodations)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchAccommodations()
+  }, []) // Only fetch once on mount
+  
+  // Filter accommodations based on selected filters
   useEffect(() => {
     let filtered = accommodations
 
@@ -205,7 +322,7 @@ export default function AccommodationPage() {
     }
 
     setFilteredAccommodations(filtered)
-  }, [selectedCountry, selectedType])
+  }, [selectedCountry, selectedType, accommodations])
 
   const getTypeIcon = (type: string) => {
     switch(type) {
@@ -296,17 +413,37 @@ export default function AccommodationPage() {
       <section className="bg-amber-50 py-3">
         <div className="container mx-auto px-4">
           <p className="text-center text-gray-700">
-            Showing <span className="font-semibold">{filteredAccommodations.length}</span> accommodations
-            {selectedCountry !== "all" && ` in ${countries.find(c => c.value === selectedCountry)?.label}`}
-            {selectedType !== "all" && ` - ${types.find(t => t.value === selectedType)?.label}`}
+            {loading ? (
+              <span>Loading accommodations...</span>
+            ) : (
+              <>
+                Showing <span className="font-semibold">{filteredAccommodations.length}</span> accommodations
+                {selectedCountry !== "all" && ` in ${countries.find(c => c.value === selectedCountry)?.label}`}
+                {selectedType !== "all" && ` - ${types.find(t => t.value === selectedType)?.label}`}
+              </>
+            )}
           </p>
         </div>
       </section>
 
+      {/* Error Message */}
+      {error && (
+        <section className="bg-red-50 py-3">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-red-700">{error}</p>
+          </div>
+        </section>
+      )}
+
       {/* Accommodation Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          {filteredAccommodations.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-amber-500 mb-4" />
+              <p className="text-gray-600">Loading accommodations from TourPlan...</p>
+            </div>
+          ) : filteredAccommodations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredAccommodations.map((accommodation) => (
                 <Card key={accommodation.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -329,10 +466,17 @@ export default function AccommodationPage() {
                   </div>
                   
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{accommodation.name}</h3>
+                    <h3 className="text-xl font-bold mb-1">
+                      {accommodation.displayName || accommodation.name}
+                    </h3>
+                    {accommodation.supplier && (
+                      <p className="text-sm text-gray-500 mb-2">{accommodation.supplier}</p>
+                    )}
                     <div className="flex items-center text-gray-600 mb-3">
                       <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{accommodation.location}</span>
+                      <span className="text-sm">
+                        {accommodation.location || accommodation.destination || 'Africa'}
+                      </span>
                     </div>
                     
                     <p className="text-gray-600 mb-4 line-clamp-3">
@@ -341,7 +485,9 @@ export default function AccommodationPage() {
 
                     <div className="flex items-center text-gray-500 mb-4">
                       <Users className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{accommodation.capacity}</span>
+                      <span className="text-sm">
+                        {accommodation.roomType || accommodation.capacity || 'Standard Room'}
+                      </span>
                     </div>
 
                     {/* Features */}
@@ -372,19 +518,40 @@ export default function AccommodationPage() {
                     </div>
 
                     {/* CTA Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-2">
+                      {/* View Details Button */}
                       <Link 
-                        href={`/contact?subject=accommodation-inquiry&property=${encodeURIComponent(accommodation.name)}`}
-                        className="flex-1"
+                        href={`/products/${accommodation.code}`}
+                        className="w-full"
                       >
                         <Button className="w-full bg-amber-500 hover:bg-amber-600">
-                          <Mail className="h-4 w-4 mr-2" />
-                          Request Quote
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                          <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
                       </Link>
-                      <Button variant="outline" size="icon">
-                        <Phone className="h-4 w-4" />
-                      </Button>
+                      
+                      {/* Request Quote Button */}
+                      <div className="flex gap-2">
+                        <Link 
+                          href={`/contact?subject=accommodation-inquiry&property=${encodeURIComponent(
+                            accommodation.displayName || accommodation.name
+                          )}&code=${accommodation.code}`}
+                          className="flex-1"
+                        >
+                          <Button variant="outline" className="w-full">
+                            <Mail className="h-4 w-4 mr-2" />
+                            Request Quote
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => window.location.href = 'tel:+61299571788'}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

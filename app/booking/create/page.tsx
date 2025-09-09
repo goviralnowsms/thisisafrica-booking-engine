@@ -184,14 +184,18 @@ export default function BookingCreatePage() {
       if (result.success && result.data?.calendar) {
         const validDates = new Set<string>()
         result.data.calendar.forEach((day: any) => {
-          // Use flexible availability logic - accept available OR validDay
-          if (day.available || day.validDay) {
+          // More precise availability logic: must be explicitly available AND have valid pricing
+          // Only add dates that are genuinely bookable (have rates and are confirmed available)
+          if (day.available && (day.rate > 0 || day.validDay)) {
             validDates.add(day.date)
             // Create date in local timezone to avoid UTC conversion issues
             const [year, month, dayNum] = day.date.split('-').map(Number)
             const localDate = new Date(year, month - 1, dayNum)
             const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long' })
-            console.log('📅 Available booking date:', day.date, dayOfWeek, 'available:', day.available, 'validDay:', day.validDay)
+            console.log('📅 Available booking date:', day.date, dayOfWeek, 'available:', day.available, 'validDay:', day.validDay, 'rate:', day.rate)
+          } else {
+            // Log why dates are being excluded for debugging
+            console.log('📅 Excluded date:', day.date, 'available:', day.available, 'validDay:', day.validDay, 'rate:', day.rate)
           }
         })
         setAvailableDates(validDates)
