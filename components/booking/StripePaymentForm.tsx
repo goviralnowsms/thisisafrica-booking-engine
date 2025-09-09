@@ -12,7 +12,12 @@ import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 
 // Load Stripe outside of component to avoid recreating on every render
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const getStripeKey = () => {
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  console.log('Stripe key loaded:', key?.substring(0, 20) + '...', 'Length:', key?.length)
+  return key
+}
+const stripePromise = loadStripe(getStripeKey()!)
 
 interface StripePaymentFormProps {
   amount: number
