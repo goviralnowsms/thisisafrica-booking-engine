@@ -100,6 +100,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     
     // Extract OptAvail data for WordPress-style availability processing
     const optAvailData = result.optAvail || null
+    const availableDatesData = result.availableDates || null
+    
+    console.log('📊 Availability data from updated parser:', {
+      optAvailCodes: optAvailData?.length || 0,
+      availableDates: availableDatesData?.length || 0,
+      firstAvailableDate: availableDatesData?.[0]?.date,
+      sampleAvailableDates: availableDatesData?.slice(0, 5)?.map(d => `${d.date} (${d.dayOfWeek})`)
+    })
     
     // Detect product types based on code patterns and referer
     const isCruise = productCode.includes('CRCHO') ||   // Chobe cruise codes like BBKCRCHO018TIACP2
@@ -273,7 +281,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log('OptAvail data available:', !!optAvailData, optAvailData?.length || 0, 'codes')
     // Pass the API's actual dateFrom for OptAvail indexing
     const apiDateFrom = pricingData.length > 0 ? pricingData[0].dateFrom : dateFrom
-    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom, forceNoAvailability, isFridayOnlyTour)
+    const calendarData = processCalendarData(pricingData, dateFrom, dateTo, productCode, isAccommodation, optAvailData, apiDateFrom, forceNoAvailability, isFridayOnlyTour, availableDatesData)
     console.log('Generated calendar data:', calendarData.length, 'days')
     
     const response = NextResponse.json({ 
@@ -309,7 +317,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Process date ranges into calendar-friendly format
  * Fixed to handle timezone consistently and avoid UTC date shifts
  */
-function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string, forceNoAvailability?: boolean, isFridayOnlyTour?: boolean) {
+function processCalendarData(dateRanges: any[], startDate: string, endDate: string, productCode: string, isAccommodation: boolean, optAvailData?: string[] | null, apiDateFrom?: string, forceNoAvailability?: boolean, isFridayOnlyTour?: boolean, availableDatesData?: any[] | null) {
   const calendar: any[] = []
   
   // Helper function to create local date from YYYY-MM-DD string
@@ -394,9 +402,20 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
         hasDateData: dateMap.has(dateKey)
       })
       
-      if (dateMap.has(dateKey)) {
-        const pricing = dateMap.get(dateKey)
-        console.log('🔍 Pricing object for', dateKey, 'has optAvail:', !!pricing.optAvail)
+      // Get pricing data for this date, or use first available pricing for OptAvail data
+      let pricing = dateMap.get(dateKey)
+      let hasDirectPricing = dateMap.has(dateKey)
+      
+      // For products that need OptAvail filtering (cruises, tours), process all dates
+      // even if they don't have direct pricing data
+      if (!hasDirectPricing && dateMap.size > 0) {
+        // Use the first pricing entry to get OptAvail data for availability filtering
+        pricing = Array.from(dateMap.values())[0]
+        console.log(`🗓️ No direct pricing for ${dateKey}, using OptAvail from first entry for filtering`)
+      }
+      
+      if (pricing) {
+        console.log('🔍 Pricing object for', dateKey, 'has optAvail:', !!pricing.optAvail, 'hasDirectPricing:', hasDirectPricing)
         
         // Check if this day is valid using WordPress-style OptAvail data
         let validDay = true
@@ -440,6 +459,11 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
             // Check if this is a Cruise product
             const isCruiseProduct = productCode.includes('CRCHO') || productCode.includes('CRTVT') || productCode.includes('CRUISE');
             
+            // Debug logging for cruise products
+            if (productCode.includes('CRCHO')) {
+              console.log(`🚢 Cruise product detected: ${productCode}, isCruiseProduct=${isCruiseProduct}, processing ${dateKey} with availCode=${availCode}`);
+            }
+            
             // Check if this is a Package product
             const isPackageProduct = productCode.includes('PK') || productCode.includes('PACKAGE');
             
@@ -466,8 +490,14 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
                 console.log(`📦 HDSPKMAKUTSMSSWLK availability check for ${dateKey}: availCode=${availCode}, validDay=${validDay}`);
               }
             } else {
-              // For other products (Rail, etc.), use the general logic
-              validDay = availCode !== '-1';  // Everything except -1 is considered available
+              // For ALL other tour products, use strict availability logic (only positive codes)
+              // This ensures proper availability for all tours, not just specific patterns
+              validDay = parseInt(availCode) > 0;  // Only show positive availability for all tours
+              
+              // Special exception for Rail products which need looser logic
+              if (productCode.includes('RLROV') || productCode.includes('RAIL') || productCode.toLowerCase().includes('rail')) {
+                validDay = availCode !== '-1';  // Rail: everything except -1 is considered available
+              }
             }
             
             let statusText = 'Unknown';
@@ -503,11 +533,14 @@ function processCalendarData(dateRanges: any[], startDate: string, endDate: stri
           })
         }
         
+        const finalValidDay = validDay && (hasDirectPricing ? pricing.available : true)
         calendar.push({
           ...pricing,
+          date: dateKey,
           dayOfWeek,
-          validDay: validDay && pricing.available,
-          displayPrice: formatDisplayPrice(productCode, pricing)
+          validDay: finalValidDay,
+          available: finalValidDay,  // Make sure available matches validDay for calendar filtering
+          displayPrice: hasDirectPricing ? formatDisplayPrice(productCode, pricing) : (validDay ? 'Available' : 'Not Available')
         })
       } else {
         // For accommodation products without pricing data, assume they're available

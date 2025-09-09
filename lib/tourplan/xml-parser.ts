@@ -77,6 +77,12 @@ export class TourPlanXMLParser {
         }
       }
 
+      // Parse single option (for direct product code searches)
+      if (reply.Option) {
+        const option = this.parseOption(reply.Option);
+        options.push(option);
+      }
+
       // Parse rates
       if (reply.Rates) {
         const rateList = this.ensureArray(reply.Rates.Rate);
@@ -90,6 +96,101 @@ export class TourPlanXMLParser {
 
     return {
       Error: this.extractError(response),
+    };
+  }
+
+  /**
+   * Parse accommodation-specific response that includes supplier and product data
+   * Merges hotel information (supplier level) with room type information (product level)
+   */
+  parseAccommodationResponse(xml: string): {
+    accommodations: Array<{
+      hotelName: string;
+      hotelDescription?: string;
+      hotelImages?: string[];
+      roomType: string;
+      roomDescription?: string;
+      productCode: string;
+      supplier: string;
+      rates: RateInfo[];
+      dateRanges: any[];
+    }>;
+    error?: TourPlanError;
+  } {
+    const response = this.parseResponse(xml);
+    
+    if (response.OptionInfoReply) {
+      const reply = response.OptionInfoReply;
+      const accommodations: any[] = [];
+
+      if (reply.Option) {
+        const options = this.ensureArray(reply.Option);
+        
+        for (const option of options) {
+          const accommodation: any = {
+            productCode: option.Opt || '',
+            roomType: option.OptGeneral?.Description || 'Standard Room',
+            roomDescription: option.OptGeneral?.Comment || '',
+            supplier: option.OptGeneral?.SupplierName || '',
+            rates: [],
+            dateRanges: []
+          };
+
+          // Extract hotel information from supplier data (when Info includes "I")
+          if (option.SupplierInfo) {
+            accommodation.hotelName = option.SupplierInfo.SupplierName || accommodation.supplier;
+            accommodation.hotelDescription = option.SupplierInfo.Description || option.SupplierInfo.DDW;
+            accommodation.hotelImages = option.SupplierInfo.Images ? 
+              this.ensureArray(option.SupplierInfo.Images.Image) : [];
+          } else {
+            // Fallback: use supplier name as hotel name
+            accommodation.hotelName = accommodation.supplier;
+          }
+
+          // Parse pricing and availability data
+          if (option.OptDateRanges) {
+            const dateRanges = this.ensureArray(option.OptDateRanges.OptDateRange);
+            accommodation.dateRanges = dateRanges.map((range: any) => ({
+              dateFrom: range.DateFrom,
+              dateTo: range.DateTo,
+              currency: range.Currency,
+              rateSets: range.RateSets ? this.ensureArray(range.RateSets.RateSet) : []
+            }));
+
+            // Extract rates from date ranges
+            dateRanges.forEach((range: any) => {
+              if (range.RateSets?.RateSet) {
+                const rateSets = this.ensureArray(range.RateSets.RateSet);
+                rateSets.forEach((rateSet: any) => {
+                  if (rateSet.OptRate?.RoomRates) {
+                    const roomRates = rateSet.OptRate.RoomRates;
+                    accommodation.rates.push({
+                      RateId: rateSet.RateId || `${accommodation.productCode}-${range.DateFrom}`,
+                      Currency: range.Currency || 'AUD',
+                      DateFrom: range.DateFrom,
+                      DateTo: range.DateTo,
+                      SingleRate: this.parseNumber(roomRates.SingleRate),
+                      DoubleRate: this.parseNumber(roomRates.DoubleRate),
+                      TwinRate: this.parseNumber(roomRates.TwinRate),
+                      TripleRate: this.parseNumber(roomRates.TripleRate),
+                      Available: true
+                    } as any);
+                  }
+                });
+              }
+            });
+          }
+
+          accommodations.push(accommodation);
+        }
+      }
+
+      return { accommodations };
+    }
+
+    return {
+      accommodations: [],
+      error: this.extractError(response),
     };
   }
 
@@ -154,7 +255,7 @@ export class TourPlanXMLParser {
   }
 
   private parseOption(opt: any): OptionInfo {
-    return {
+    const option: OptionInfo = {
       Opt: opt.Opt,
       OptCode: opt.OptCode,
       OptName: opt.OptName,
@@ -168,6 +269,49 @@ export class TourPlanXMLParser {
       DurationUnits: opt.DurationUnits,
       Image: opt.Image,
     };
+
+    // Parse availability data from OptAvail field
+    if (opt.OptAvail) {
+      const availString = typeof opt.OptAvail === 'string' ? opt.OptAvail : opt.OptAvail['#text'] || '';
+      const availCodes = availString.split(' ').filter((code: string) => code.trim());
+      
+      // Parse date ranges to determine start date
+      let startDate = new Date('2025-09-09'); // Default fallback
+      if (opt.OptDateRanges?.OptDateRange) {
+        const dateRanges = this.ensureArray(opt.OptDateRanges.OptDateRange);
+        if (dateRanges.length > 0 && dateRanges[0].DateFrom) {
+          startDate = new Date(dateRanges[0].DateFrom);
+        }
+      }
+
+      // Convert availability codes to dates
+      const availableDates: Array<{
+        date: string;
+        availability: number;
+        dayOfWeek: string;
+      }> = [];
+
+      for (let i = 0; i < availCodes.length; i++) {
+        const code = availCodes[i];
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        
+        // Check if date is available (positive number means available)
+        const availability = parseInt(code);
+        if (availability > 0) {
+          availableDates.push({
+            date: currentDate.toISOString().split('T')[0],
+            availability: availability,
+            dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][currentDate.getDay()]
+          });
+        }
+      }
+
+      (option as any).availableDates = availableDates;
+      (option as any).optAvailCodes = availCodes;
+    }
+
+    return option;
   }
 
   private parseRate(rate: any): RateInfo {

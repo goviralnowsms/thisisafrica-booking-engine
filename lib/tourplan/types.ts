@@ -27,7 +27,12 @@ export type ProductType =
   | 'Packages'
   | 'Special Offers';
 
-export type InfoType = 'D' | 'S' | 'G' | 'I' | 'R' | 'T' | 'P' | 'GMFTD' | 'GS';
+export type InfoType = 'D' | 'S' | 'G' | 'I' | 'R' | 'T' | 'P' | 'GMFTD' | 'GS' | 'GSI' | 'DI';
+
+export interface ButtonDestination {
+  ButtonName?: string;
+  DestinationName?: string;
+}
 
 export interface BaseSearchRequest {
   ButtonName: ProductType;
@@ -35,14 +40,17 @@ export interface BaseSearchRequest {
   DateFrom?: string;
   DateTo?: string;
   Info?: InfoType;
+  Opt?: string; // For direct product code search
+  ButtonDestinations?: ButtonDestination[]; // For accommodation search structure
 }
 
 export interface AccommodationSearchRequest extends BaseSearchRequest {
   ButtonName: 'Accommodation';
-  Info: 'GS';
+  Info: 'GS' | 'GSI' | 'S'; // Support new accommodation info types
   RoomConfigs: RoomConfig[];
   DateFrom: string;
   DateTo: string;
+  ButtonDestinations?: ButtonDestination[]; // For accommodation-specific search structure
 }
 
 export interface TourSearchRequest extends BaseSearchRequest {
@@ -87,6 +95,12 @@ export interface TourPlanError {
   ErrorMessage: string;
 }
 
+export interface AvailableDate {
+  date: string;
+  availability: number;
+  dayOfWeek: string;
+}
+
 export interface OptionInfo {
   Opt: string;
   OptCode?: string;
@@ -100,6 +114,8 @@ export interface OptionInfo {
   Duration?: string;
   DurationUnits?: string;
   Image?: string;
+  availableDates?: AvailableDate[];
+  optAvailCodes?: string[];
 }
 
 export interface RateInfo {
