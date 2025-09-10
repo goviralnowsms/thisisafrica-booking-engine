@@ -37,26 +37,13 @@ export async function GET(
       thumbnailImage: productImages.thumbnailImage?.asset?.url || null,
       gallery: productImages.gallery
         ?.sort((a, b) => (a.order || 0) - (b.order || 0)) // Sort by order field
-        ?.map(item => {
-          // Handle both direct image type and galleryImage object type
-          if (item._type === 'image' && item.asset?.url) {
-            return {
-              url: item.asset.url,
-              alt: item.alt || '',
-              caption: item.caption || '',
-              order: item.order || 0
-            }
-          } else if (item.image?.asset?.url) {
-            return {
-              url: item.image.asset.url,
-              alt: item.alt || '',
-              caption: item.caption || '',
-              order: item.order || 0
-            }
-          }
-          return null
-        })
-        ?.filter(item => item !== null) // Only include items with valid URLs
+        ?.map(item => ({
+          url: item.image?.asset?.url,
+          alt: item.alt || '',
+          caption: item.caption || '',
+          order: item.order || 0
+        }))
+        ?.filter(item => item.url) // Only include items with valid URLs
         || []
     }
 

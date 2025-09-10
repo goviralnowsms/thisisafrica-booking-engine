@@ -63,27 +63,15 @@ export async function getProductImages(productCode: string): Promise<SanityProdu
         },
         gallery[] {
           _key,
-          _type,
-          ...(_type == "image" => {
+          image {
             asset-> {
               _ref,
               url
-            },
-            alt,
-            caption,
-            order
-          }),
-          ...(_type == "galleryImage" => {
-            image {
-              asset-> {
-                _ref,
-                url
-              }
-            },
-            alt,
-            caption,
-            order
-          })
+            }
+          },
+          alt,
+          caption,
+          order
         },
         mapImage {
           asset-> {
@@ -127,27 +115,15 @@ export async function getAllProductImages(): Promise<SanityProductImage[]> {
         },
         gallery[] {
           _key,
-          _type,
-          ...(_type == "image" => {
+          image {
             asset-> {
               _ref,
               url
-            },
-            alt,
-            caption,
-            order
-          }),
-          ...(_type == "galleryImage" => {
-            image {
-              asset-> {
-                _ref,
-                url
-              }
-            },
-            alt,
-            caption,
-            order
-          })
+            }
+          },
+          alt,
+          caption,
+          order
         },
         mapImage {
           asset-> {
