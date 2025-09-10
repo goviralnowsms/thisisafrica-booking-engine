@@ -1339,7 +1339,7 @@ export default function BookingCreatePage() {
                     </div>
                   </div>
                   
-                  {total > 0 ? (
+                  {total > 0 && total < 1000000 && !isNaN(total) && isFinite(total) ? (
                     <StripePaymentForm
                       amount={total * 0.3} // 30% deposit
                       onSuccess={async (paymentIntentId) => {
@@ -1425,9 +1425,15 @@ export default function BookingCreatePage() {
                       }}
                     />
                   ) : (
-                    <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded">
-                      <p className="text-yellow-800">Loading pricing information...</p>
-                      <p className="text-sm text-yellow-600 mt-1">Please wait while we calculate your tour price.</p>
+                    <div className="text-center p-4 bg-red-50 border border-red-200 rounded">
+                      <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                      <h4 className="font-semibold text-red-800 mb-2">Payment Not Available</h4>
+                      <p className="text-red-700 text-sm">
+                        Unable to calculate pricing for the selected date. Please try selecting a different date or contact us for assistance.
+                      </p>
+                      <p className="text-red-600 text-xs mt-2">
+                        Rate calculation issue: {isNaN(total) ? 'Invalid rate data' : total > 1000000 ? 'Rate too high' : 'No rate available'}
+                      </p>
                     </div>
                   )}
                 </div>
