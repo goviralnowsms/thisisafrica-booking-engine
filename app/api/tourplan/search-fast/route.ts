@@ -102,15 +102,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Build search criteria
+    // For "From..." pricing display, we need all seasonal rates, not just user's date range
+    // Use a broad 2+ year range to capture all seasonal pricing like WordPress
+    const today = new Date();
+    const searchDateFrom = today.toISOString().split('T')[0]; // Today in YYYY-MM-DD format
+    const twoYearsFromNow = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+    const searchDateTo = twoYearsFromNow.toISOString().split('T')[0]; // 2 years from today
+    
     const searchCriteria = {
       productType: validatedData.productType,
       destination: validatedData.destination,
       class: validatedData.class,
-      dateFrom: validatedData.dateFrom,
-      dateTo: validatedData.dateTo,
+      dateFrom: searchDateFrom, // Use broad date range instead of user's filter
+      dateTo: searchDateTo,     // Use broad date range instead of user's filter
       adults: validatedData.adults,
       children: validatedData.children,
       roomConfigs: validatedData.roomConfigs || validatedData.cabinConfigs,
+      // Store the original user filters for display purposes
+      _originalDateFrom: validatedData.dateFrom,
+      _originalDateTo: validatedData.dateTo,
     };
 
     // Check cache first if enabled
@@ -236,14 +246,24 @@ export async function GET(request: NextRequest) {
   
   try {
     // Build search criteria
+    // For "From..." pricing display, we need all seasonal rates, not just user's date range
+    // Use a broad 2+ year range to capture all seasonal pricing like WordPress
+    const today = new Date();
+    const searchDateFrom = today.toISOString().split('T')[0]; // Today in YYYY-MM-DD format
+    const twoYearsFromNow = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+    const searchDateTo = twoYearsFromNow.toISOString().split('T')[0]; // 2 years from today
+    
     const searchCriteria = {
       productType,
       destination,
       class: classFilter,
-      dateFrom: startDate,
-      dateTo: endDate,
+      dateFrom: searchDateFrom, // Use broad date range instead of user's filter
+      dateTo: searchDateTo,     // Use broad date range instead of user's filter
       adults: adults || travelers,
       children: children,
+      // Store the original user filters for display purposes
+      _originalDateFrom: startDate,
+      _originalDateTo: endDate,
     };
 
     // Check cache first if enabled

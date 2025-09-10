@@ -34,12 +34,12 @@ export async function GET(
         periods: 13,
         rates: [{
           currency: 'AUD',
-          singleRate: 0,
-          doubleRate: 0,
-          twinRate: 0,
-          twinRateTotal: 0,
-          twinRateFormatted: 'Contact for pricing',
-          dateRange: 'Year Round',
+          singleRate: 890000,  // $8,900 in cents
+          doubleRate: 780000,  // $7,800 in cents
+          twinRate: 780000,    // $7,800 in cents (per person twin share)
+          twinRateTotal: 1560000, // $15,600 for two people
+          twinRateFormatted: 'AUD $7,800',
+          dateRange: 'July 2026 - December 2028',
           rateName: 'Small Group Safari'
         }],
         notes: [{
@@ -138,35 +138,9 @@ export async function GET(
       ];
     }
     
-    // Fix pricing for Classic Kenya - Keekorok specifically
-    if (productCode === 'NBOGTARP001CKEKEE') {
-      console.log('🔧 Applying pricing correction for Classic Kenya - Keekorok');
-      productData.rates = [{
-        currency: 'AUD',
-        singleRate: 5447,
-        doubleRate: 10894,
-        twinRate: 10894,
-        twinRateTotal: 10894,
-        twinRateFormatted: 'AUD $5,447',
-        dateRange: '2025 Package Rates',
-        rateName: 'Keekorok Lodges Package'
-      }];
-    }
+    // Removed hardcoded pricing - let actual API data come through
     
-    // Fix pricing for Classic Kenya - Serena specifically
-    if (productCode === 'NBOGTARP001CKSE') {
-      console.log('🔧 Applying pricing correction for Classic Kenya - Serena');
-      productData.rates = [{
-        currency: 'AUD',
-        singleRate: 5800,
-        doubleRate: 11600,
-        twinRate: 11600,
-        twinRateTotal: 11600,
-        twinRateFormatted: 'AUD $5,800',
-        dateRange: '2025 Package Rates',
-        rateName: 'Serena Lodges Package'
-      }];
-    }
+    // Removed hardcoded pricing - let actual API data come through
     
     // Fix pricing for Kenya - Classic Kenya Serena Lodges Test Package
     if (productCode === 'NBOGPARP001CKSLP') {
