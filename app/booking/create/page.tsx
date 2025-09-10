@@ -414,7 +414,22 @@ export default function BookingCreatePage() {
     if (!product?.rates || product.rates.length === 0) {
       return 0
     }
-    const rate = product.rates[0]
+    // Find rate that matches selected departure date, fallback to first rate
+    let rate = product.rates[0] // Default fallback
+    
+    if (formData.departureDate) {
+      const selectedDateStr = format(formData.departureDate, 'yyyy-MM-dd')
+      const matchingRate = product.rates.find(r => {
+        if (!r.dateFrom) return false
+        const rateFrom = new Date(r.dateFrom)
+        const rateTo = r.dateTo ? new Date(r.dateTo) : rateFrom
+        const selectedDate = new Date(selectedDateStr)
+        return selectedDate >= rateFrom && selectedDate <= rateTo
+      })
+      if (matchingRate) {
+        rate = matchingRate
+      }
+    }
     
     // Check if this is a rail product
     const isRail = product.code?.includes('RLROV') ||     // Rovos Rail codes
@@ -427,8 +442,6 @@ export default function BookingCreatePage() {
     
     // Check if this product has corrected pricing (rates already in dollars)
     const hasCorrectedPricing = product.code === 'HDSSPMAKUTSMSSCLS' || 
-                               product.code === 'NBOGTARP001CKEKEE' || 
-                               product.code === 'NBOGTARP001CKSE' || 
                                product.code === 'NBOGPARP001CKSLP' ||
                                product.code === 'GKPSPSABBLDSABBLS' || 
                                product.code === 'GKPSPSAV002SAVLHM'

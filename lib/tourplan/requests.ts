@@ -98,6 +98,16 @@ export class OptionInfoRequest {
     return this;
   }
 
+  setOpt(productCode: string): this {
+    this.params.Opt = productCode;
+    return this;
+  }
+
+  setClass(classFilter: string): this {
+    this.params.Class = classFilter;
+    return this;
+  }
+
   setRateConvert(enabled: boolean = true): this {
     this.params.RateConvert = enabled ? 'Y' : 'N';
     return this;
@@ -337,14 +347,23 @@ export function buildAccommodationSearchRequest(
   destination: string, 
   dateFrom: string, 
   dateTo: string,
-  roomConfigs: Array<{Adults: number, Children?: number, Type?: string, Quantity?: number}>
+  roomConfigs: Array<{Adults: number, Children?: number, Type?: string, Quantity?: number}>,
+  classFilter?: string
 ): string {
   const request = new OptionInfoRequest()
     .setButtonName('Accommodation')
-    .setInfo('S') // Changed from 'GS' to 'S' per TourPlan: "Info S to return results the rate should be confirmed"
+    .setInfo('GSI') // G=General product info, S=Stay pricing, I=Supplier info (hotel details, descriptions, images)
     .setDateRange(dateFrom, dateTo)
     .setRateConvert(true)
     .setRoomConfigs(roomConfigs);
+  
+  // Add class filter - try common accommodation types
+  if (classFilter) {
+    request.setClass(classFilter);
+  } else {
+    // Default to "Suite" as it's mentioned in the documentation
+    request.setClass('Suite');
+  }
     
   // Use ButtonDestinations structure as suggested by TourPlan
   if (destination && destination.trim()) {

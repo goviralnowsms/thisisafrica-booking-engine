@@ -56,13 +56,84 @@ export class TourPlanXMLBuilder {
     return this.buildBaseRequest('AgentInfoRequest', {});
   }
 
-  buildOptionInfoRequest(params: BaseSearchRequest | AccommodationSearchRequest | TourSearchRequest | CruiseSearchRequest): string {
-    const content: Record<string, any> = {
-      ButtonName: params.ButtonName,
-    };
+  /**
+   * Build accommodation-specific search request with proper structure
+   * Handles supplier vs product data distinction as per TourPlan documentation
+   */
+  buildAccommodationSearchRequest(params: {
+    destination?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    roomConfigs?: RoomConfig[];
+    productCode?: string;
+    useButtonDestinations?: boolean;
+  }): string {
+    const content: Record<string, any> = {};
 
-    if (params.DestinationName) {
-      content.DestinationName = params.DestinationName;
+    // Method 1: Direct product code search (recommended for specific hotels)
+    if (params.productCode) {
+      content.Opt = params.productCode;
+      content.Info = 'GSI'; // G=General, S=Stay pricing, I=Supplier info (hotel details)
+    } 
+    // Method 2: Use ButtonDestinations structure for accommodation search
+    else if (params.useButtonDestinations && params.destination) {
+      content.ButtonDestinations = {
+        ButtonDestination: [{
+          ButtonName: '',
+          DestinationName: params.destination
+        }]
+      };
+      content.Info = 'S'; // S=Stay pricing for confirmed rates only
+    }
+    // Method 3: Traditional ButtonName approach (may return empty)
+    else {
+      content.ButtonName = 'Accommodation';
+      if (params.destination) {
+        content.DestinationName = params.destination;
+      }
+      content.Info = 'GSI'; // Request all accommodation data types
+    }
+
+    // Add date range
+    if (params.dateFrom) {
+      content.DateFrom = params.dateFrom;
+    }
+    if (params.dateTo) {
+      content.DateTo = params.dateTo;
+    }
+
+    // Add room configurations
+    if (params.roomConfigs && params.roomConfigs.length > 0) {
+      content.RoomConfigs = {
+        RoomConfig: params.roomConfigs.map(this.buildRoomConfig),
+      };
+    }
+
+    return this.buildBaseRequest('OptionInfoRequest', content);
+  }
+
+  buildOptionInfoRequest(params: BaseSearchRequest | AccommodationSearchRequest | TourSearchRequest | CruiseSearchRequest): string {
+    const content: Record<string, any> = {};
+
+    // Handle accommodation-specific ButtonDestinations structure
+    if (params.ButtonName === 'Accommodation' && 'ButtonDestinations' in params && params.ButtonDestinations) {
+      content.ButtonDestinations = {
+        ButtonDestination: params.ButtonDestinations.map(dest => ({
+          ButtonName: dest.ButtonName || '',
+          DestinationName: dest.DestinationName || ''
+        }))
+      };
+    } else {
+      content.ButtonName = params.ButtonName;
+      
+      if (params.DestinationName) {
+        content.DestinationName = params.DestinationName;
+      }
+    }
+
+    // Handle direct product code search
+    if ('Opt' in params && params.Opt) {
+      content.Opt = params.Opt;
     }
 
     if (params.DateFrom) {

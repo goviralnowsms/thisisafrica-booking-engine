@@ -334,7 +334,7 @@ export default function SpecialOffersPage() {
               <h2 className="text-3xl font-bold mb-6">Why our special offers?</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Gift className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Exclusive Deals</h3>
@@ -343,7 +343,7 @@ export default function SpecialOffersPage() {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Star className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Premium Value</h3>
@@ -352,7 +352,7 @@ export default function SpecialOffersPage() {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Clock className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Limited Time</h3>
@@ -388,7 +388,7 @@ export default function SpecialOffersPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             <Link
               href="/contact?subject=special-offers-inquiry"
-              className="inline-flex items-center justify-center px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
+              className="inline-flex items-center justify-center px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors"
             >
               <span className="mr-2">📧</span>
               Contact Us

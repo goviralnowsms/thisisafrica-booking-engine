@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,15 @@ export default function TestEmailsPage() {
   const [emailType, setEmailType] = useState('basic');
   const [recipientEmail, setRecipientEmail] = useState('');
   const [testResults, setTestResults] = useState<any[]>([]);
+  const [emailConfig, setEmailConfig] = useState<any>(null);
+
+  // Fetch email configuration on component mount
+  React.useEffect(() => {
+    fetch('/api/email-config')
+      .then(res => res.json())
+      .then(config => setEmailConfig(config))
+      .catch(err => console.error('Failed to fetch email config:', err));
+  }, []);
 
   const sendTestEmail = async () => {
     if (!recipientEmail) {
@@ -138,13 +147,16 @@ export default function TestEmailsPage() {
                 <span className="font-semibold">Service:</span> Resend
               </div>
               <div>
-                <span className="font-semibold">From:</span> noreply@thisisafrica.com.au
+                <span className="font-semibold">From:</span> {emailConfig?.fromEmail || 'noreply@thisisafrica.com.au'}
               </div>
               <div>
-                <span className="font-semibold">Admin Emails:</span> admin@thisisafrica.com.au, bookings@thisisafrica.com.au
+                <span className="font-semibold">Admin Emails:</span> {emailConfig?.adminEmails || 'sales@thisisafrica.com.au'}
               </div>
               <div>
-                <span className="font-semibold">API Key:</span> {process.env.RESEND_API_KEY ? '✅ Configured' : '❌ Not configured'}
+                <span className="font-semibold">API Key:</span> {
+                  emailConfig === null ? '⏳ Loading...' : 
+                  emailConfig?.hasResendKey ? '✅ Configured' : '❌ Not configured'
+                }
               </div>
             </div>
             

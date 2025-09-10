@@ -274,17 +274,17 @@ export default function MyBookingsPage() {
   }
 
   const handleCancelBooking = (bookingId: string) => {
-    setIsLoading(true)
-
-    // Simulate API call delay
-    setTimeout(() => {
-      // In a real implementation, this would make an API call to cancel the booking
-      const updatedBookings = bookings.map((booking) =>
-        booking.id === bookingId ? { ...booking, status: "cancelled" } : booking,
-      )
-      setBookings(updatedBookings)
-      setIsLoading(false)
-    }, 1500)
+    // Show cancellation information instead of actually cancelling
+    alert(
+      "IMPORTANT: Cancellation Request\n\n" +
+      "This action does NOT automatically cancel your booking with This is Africa.\n\n" +
+      "To fully cancel your booking, you must:\n" +
+      "1. Contact our support team directly\n" +
+      "2. Email: sales@thisisafrica.com.au\n" +
+      "3. Phone: +61 2 9664 9187\n\n" +
+      "Please have your booking reference ready when contacting us.\n\n" +
+      "Cancellation policies and fees may apply depending on your booking terms."
+    )
   }
 
   const getStatusBadge = (status: string) => {
@@ -499,7 +499,7 @@ export default function MyBookingsPage() {
                               disabled={isLoading}
                             >
                               {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                              Cancel Booking
+                              Request Cancellation
                             </Button>
                           )}
                         </div>
@@ -603,7 +603,7 @@ export default function MyBookingsPage() {
                               disabled={isLoading}
                             >
                               {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                              Cancel Booking
+                              Request Cancellation
                             </Button>
                           )}
                         </div>

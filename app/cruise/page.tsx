@@ -484,11 +484,30 @@ export default function CruisesPage() {
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-500">From</p>
-                              {!tour.rates || tour.rates.length === 0 || tour.rates[0]?.rateName === 'Price on Application' || tour.rates[0]?.singleRate === 0 ? (
+                              {!tour.rates || tour.rates.length === 0 || tour.rates[0]?.rateName === 'Price on Application' || (tour.rates[0]?.twinRate === 0 && tour.rates[0]?.singleRate === 0) ? (
                                 <p className="text-lg font-bold text-blue-600">On Request</p>
                               ) : (
                                 <p className="text-xl font-bold text-green-600">
-                                  ${tour.rates[0].singleRate ? Math.round(tour.rates[0].singleRate / 100).toLocaleString() : 'POA'}
+                                  ${(() => {
+                                    // Find the LOWEST rate across all date ranges (for "From..." pricing)
+                                    const twinRates = tour.rates?.filter((r: any) => r.twinRate > 0).map((r: any) => r.twinRate) || []
+                                    const lowestTwinRate = twinRates.length > 0 ? Math.min(...twinRates) : 0
+                                    
+                                    const doubleRates = tour.rates?.filter((r: any) => r.doubleRate > 0).map((r: any) => r.doubleRate) || []
+                                    const lowestDoubleRate = doubleRates.length > 0 ? Math.min(...doubleRates) : 0
+                                    
+                                    const singleRates = tour.rates?.filter((r: any) => r.singleRate > 0).map((r: any) => r.singleRate) || []
+                                    const lowestSingleRate = singleRates.length > 0 ? Math.min(...singleRates) : 0
+                                    
+                                    if (lowestTwinRate > 0) {
+                                      return Math.round(lowestTwinRate / 200).toLocaleString()
+                                    } else if (lowestDoubleRate > 0) {
+                                      return Math.round(lowestDoubleRate / 200).toLocaleString()
+                                    } else if (lowestSingleRate > 0) {
+                                      return Math.round(lowestSingleRate / 100).toLocaleString()
+                                    }
+                                    return 'POA'
+                                  })()}
                                 </p>
                               )}
                             </div>

@@ -1,0 +1,15 @@
+/* Prevent unwanted scroll behavior */
+html {
+  scroll-behavior: auto !important;
+}
+
+/* Prevent focus from causing scroll */
+*:focus {
+  scroll-margin-top: 100px;
+}
+
+/* Ensure body doesn't have unwanted scroll */
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}

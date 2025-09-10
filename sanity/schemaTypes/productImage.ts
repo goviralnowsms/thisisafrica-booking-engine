@@ -57,11 +57,18 @@ export default defineType({
       type: 'array',
       of: [
         {
-          type: 'image',
-          options: {
-            hotspot: true,
-          },
+          type: 'object',
+          name: 'galleryImage',
+          title: 'Gallery Image',
           fields: [
+            {
+              name: 'image',
+              type: 'image',
+              title: 'Image',
+              options: {
+                hotspot: true,
+              },
+            },
             {
               name: 'alt',
               type: 'string',
@@ -79,6 +86,13 @@ export default defineType({
               description: 'Order in gallery (lower numbers appear first)',
             },
           ],
+          preview: {
+            select: {
+              title: 'alt',
+              subtitle: 'caption',
+              media: 'image',
+            },
+          },
         },
       ],
       description: 'Additional images for product detail page gallery',
@@ -126,7 +140,24 @@ export default defineType({
       name: 'tags',
       title: 'Tags',
       type: 'array',
-      of: [{type: 'string'}],
+      of: [
+        {
+          type: 'object',
+          name: 'tag',
+          fields: [
+            {
+              name: 'value',
+              type: 'string',
+              title: 'Tag',
+            },
+          ],
+          preview: {
+            select: {
+              title: 'value',
+            },
+          },
+        },
+      ],
       options: {
         layout: 'tags',
       },

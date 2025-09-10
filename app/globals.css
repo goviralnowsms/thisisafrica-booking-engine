@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global scroll behavior fixes */
+html {
+  scroll-behavior: auto !important;
+  overflow-x: hidden;
+}
+
+/* Prevent focus from causing unwanted scroll */
+*:focus {
+  scroll-margin-top: 100px;
+}
+
+/* Disable auto-scroll restoration */
+body {
+  overflow-x: hidden;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

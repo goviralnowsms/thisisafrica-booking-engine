@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!-- TourPlan Accommodation Search Test Cases -->
+<!-- Issue: ButtonName="Accommodation" returns empty results -->
+<!-- We need to search for accommodation/hotel products but are getting no results -->
+
+<!-- ============================================= -->
+<!-- Test 1: Basic search as per documentation -->
+<!-- ============================================= -->
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- 
+============================================= 
+Test 2: With specific destination 
+Would be sent as a separate request:
+
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <DestinationName>Nairobi</DestinationName>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+============================================= 
+Test 3: Using ButtonDestinations structure
+Would be sent as a separate request:
+
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <ButtonDestinations>
+      <ButtonDestination>
+        <ButtonName></ButtonName>
+        <DestinationName>Nairobi</DestinationName>
+      </ButtonDestination>
+    </ButtonDestinations>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+============================================= 
+What we need:
+============================================= 
+
+We need to retrieve accommodation products for our booking website.
+The live site (book.thisisafrica.com.au) shows accommodations like:
+- Serena Safari Lodge
+- Governor's Camp  
+- Keekorok Lodge
+- Sabi Sabi Bush Lodge
+- Cape Grace Hotel
+- Victoria Falls Hotel
+- Chobe Game Lodge
+- Sossusvlei Desert Lodge
+
+We understand that products represent room types (e.g., GKPACSAB019SABSUI = Sabi Sabi Bush Lodge Luxury Suite).
+
+Questions:
+1. Why does ButtonName="Accommodation" return empty results?
+2. Is there a different ButtonName we should use (Hotels, Lodging, etc.)?
+3. Are there specific parameters required for accommodation searches?
+4. Should we be using a different Info parameter (S, GS, G)?
+5. Are the accommodation products configured differently in our account?
+6. Can you provide example product codes for accommodations we can search directly?
+
+Our goal is to:
+- Search for available accommodations by destination
+- Display room types with pricing
+- Show availability for specific date ranges
+- Allow booking through the API
+
+Please advise on the correct XML format to retrieve accommodation products.
+-->

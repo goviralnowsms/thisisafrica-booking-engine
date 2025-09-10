@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<!-- Test 1: Basic Accommodation Search with Info="GS" -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- Test 2: With DestinationName -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <DestinationName>Nairobi</DestinationName>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- Test 3: Using ButtonDestinations structure (as per docs) -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <ButtonDestinations>
+      <ButtonDestination>
+        <ButtonName></ButtonName>
+        <DestinationName>Nairobi</DestinationName>
+      </ButtonDestination>
+    </ButtonDestinations>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- Test 4: With MinimumAvailability parameter -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <MinimumAvailability>RQ</MinimumAvailability>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- Test 5: Try with Info="S" only (confirmed rates) -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <ButtonName>Accommodation</ButtonName>
+    <Info>S</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>
+
+<!-- Test 6: Direct product code search (fallback approach currently used) -->
+<Request>
+  <OptionInfoRequest>
+    <AgentID>SAMAGT</AgentID>
+    <Password>S@MAgt01</Password>
+    <Opt>GKPACSAB019SABSUI</Opt>
+    <Info>GS</Info>
+    <DateFrom>2025-07-15</DateFrom>
+    <DateTo>2025-07-18</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>2</Adults>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>

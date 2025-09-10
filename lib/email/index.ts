@@ -132,7 +132,7 @@ export async function sendAdminNotification(booking: {
   requiresManualConfirmation?: boolean;
   tourplanStatus?: string;
 }) {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',') || ['admin@thisisafrica.com.au'];
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',') || ['sales@thisisafrica.com.au'];
   const template = getAdminNotificationTemplate(booking);
   
   return sendEmail({

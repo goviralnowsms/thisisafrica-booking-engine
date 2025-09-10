@@ -37,6 +37,60 @@ export const PRODUCT_DESTINATIONS: Record<string, CountryDestinations> = {
     }
   },
 
+  'Accommodation': {
+    'south-africa': {
+      displayName: 'South Africa',
+      destinations: [
+        { value: 'south-africa', label: 'South Africa (All)', tourPlanName: 'South Africa' },
+        { value: 'cape-town', label: 'Cape Town', tourPlanName: 'Cape Town' },
+        { value: 'kruger', label: 'Kruger National Park', tourPlanName: 'Kruger' },
+        { value: 'johannesburg', label: 'Johannesburg', tourPlanName: 'Johannesburg' }
+      ]
+    },
+    'kenya': {
+      displayName: 'Kenya',
+      destinations: [
+        { value: 'kenya', label: 'Kenya (All)', tourPlanName: 'Kenya' },
+        { value: 'nairobi', label: 'Nairobi', tourPlanName: 'Nairobi' },
+        { value: 'masai-mara', label: 'Masai Mara', tourPlanName: 'Masai Mara' },
+        { value: 'amboseli', label: 'Amboseli', tourPlanName: 'Amboseli' }
+      ]
+    },
+    'tanzania': {
+      displayName: 'Tanzania',
+      destinations: [
+        { value: 'tanzania', label: 'Tanzania (All)', tourPlanName: 'Tanzania' },
+        { value: 'serengeti', label: 'Serengeti', tourPlanName: 'Serengeti' },
+        { value: 'ngorongoro', label: 'Ngorongoro Crater', tourPlanName: 'Ngorongoro' },
+        { value: 'zanzibar', label: 'Zanzibar', tourPlanName: 'Zanzibar' }
+      ]
+    },
+    'botswana': {
+      displayName: 'Botswana',
+      destinations: [
+        { value: 'botswana', label: 'Botswana (All)', tourPlanName: 'Botswana' },
+        { value: 'chobe', label: 'Chobe National Park', tourPlanName: 'Chobe' },
+        { value: 'okavango', label: 'Okavango Delta', tourPlanName: 'Okavango' }
+      ]
+    },
+    'zimbabwe': {
+      displayName: 'Zimbabwe',
+      destinations: [
+        { value: 'zimbabwe', label: 'Zimbabwe (All)', tourPlanName: 'Zimbabwe' },
+        { value: 'victoria-falls', label: 'Victoria Falls', tourPlanName: 'Victoria Falls' },
+        { value: 'hwange', label: 'Hwange National Park', tourPlanName: 'Hwange' }
+      ]
+    },
+    'namibia': {
+      displayName: 'Namibia',
+      destinations: [
+        { value: 'namibia', label: 'Namibia (All)', tourPlanName: 'Namibia' },
+        { value: 'windhoek', label: 'Windhoek', tourPlanName: 'Windhoek' },
+        { value: 'sossusvlei', label: 'Sossusvlei', tourPlanName: 'Sossusvlei' }
+      ]
+    }
+  },
+
   'Rail': {
     'south-africa': {
       displayName: 'South Africa',
