@@ -46,6 +46,7 @@ export default function SearchResultsPage() {
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['Group Tours', 'Packages', 'Rail', 'Cruises'])
   const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  const [sanityImages, setSanityImages] = useState<{[key: string]: any}>({})
 
   // Initialize countries and perform initial search
   useEffect(() => {
@@ -67,28 +68,45 @@ export default function SearchResultsPage() {
     
     loadCountries()
     
-    // Load product images
+    // Load Sanity images for better performance
+    const loadSanityImages = async () => {
+      try {
+        // Fetch all product images from Sanity in one go
+        const response = await fetch('/api/sanity/product-images', {
+          cache: 'no-store'
+        })
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            const imageMap: {[key: string]: any} = {}
+            result.data.forEach((item: any) => {
+              if (item.productCode) {
+                imageMap[item.productCode] = item
+              }
+            })
+            setSanityImages(imageMap)
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load Sanity images:', error)
+      }
+    }
+    
+    // Load local image index as fallback
     const loadImageIndex = async () => {
       try {
         const response = await fetch('/images/product-image-index.json')
-        if (!response.ok) {
-          console.warn('Product image index not found, using default images')
-          return
-        }
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          console.warn('Product image index returned non-JSON response')
-          return
-        }
-        const imageIndex = await response.json()
+        if (!response.ok) return
         
-        // Create a mapping of product codes to their primary images
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) return
+        
+        const imageIndex = await response.json()
         const imageMap: {[key: string]: string} = {}
         
         Object.keys(imageIndex).forEach(productCode => {
           const images = imageIndex[productCode]
           if (images && images.length > 0) {
-            // Use the first available image as primary
             const primaryImage = images.find((img: any) => img.status === 'exists')
             if (primaryImage && primaryImage.localPath) {
               imageMap[productCode] = primaryImage.localPath
@@ -102,7 +120,8 @@ export default function SearchResultsPage() {
       }
     }
     
-    loadImageIndex()
+    // Load both in parallel
+    Promise.all([loadSanityImages(), loadImageIndex()])
     
     // Perform initial search if we have parameters
     if (initialCountry) {
@@ -219,30 +238,28 @@ export default function SearchResultsPage() {
   }
 
   const getProductImage = (tour: any, productType: string) => {
+    const fallbackImages = {
+      'Group Tours': '/images/safari-lion.png',
+      'Packages': '/images/safari-lion.png', 
+      'Rail': '/images/rail-journey.jpg',
+      'Cruises': '/images/zambezi-queen.png'
+    }
+    
     if (!tour.code) {
-      // Use product-specific fallback images if no tour code
-      const fallbackImages = {
-        'Group Tours': '/images/safari-lion.png',
-        'Packages': '/images/safari-lion.png', 
-        'Rail': '/images/rail-journey.jpg',
-        'Cruises': '/images/zambezi-queen.png'
-      }
       return fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png'
     }
     
-    // Check if we have the image cached from product-image-index.json
+    // Check Sanity images first (fastest)
+    if (sanityImages[tour.code]?.primaryImage?.asset?.url) {
+      return sanityImages[tour.code].primaryImage.asset.url
+    }
+    
+    // Check local image index
     if (productImages[tour.code]) {
       return productImages[tour.code]
     }
     
     // Fallback to product-specific default images
-    const fallbackImages = {
-      'Group Tours': '/images/safari-lion.png',
-      'Packages': '/images/safari-lion.png',
-      'Rail': '/images/rail-journey.jpg', 
-      'Cruises': '/images/zambezi-queen.png'
-    }
-    
     return fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png'
   }
 
@@ -262,6 +279,10 @@ export default function SearchResultsPage() {
             alt={tour.name} 
             fill 
             className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
             onError={(e) => {
               // Fallback to product-specific default image if loading fails
               const target = e.target as HTMLImageElement;

@@ -108,7 +108,10 @@ export default function ProductDetailsPage() {
 
       try {
         console.log('Fetching Sanity images for:', productCode)
-        const response = await fetch(`/api/sanity/product-images/${productCode}`)
+        const response = await fetch(`/api/sanity/product-images/${productCode}`, {
+          cache: 'no-store',
+          next: { revalidate: 0 }
+        })
         const result = await response.json()
         
         if (result.success && result.data) {

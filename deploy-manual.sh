@@ -27,6 +27,10 @@ EOF
   chmod 600 .env.production.local
 fi
 
+echo "🧹 Clearing build cache..."
+rm -rf .next
+rm -rf node_modules/.cache
+
 echo "📦 Installing dependencies..."
 pnpm install || { echo "❌ pnpm install failed"; exit 1; }
 

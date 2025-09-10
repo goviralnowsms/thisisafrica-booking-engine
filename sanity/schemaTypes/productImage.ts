@@ -57,9 +57,35 @@ export default defineType({
       type: 'array',
       of: [
         {
+          type: 'image',
+          name: 'image',
+          title: 'Gallery Image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'alt',
+              type: 'string',
+              title: 'Alternative Text',
+            },
+            {
+              name: 'caption',
+              type: 'string',
+              title: 'Caption',
+            },
+            {
+              name: 'order',
+              type: 'number',
+              title: 'Display Order',
+              description: 'Order in gallery (lower numbers appear first)',
+            },
+          ],
+        },
+        {
           type: 'object',
           name: 'galleryImage',
-          title: 'Gallery Image',
+          title: 'Gallery Image Object',
           fields: [
             {
               name: 'image',
