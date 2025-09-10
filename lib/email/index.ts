@@ -486,7 +486,7 @@ function getAdminNotificationTemplate(booking: any) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: ${booking.requiresManualConfirmation ? '#dc3545' : '#f59e0b'}; color: white; padding: 30px 20px; text-align: center; }
+        .header { background-color: ${booking.requiresManualConfirmation ? '#dc3545' : '#1e3a5f'}; color: white; padding: 30px 20px; text-align: center; }
         .logo { max-width: 200px; height: auto; margin-bottom: 20px; }
         .content { padding: 20px; background-color: #f9f9f9; }
         .booking-details { background-color: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -512,7 +512,11 @@ function getAdminNotificationTemplate(booking: any) {
               <strong>⚠️ Manual Processing Required!</strong><br>
               This booking requires manual confirmation with the supplier.<br>
               TourPlan Status: ${booking.tourplanStatus || 'Unknown'}<br>
-              Product Type: ${booking.productCode.includes('CRUISE') ? 'CRUISE' : booking.productCode.includes('RAIL') ? 'RAIL' : 'OTHER'}
+              Product Type: ${booking.productCode.includes('CR') || booking.productCode.includes('CRUISE') ? 'CRUISE' : 
+                         booking.productCode.includes('RL') || booking.productCode.includes('RAIL') ? 'RAIL' : 
+                         booking.productCode.includes('GT') ? 'GROUP TOUR' : 
+                         booking.productCode.includes('PK') ? 'PACKAGE' : 
+                         booking.productCode.includes('SP') ? 'SPECIAL OFFER' : 'OTHER'}
             </div>
           ` : ''}
           

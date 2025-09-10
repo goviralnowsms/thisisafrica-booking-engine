@@ -171,8 +171,9 @@ export async function POST(request: NextRequest) {
     }
     
     // Handle different TourPlan responses
-    if (result.status === 'NO' || result.status === 'RQ' || result.status === 'WQ') {
-      // NO = Declined, RQ = On Request, WQ = Website Quote (what we want!)
+    if (result.status === 'NO' || result.status === 'WQ') {
+      // NO = Declined, WQ = Website Quote (manual confirmation required)
+      // RQ = On Request (successfully booked but awaiting confirmation) - should be treated as successful
       console.log(`⚠️ TourPlan returned status: ${result.status} - handling as quote requiring manual confirmation`);
       
       if (isWorkingProduct && result.status === 'NO') {
@@ -308,6 +309,73 @@ export async function POST(request: NextRequest) {
       }
       
       return successResponse(quotedBooking, 201);
+    }
+    
+    // Handle RQ status (On Request - successfully booked but awaiting confirmation)
+    if (result.status === 'RQ') {
+      console.log('✅ TourPlan returned RQ status - booking successful, awaiting supplier confirmation');
+      
+      const confirmedBooking = {
+        bookingId: result.bookingId,
+        reference: result.reference || result.bookingRef,
+        status: 'PENDING_SUPPLIER_CONFIRMATION',
+        tourplanStatus: result.status,
+        totalCost: result.totalCost || 0,
+        currency: result.currency || 'AUD',
+        rateId: result.rateId,
+        customerDetails: {
+          name: data.customerName,
+          email: data.email,
+          mobile: data.mobile
+        },
+        productDetails: {
+          code: data.productCode,
+          dateFrom: data.dateFrom,
+          dateTo: calculatedDateTo,
+          adults: data.adults,
+          children: data.children,
+          infants: data.infants
+        },
+        requiresManualConfirmation: false, // RQ is successfully in TourPlan
+        createdAt: new Date().toISOString(),
+        message: 'Your booking has been successfully submitted to TourPlan and is awaiting supplier confirmation.',
+        rawResponse: result.rawResponse
+      };
+      
+      // Send email notifications (as successful booking, not manual)
+      try {
+        await sendBookingConfirmation({
+          reference: result.reference || result.bookingRef,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          customerName: data.customerName,
+          productName: productName,
+          dateFrom: data.dateFrom,
+          dateTo: calculatedDateTo,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          status: 'PENDING_SUPPLIER_CONFIRMATION',
+          requiresManualConfirmation: false
+        });
+        
+        await sendAdminNotification({
+          reference: result.reference || result.bookingRef,
+          customerName: data.customerName,
+          customerEmail: data.email || 'noreply@thisisafrica.com.au',
+          productCode: data.productCode,
+          productName: productName,
+          dateFrom: data.dateFrom,
+          totalCost: result.totalCost || 0,
+          currency: result.currency || 'AUD',
+          requiresManualConfirmation: false,
+          tourplanStatus: result.status
+        });
+        
+        console.log('✅ Email notifications sent for RQ booking');
+      } catch (emailError) {
+        console.error('⚠️ Failed to send email notifications:', emailError);
+      }
+      
+      return successResponse(confirmedBooking, 201);
     }
     
     // For successful bookings (status OK or other success statuses)
