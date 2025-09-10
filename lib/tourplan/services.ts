@@ -2472,35 +2472,28 @@ function extractRatesFromOption(option: any): any[] {
           if (rateSet.OptRate?.RoomRates) {
             const roomRates = rateSet.OptRate.RoomRates;
             
-            // Convert from cents to dollars (TourPlan returns prices in cents)
+            // Combine all rate types into one object per date range
+            const combinedRate: any = {
+              currency: dateRange.Currency || 'AUD',
+              rateName: rateSet.RateName || 'Standard',
+              dateFrom: dateRange.DateFrom,
+              dateTo: dateRange.DateTo
+            };
+            
+            // Add all available rate types to the same object
             if (roomRates.SingleRate) {
-              rates.push({
-                currency: dateRange.Currency || 'AUD',
-                singleRate: parseFloat(roomRates.SingleRate),
-                rateName: rateSet.RateName || 'Single',
-                dateFrom: dateRange.DateFrom,
-                dateTo: dateRange.DateTo
-              });
+              combinedRate.singleRate = parseFloat(roomRates.SingleRate);
             }
-            
             if (roomRates.DoubleRate) {
-              rates.push({
-                currency: dateRange.Currency || 'AUD',
-                doubleRate: parseFloat(roomRates.DoubleRate),
-                rateName: rateSet.RateName || 'Double',
-                dateFrom: dateRange.DateFrom,
-                dateTo: dateRange.DateTo
-              });
+              combinedRate.doubleRate = parseFloat(roomRates.DoubleRate);
+            }
+            if (roomRates.TwinRate) {
+              combinedRate.twinRate = parseFloat(roomRates.TwinRate);
             }
             
-            if (roomRates.TwinRate) {
-              rates.push({
-                currency: dateRange.Currency || 'AUD',
-                twinRate: parseFloat(roomRates.TwinRate),
-                rateName: rateSet.RateName || 'Twin',
-                dateFrom: dateRange.DateFrom,
-                dateTo: dateRange.DateTo
-              });
+            // Only push if we have at least one rate
+            if (combinedRate.singleRate || combinedRate.doubleRate || combinedRate.twinRate) {
+              rates.push(combinedRate);
             }
           }
         });
