@@ -313,7 +313,7 @@ export default function ProductDetailsPage() {
   const productImages = useMemo(() => {
     return realImages.length > 0 
       ? realImages
-      : ["/images/safari-lion.png", "/images/luxury-accommodation.png", "/images/rail-journey.png"]
+      : ["/images/products/Lion-1-1200x800.jpg", "/images/products/accomm-hero.jpg", "/images/products/Lion-2-1200x800.jpg"]
   }, [realImages])
   
   // Determine left side image and remaining carousel images
@@ -688,16 +688,16 @@ export default function ProductDetailsPage() {
         {console.log('🖼️ RENDER hasHighResImages:', hasHighResImages, 'hasHighResMap:', hasHighResMap, 'productCode:', productCode, 'sanityImagesLoaded:', sanityImagesLoaded)}
         <div className={`relative ${hasHighResImages ? 'h-[80vh] w-full' : 'h-[60vh] flex justify-center'}`}>
           <div className={hasHighResImages ? 'h-full w-full flex gap-6 px-6 py-4' : 'flex justify-center w-full'}>
-            {/* Left Side - Map or Alternative Image */}
-            <div className={`hidden lg:block ${hasHighResImages ? 'w-[28%] h-full rounded-lg overflow-hidden shadow-lg' : 'w-1/3 h-full border-r'} bg-white relative`}>
+            {/* Left Side - Map or Alternative Image - Square but 1/3 of space */}
+            <div className={`hidden lg:block ${hasHighResImages ? 'w-1/3 h-full rounded-lg overflow-hidden shadow-lg flex-shrink-0' : 'w-1/3 h-full border-r'} bg-white relative`}>
               {leftSideImage ? (
                 <Image
                   src={leftSideImage}
                   alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : isAccommodation ? "Hotel Image" : "Tour Image"}
                   fill
-                  className={hasHighResImages ? "object-cover" : "object-contain p-4"}
+                  className={hasHighResImages ? "object-cover object-left" : "object-contain p-4"}
                   quality={100}
-                  sizes={hasHighResImages ? "28vw" : "(max-width: 1024px) 0vw, 500px"}
+                  sizes={hasHighResImages ? "33vw" : "(max-width: 1024px) 0vw, 500px"}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-500">
@@ -710,9 +710,9 @@ export default function ProductDetailsPage() {
               )}
             </div>
             
-            {/* Image Gallery - Right Side */}
+            {/* Image Gallery - Right Side - 2/3 of space, same height as map */}
             <div 
-              className={`relative ${hasHighResImages ? 'w-[72%] h-full rounded-lg overflow-hidden shadow-lg' : 'flex-1 h-full'} bg-white`}
+              className={`relative ${hasHighResImages ? 'w-2/3 h-full rounded-lg overflow-hidden shadow-lg' : 'flex-1 h-full'} bg-white`}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}

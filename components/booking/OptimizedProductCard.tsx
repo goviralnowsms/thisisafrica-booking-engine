@@ -46,12 +46,12 @@ export default function OptimizedProductCard({ tour, productType, priority = fal
   // Get fallback image based on product type
   const getFallbackImage = () => {
     const fallbackImages = {
-      'Group Tours': '/images/safari-lion.png',
-      'Packages': '/images/safari-lion.png',
+      'Group Tours': '/images/products/Lion-1-1200x800.jpg',
+      'Packages': '/images/products/Lion-1-1200x800.jpg',
       'Rail': '/images/rail-journey.jpg',
       'Cruises': '/images/zambezi-queen.png'
     }
-    return fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png'
+    return fallbackImages[productType as keyof typeof fallbackImages] || '/images/products/Lion-1-1200x800.jpg'
   }
 
   useEffect(() => {

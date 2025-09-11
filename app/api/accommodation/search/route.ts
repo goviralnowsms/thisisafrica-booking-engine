@@ -64,10 +64,38 @@ export async function GET(request: NextRequest) {
     </RoomConfigs>
   </OptionInfoRequest>
 </Request>`;
+    } else if (useButtonDestinations && destination) {
+      // Strategy 2: Use TourPlan recommended ButtonDestinations structure
+      // Use Info="G" (general only) to show all accommodations without pricing
+      // This forces customers to contact This is Africa for quotes
+      const infoParam = 'G';
+      
+      xml = `<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+  <OptionInfoRequest>
+    <AgentID>${credentials.agentId}</AgentID>
+    <Password>${credentials.password}</Password>
+    <ButtonDestinations>
+      <ButtonDestination>
+        <ButtonName>Accommodation</ButtonName>
+        <DestinationName>${destination}</DestinationName>
+      </ButtonDestination>
+    </ButtonDestinations>
+    <Info>${infoParam}</Info>
+    <DateFrom>${dateFrom}</DateFrom>
+    <DateTo>${dateTo}</DateTo>
+    <RoomConfigs>
+      <RoomConfig>
+        <Adults>${adults}</Adults>
+        ${children > 0 ? `<Children>${children}</Children>` : ''}
+        <RoomType>DB</RoomType>
+      </RoomConfig>
+    </RoomConfigs>
+  </OptionInfoRequest>
+</Request>`;
     } else {
-      // Strategy 2: Since ButtonName="Accommodation" returns empty, 
-      // let's try searching for tours/packages that include accommodation
-      // This matches the approach used in the existing accommodation catalog
+      // Strategy 3: Fallback - search for tours/packages that include accommodation
       xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
@@ -142,27 +170,50 @@ export async function GET(request: NextRequest) {
     }
     
     // Transform options to accommodations using actual TourPlan structure
-    let accommodations = rawOptions.map((option: any) => ({
-      id: option.Opt || option.OptCode,
-      code: option.Opt || option.OptCode,
-      name: option.OptGeneral?.Description || option.Description || 'Safari Tour',
-      supplier: option.OptGeneral?.SupplierName || option.SupplierName || '',
-      description: option.OptGeneral?.Comment || option.Comment || option.OptGeneral?.Description || '',
-      destination: destination || '',
-      country: extractCountryFromDestination(destination || ''),
-      type: determineAccommodationType(option.OptGeneral?.Description || '', option.OptGeneral?.Comment || ''),
-      category: 'standard',
-      image: option.OptGeneral?.Image || '/images/safari-lodge.png',
-      rates: [], // Will be populated from OptDateRanges if available
-      hasAvailability: true, // Assume available if returned by TourPlan
-      // Accommodation-specific fields
-      roomType: option.OptGeneral?.Description || 'Safari Package',
-      hotelName: option.OptGeneral?.SupplierName || 'Safari Lodge'
-    }))
+    let accommodations = rawOptions.map((option: any) => {
+      // Check if this is a real accommodation with stay results
+      const isRealAccommodation = option.OptStayResults != null
+      const stayResults = option.OptStayResults || {}
+      
+      return {
+        id: option.Opt || option.OptCode,
+        code: option.Opt || option.OptCode,
+        name: option.OptGeneral?.SupplierName || option.OptGeneral?.Description || option.Description || 'Safari Tour',
+        supplier: option.OptGeneral?.SupplierName || option.SupplierName || '',
+        description: `${option.OptGeneral?.Description || ''} - ${option.OptGeneral?.Comment || ''}`.trim().replace(/^- |^$/, ''),
+        destination: destination || option.OptGeneral?.LocalityDescription || '',
+        country: extractCountryFromDestination(destination || ''),
+        type: isRealAccommodation ? 'hotel' : determineAccommodationType(option.OptGeneral?.Description || '', option.OptGeneral?.Comment || ''),
+        category: option.OptGeneral?.ClassDescription?.toLowerCase().includes('4') ? 'luxury' : 'standard',
+        image: option.OptGeneral?.Image || '/images/products/accomm-hero.jpg',
+        rates: isRealAccommodation ? [{
+          currency: stayResults.Currency || 'AUD',
+          totalPrice: stayResults.TotalPrice || 0,
+          agentPrice: stayResults.AgentPrice || 0,
+          rateId: stayResults.RateId || 'Default',
+          rateName: stayResults.RateName || 'Standard',
+          availability: stayResults.Availability || 'RQ',
+          roomType: stayResults.RoomList?.RoomType || 'DB'
+        }] : [],
+        hasAvailability: isRealAccommodation ? stayResults.Availability === 'OK' : true,
+        // Accommodation-specific fields
+        roomType: option.OptGeneral?.Description || 'Standard Room',
+        hotelName: option.OptGeneral?.SupplierName || 'Safari Lodge',
+        address: [
+          option.OptGeneral?.Address2,
+          option.OptGeneral?.Address3,
+          option.OptGeneral?.Address4
+        ].filter(Boolean).join(', '),
+        starRating: option.OptGeneral?.Class || '',
+        locality: option.OptGeneral?.LocalityDescription || '',
+        // Pricing info (convert from cents to dollars)
+        pricePerNight: isRealAccommodation && stayResults.TotalPrice ? Math.round(stayResults.TotalPrice / 100) : null,
+        totalPrice: isRealAccommodation && stayResults.TotalPrice ? Math.round(stayResults.TotalPrice / 100) : null
+      }
+    })
 
-    // If we searched for Group Tours (because Accommodation returns empty),
-    // filter results to focus on accommodation-heavy tours
-    if (!productCode) {
+    // Apply filtering only for Group Tours fallback searches
+    if (!productCode && !useButtonDestinations) {
       console.log('🏨 Filtering Group Tours results for accommodation-focused tours')
       const beforeFilter = accommodations.length
       accommodations = accommodations.filter((acc: any) => {
@@ -191,6 +242,8 @@ export async function GET(request: NextRequest) {
         )
       })
       console.log(`🏨 Filtered from ${beforeFilter} to ${accommodations.length} accommodation-focused results`)
+    } else if (useButtonDestinations) {
+      console.log('🏨 Using real accommodation results from ButtonDestinations - no filtering needed')
     }
 
     console.log(`🏨 Successfully found ${accommodations.length} accommodations`)

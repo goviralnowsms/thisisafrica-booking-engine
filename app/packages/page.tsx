@@ -228,7 +228,7 @@ export default function PackagesPage() {
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/safari-lion.png"
+    if (!tourCode) return "/images/products/Lion-1-1200x800.jpg"
     
     // Check for specific product code mappings first
     // Botswana packages (Chobe)
@@ -259,7 +259,7 @@ export default function PackagesPage() {
     }
     
     // Fallback to generic safari image
-    return "/images/safari-lion.png"
+    return "/images/products/Lion-1-1200x800.jpg"
   }
 
   const handleSearch = async () => {

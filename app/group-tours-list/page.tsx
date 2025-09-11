@@ -169,7 +169,7 @@ export default function GroupToursPage() {
 
   // Function to get product-specific image from cached data or fallback
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/safari-lion.png"
+    if (!tourCode) return "/images/products/Lion-1-1200x800.jpg"
     
     // Check if we have the image cached
     if (productImages[tourCode]) {
@@ -177,7 +177,7 @@ export default function GroupToursPage() {
     }
     
     // Fallback to generic safari image
-    return "/images/safari-lion.png"
+    return "/images/products/Lion-1-1200x800.jpg"
   }
 
   // Check if a product has available dates
@@ -532,7 +532,7 @@ export default function GroupToursPage() {
                             onError={(e) => {
                               // Fallback to generic safari image if product image fails to load
                               const target = e.target as HTMLImageElement;
-                              target.src = "/images/safari-lion.png";
+                              target.src = "/images/products/Lion-1-1200x800.jpg";
                             }}
                           />
                           <div className="absolute top-4 left-4">

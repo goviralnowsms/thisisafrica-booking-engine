@@ -239,14 +239,14 @@ export default function SearchResultsPage() {
 
   const getProductImage = (tour: any, productType: string) => {
     const fallbackImages = {
-      'Group Tours': '/images/safari-lion.png',
-      'Packages': '/images/safari-lion.png', 
+      'Group Tours': '/images/products/Lion-1-1200x800.jpg',
+      'Packages': '/images/products/Lion-1-1200x800.jpg', 
       'Rail': '/images/rail-journey.jpg',
       'Cruises': '/images/zambezi-queen.png'
     }
     
     if (!tour.code) {
-      return fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png'
+      return fallbackImages[productType as keyof typeof fallbackImages] || '/images/products/Lion-1-1200x800.jpg'
     }
     
     // Check Sanity images first (fastest)
@@ -260,7 +260,7 @@ export default function SearchResultsPage() {
     }
     
     // Fallback to product-specific default images
-    return fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png'
+    return fallbackImages[productType as keyof typeof fallbackImages] || '/images/products/Lion-1-1200x800.jpg'
   }
 
   const renderProductCard = (tour: any, productType: string) => {
@@ -287,12 +287,12 @@ export default function SearchResultsPage() {
               // Fallback to product-specific default image if loading fails
               const target = e.target as HTMLImageElement;
               const fallbackImages = {
-                'Group Tours': '/images/safari-lion.png',
-                'Packages': '/images/safari-lion.png',
+                'Group Tours': '/images/products/Lion-1-1200x800.jpg',
+                'Packages': '/images/products/Lion-1-1200x800.jpg',
                 'Rail': '/images/rail-journey.jpg',
                 'Cruises': '/images/zambezi-queen.png'
               }
-              target.src = fallbackImages[productType as keyof typeof fallbackImages] || '/images/safari-lion.png';
+              target.src = fallbackImages[productType as keyof typeof fallbackImages] || '/images/products/Lion-1-1200x800.jpg';
             }}
           />
           <div className="absolute top-4 left-4">

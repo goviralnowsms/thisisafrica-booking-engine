@@ -71,7 +71,7 @@ export default function SpecialOffersPage() {
     }
     
     // Default fallback (same as homepage)
-    return offer.image || '/images/safari-lion.png'
+    return offer.image || '/images/products/Lion-1-1200x800.jpg'
   }
 
   // Check if a product has available dates
@@ -194,7 +194,7 @@ export default function SpecialOffersPage() {
                       onError={(e) => {
                         // Fallback to generic safari image if product image fails to load
                         const target = e.target as HTMLImageElement;
-                        target.src = "/images/safari-lion.png";
+                        target.src = "/images/products/Lion-1-1200x800.jpg";
                       }}
                     />
                     <div className="absolute top-4 left-4">

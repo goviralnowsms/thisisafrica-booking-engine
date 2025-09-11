@@ -29,25 +29,47 @@ import { getAvailableCountries, getAvailableDestinations } from "@/lib/destinati
 // Generic accommodation images for different types
 const genericImages = {
   lodge: [
-    "/images/products/safari-jeep.jpg",
-    "/images/products/lion-pride.jpg",
-    "/images/products/elephants.jpg"
+    "/images/products/sabi-sabi1.png",
+    "/images/products/sabi-sabi2.jpg", 
+    "/images/products/savannah-lodge-honeymoon.png",
+    "/images/products/savannah-suite.jpg"
   ],
   hotel: [
-    "/images/products/cape-town.jpg",
-    "/images/products/victoria-falls.jpg"
+    "/images/products/portswood-captains-suite.jpg",
+    "/images/products/portswood-hotel-dining-1920x.jpg",
+    "/images/products/portswoodhotelexterior10_facilities-1920.jpg",
+    "/images/products/accomm-hero.jpg"
   ],
   camp: [
-    "/images/products/sunrise-tour.jpg",
-    "/images/products/leopard.jpg"
+    "/images/products/sabi-sabi3.jpg",
+    "/images/products/sabi-sabi4.jpg",
+    "/images/products/savannah-lodge-honeymoon.png"
   ],
   resort: [
-    "/images/products/chobe-river.jpg",
-    "/images/products/namibia-desert.jpg"
+    "/images/products/accomm-hero.jpg",
+    "/images/products/portswood-hotel-dining-1920x.jpg"
   ]
 }
 
-// Get a random generic image for accommodation type
+// Get a specific image for accommodation type and name
+const getAccommodationImage = (type: string, name: string, supplier: string): string => {
+  const lowerName = (name + ' ' + supplier).toLowerCase()
+  
+  // Specific accommodation mappings
+  if (lowerName.includes('portswood')) return '/images/products/portswood-captains-suite.jpg'
+  if (lowerName.includes('table bay')) return '/images/products/portswood-hotel-dining-1920x.jpg'
+  if (lowerName.includes('cape grace')) return '/images/products/portswoodhotelexterior10_facilities-1920.jpg'
+  if (lowerName.includes('sabi sabi')) return '/images/products/sabi-sabi1.png'
+  if (lowerName.includes('kapama')) return '/images/products/sabi-sabi2.jpg'
+  if (lowerName.includes('kuname')) return '/images/products/savannah-lodge-honeymoon.png'
+  if (lowerName.includes('savannah') || lowerName.includes('serena')) return '/images/products/savannah-suite.jpg'
+  
+  // Fallback to type-based selection
+  const typeImages = genericImages[type as keyof typeof genericImages] || genericImages.hotel
+  return typeImages[Math.floor(Math.random() * typeImages.length)]
+}
+
+// Get a random generic image for accommodation type (kept for backward compatibility)
 const getGenericImage = (type: string): string => {
   const typeImages = genericImages[type as keyof typeof genericImages] || genericImages.lodge
   return typeImages[Math.floor(Math.random() * typeImages.length)]
@@ -247,6 +269,7 @@ export default function AccommodationPage() {
       }
       
       params.set('destination', tourPlanDestination)
+      params.set('useButtonDestinations', 'true')
       
       if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
       
@@ -263,7 +286,7 @@ export default function AccommodationPage() {
           ...acc,
           id: acc.code || acc.id,
           name: acc.displayName || acc.name || `${acc.hotelName || 'Hotel'} - ${acc.roomType || 'Room'}`,
-          image: productImages[acc.code] || acc.image || getGenericImage('lodge'),
+          image: productImages[acc.code] || acc.image || getAccommodationImage(acc.type || 'hotel', acc.name || '', acc.supplier || ''),
           description: acc.description || acc.hotelDescription || '',
           duration: `${acc.roomType || 'Accommodation'}`,
           destination: tourPlanDestination,
