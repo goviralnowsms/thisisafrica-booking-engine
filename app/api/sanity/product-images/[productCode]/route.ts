@@ -3,10 +3,10 @@ import { getProductImages } from '@/lib/sanity/productImages'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { productCode: string } }
+  { params }: { params: Promise<{ productCode: string }> }
 ) {
   try {
-    const { productCode } = params
+    const { productCode } = await params
 
     if (!productCode) {
       return NextResponse.json(
