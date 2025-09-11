@@ -95,6 +95,29 @@ export default function ProductDetailsPage() {
   const [hasAvailableDates, setHasAvailableDates] = useState<boolean | null>(null)
   const [sanityImages, setSanityImages] = useState<any>(null)
   const [sanityImagesLoaded, setSanityImagesLoaded] = useState(false)
+  const [hasHighResImages, setHasHighResImages] = useState(false)
+  const [hasHighResMap, setHasHighResMap] = useState(false)
+  
+  // Check if this is an accommodation product
+  const isAccommodation = useMemo(() => {
+    if (!productCode) return false
+    // Accommodation codes typically contain 'AC' after the airport code
+    // Examples: CPTACPOR002PORTST, JNBAC*, etc.
+    const pattern = /^[A-Z]{3}AC/
+    return pattern.test(productCode)
+  }, [productCode])
+  
+  // Format display name for accommodation products
+  const displayName = useMemo(() => {
+    if (!product) return ''
+    
+    if (isAccommodation && product.supplierName) {
+      // For accommodation: "Hotel Name - Room Type"
+      return `${product.supplierName}${product.name ? ` - ${product.name}` : ''}`
+    }
+    
+    return product.name
+  }, [product, isAccommodation])
 
   // Client-side hydration effect
   useEffect(() => {
@@ -117,13 +140,98 @@ export default function ProductDetailsPage() {
         if (result.success && result.data) {
           console.log('Sanity images loaded:', result.data)
           setSanityImages(result.data)
+          
+          // Check if this product has high-resolution images by examining actual image dimensions
+          // High-res gallery images should be ~1200x800, maps ~800x800 
+          // Old images are ~600x347, so we detect based on width >= 1000 for gallery images
+          
+          if (result.data.gallery && result.data.gallery.length > 0) {
+            // Try to detect high-res images by checking image URLs or loading one image to check dimensions
+            const firstGalleryImage = result.data.gallery[0]?.url
+            if (firstGalleryImage) {
+              try {
+                // Create a temporary image to check dimensions
+                const img = new Image()
+                img.onload = function() {
+                  // High-res detection: width >= 1000px (distinguishes 1200x800 from 600x347)
+                  const isHighRes = this.width >= 1000
+                  setHasHighResImages(isHighRes)
+                  console.log(`🖼️ Gallery image dimensions: ${this.width}x${this.height}, High-res: ${isHighRes}`)
+                }
+                img.onerror = function() {
+                  console.log('Could not load image for dimension check, using fallback detection')
+                  // Fallback: check if the URL suggests high resolution (contains certain patterns)
+                  const urlSuggetsHighRes = firstGalleryImage.includes('1200') || 
+                                           firstGalleryImage.includes('800') ||
+                                           firstGalleryImage.includes('high') ||
+                                           firstGalleryImage.includes('large')
+                  setHasHighResImages(urlSuggetsHighRes)
+                }
+                img.src = firstGalleryImage
+              } catch (error) {
+                console.log('Error checking image dimensions:', error)
+                setHasHighResImages(false)
+              }
+            }
+          } else {
+            setHasHighResImages(false)
+          }
+          
+          // Also check map image resolution if available
+          if (result.data.mapImage) {
+            try {
+              const mapImg = new Image()
+              mapImg.onload = function() {
+                // Map high-res detection: width > 600px (distinguishes 800x800 from smaller maps)
+                const isHighResMap = this.width > 600
+                setHasHighResMap(isHighResMap)
+                console.log(`Map image dimensions: ${this.width}x${this.height}, High-res map: ${isHighResMap}`)
+              }
+              mapImg.onerror = function() {
+                console.log('Could not load map image for dimension check')
+                setHasHighResMap(false)
+              }
+              mapImg.src = result.data.mapImage
+            } catch (error) {
+              console.log('Error checking map image dimensions:', error)
+              setHasHighResMap(false)
+            }
+          } else {
+            setHasHighResMap(false)
+          }
+          
+          console.log('Checking high resolution images for', productCode)
         } else {
           console.log('No Sanity images found for product:', productCode)
           setSanityImages(null)
+          
+          // Check if this product has hardcoded high-res images
+          if (productCode === 'NBOGTSAFHQEAETIA') {
+            console.log('🖼️ Checking hardcoded images for NBOGTSAFHQEAETIA')
+            try {
+              const img = new Image()
+              img.onload = function() {
+                const isHighRes = this.width >= 1000
+                setHasHighResImages(isHighRes)
+                console.log(`🖼️ Hardcoded image dimensions: ${this.width}x${this.height}, High-res: ${isHighRes}`)
+              }
+              img.onerror = function() {
+                console.log('🖼️ Could not load hardcoded image, assuming high-res for NBOGTSAFHQEAETIA')
+                setHasHighResImages(true)
+              }
+              img.src = '/images/products/NBOGTSAFHEQ-AETIA-1.jpg'
+            } catch (error) {
+              console.log('🖼️ Error checking hardcoded image, assuming high-res for NBOGTSAFHQEAETIA')
+              setHasHighResImages(true)
+            }
+          } else {
+            setHasHighResImages(false)
+          }
         }
       } catch (error) {
         console.warn('Error fetching Sanity images:', error)
         setSanityImages(null)
+        setHasHighResImages(false)
       } finally {
         setSanityImagesLoaded(true)
       }
@@ -153,9 +261,9 @@ export default function ProductDetailsPage() {
     // Fallback to hardcoded images for specific products
     console.log('No Sanity images, checking hardcoded images for:', productCode)
     
-    // Check for NBOGTSAFHQ EAETIA specific images (East Africa tour)
-    if (productCode === 'NBOGTSAFHQ EAETIA') {
-      console.log('Matched NBOGTSAFHQ EAETIA - returning custom images')
+    // Check for NBOGTSAFHQEAETIA specific images (East Africa tour - no space)
+    if (productCode === 'NBOGTSAFHQEAETIA') {
+      console.log('Matched NBOGTSAFHQEAETIA - returning custom images')
       return [
         '/images/products/NBOGTSAFHEQ-AETIA-1.jpg',
         '/images/products/NBOGTSAFHQ-EAETIA-2.jpg',
@@ -199,8 +307,8 @@ export default function ProductDetailsPage() {
       return sanityImages.mapImage
     }
     
-    // Check for NBOGTSAFHQ EAETIA specific map
-    if (productCode === 'NBOGTSAFHQ EAETIA') {
+    // Check for NBOGTSAFHQEAETIA specific map (no space)
+    if (productCode === 'NBOGTSAFHQEAETIA') {
       return '/images/products/NBOGTSAFHQ-EAETIA-Map.jpg'
     }
     
@@ -438,8 +546,8 @@ export default function ProductDetailsPage() {
           if (productData && productData.id) {
             console.log('Setting product data:', productData)
             
-            // Add PDF for NBOGTSAFHQ EAETIA product
-            if (productCode === 'NBOGTSAFHQ EAETIA') {
+            // Add PDF for NBOGTSAFHQEAETIA product (no space)
+            if (productCode === 'NBOGTSAFHQEAETIA') {
               if (!productData.localAssets) {
                 productData.localAssets = { images: [], pdfs: [] }
               }
@@ -530,7 +638,7 @@ export default function ProductDetailsPage() {
             <span className="text-gray-400">/</span>
             <Link href="/booking" className="text-gray-500 hover:text-gray-700">Tours</Link>
             <span className="text-gray-400">/</span>
-            <span className="text-gray-900">{product.name}</span>
+            <span className="text-gray-900">{displayName}</span>
           </nav>
         </div>
       </div>
@@ -555,51 +663,53 @@ export default function ProductDetailsPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{displayName}</h1>
           </div>
         </div>
 
         {/* Gallery and Map Section */}
-        <div className={`relative ${productCode === 'NBOGTSAFHQ EAETIA' ? 'h-[70vh] flex justify-center gap-4' : 'h-[60vh] flex justify-center'}`}>
-          {/* Left Side - Map or Alternative Image */}
-          <div className={`hidden lg:block ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'w-[40vw] h-full' : 'w-1/3 h-full'} bg-white relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? '' : 'border-r'}`}>
-            {leftSideImage ? (
-              <Image
-                src={leftSideImage}
-                alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : "Tour Image"}
-                fill
-                className={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "object-cover" : "object-contain p-4"}
-                quality={95}
-                sizes={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "40vw" : "(max-width: 1024px) 0vw, 500px"}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <div className="h-12 w-12 mx-auto mb-2 flex items-center justify-center text-2xl">📍</div>
-                  <p className="font-semibold">Tour Route Map</p>
-                  <p className="text-sm">Map will be available soon</p>
+        {console.log('🖼️ hasHighResImages:', hasHighResImages, 'hasHighResMap:', hasHighResMap, 'productCode:', productCode)}
+        <div className={`relative ${hasHighResImages ? 'h-[80vh] w-full' : 'h-[60vh] flex justify-center'}`}>
+          <div className={hasHighResImages ? 'h-full w-full flex gap-6 px-6 py-4' : 'flex justify-center w-full'}>
+            {/* Left Side - Map or Alternative Image */}
+            <div className={`hidden lg:block ${hasHighResImages ? 'w-[28%] h-full rounded-lg overflow-hidden shadow-lg' : 'w-1/3 h-full border-r'} bg-white relative`}>
+              {leftSideImage ? (
+                <Image
+                  src={leftSideImage}
+                  alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : isAccommodation ? "Hotel Image" : "Tour Image"}
+                  fill
+                  className={hasHighResImages ? "object-cover" : "object-contain p-4"}
+                  quality={100}
+                  sizes={hasHighResImages ? "28vw" : "(max-width: 1024px) 0vw, 500px"}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <div className="h-12 w-12 mx-auto mb-2 flex items-center justify-center text-2xl">📍</div>
+                    <p className="font-semibold">Tour Route Map</p>
+                    <p className="text-sm">Map will be available soon</p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Image Gallery - Right Side */}
-          <div 
-            className={`relative ${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'w-[60vw] h-full' : 'flex-1 h-full'} bg-white`}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <Image
-              key={selectedImageIndex}
-              src={carouselImages[selectedImageIndex] || carouselImages[0]}
-              alt={product.name}
-              fill
-              className={`${(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? 'object-cover' : 'object-contain'}`}
-              priority
-              quality={95}
-              sizes={(productCode === 'NBOGTSAFHQ EAETIA' || productCode === 'NBOGTSAFHQEAETIA') ? "1200px" : "(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"}
-            />
+              )}
+            </div>
+            
+            {/* Image Gallery - Right Side */}
+            <div 
+              className={`relative ${hasHighResImages ? 'w-[72%] h-full rounded-lg overflow-hidden shadow-lg' : 'flex-1 h-full'} bg-white`}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <Image
+                key={selectedImageIndex}
+                src={carouselImages[selectedImageIndex] || carouselImages[0]}
+                alt={product.name}
+                fill
+                className={hasHighResImages ? "object-cover" : "object-contain"}
+                priority
+                quality={100}
+                sizes={hasHighResImages ? "72vw" : "(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1000px"}
+              />
             
             {/* Navigation buttons - only show if more than 1 real image */}
             {showCarouselControls && (
@@ -639,6 +749,7 @@ export default function ProductDetailsPage() {
               </div>
             </>
           )}
+            </div>
           </div>
         </div>
         
@@ -727,15 +838,15 @@ export default function ProductDetailsPage() {
               <div id="overview" className="bg-white rounded-lg shadow">
                 <Tabs defaultValue="introduction" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 rounded-t-lg h-12">
-                    <TabsTrigger value="introduction" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Introduction</TabsTrigger>
-                    <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Details</TabsTrigger>
-                    <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Inclusions</TabsTrigger>
-                    <TabsTrigger value="pricing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Pricing</TabsTrigger>
+                    <TabsTrigger value="introduction" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Overview' : 'Introduction'}</TabsTrigger>
+                    <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rooms' : 'Details'}</TabsTrigger>
+                    <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Amenities' : 'Inclusions'}</TabsTrigger>
+                    <TabsTrigger value="pricing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rates' : 'Pricing'}</TabsTrigger>
                   </TabsList>
                   
                   <div className="p-6">
                     <TabsContent value="introduction" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Introduction</h2>
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">{isAccommodation ? 'Hotel Overview' : 'Tour Introduction'}</h2>
                       <div className="prose max-w-none">
                         {product.content?.details ? (
                           <div className="whitespace-pre-line text-gray-700 leading-relaxed">
@@ -748,7 +859,7 @@ export default function ProductDetailsPage() {
                     </TabsContent>
                     
                     <TabsContent value="details" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">Tour Details</h2>
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">{isAccommodation ? 'Room Details' : 'Tour Details'}</h2>
                       <div className="prose max-w-none">
                         {product.content?.introduction ? (
                           <div className="whitespace-pre-line text-gray-700 leading-relaxed">
@@ -806,7 +917,7 @@ export default function ProductDetailsPage() {
             {/* Sidebar */}
             <div>
               <div className="bg-white rounded-lg shadow p-6 sticky top-4">
-                <h3 className="text-xl font-bold text-center mb-4 text-amber-600">🎯 Book This Adventure</h3>
+                <h3 className="text-xl font-bold text-center mb-4 text-amber-600">{isAccommodation ? '🏨 Book This Hotel' : '🎯 Book This Adventure'}</h3>
                 
                 {/* Pricing */}
                 <div className="text-center bg-green-50 p-4 rounded-lg mb-6">

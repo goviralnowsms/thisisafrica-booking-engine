@@ -45,10 +45,28 @@ export default {
       name: 'tags',
       title: 'Tags',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [
+        {
+          type: 'object',
+          name: 'tag',
+          fields: [
+            {
+              name: 'value',
+              type: 'string',
+              title: 'Tag',
+            },
+          ],
+          preview: {
+            select: {
+              title: 'value',
+            },
+          },
+        },
+      ],
       options: {
         layout: 'tags',
       },
+      description: 'Tags for categorization (e.g., luxury, budget, family-friendly)',
     },
     {
       name: 'order',

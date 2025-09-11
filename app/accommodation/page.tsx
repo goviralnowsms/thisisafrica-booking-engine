@@ -349,8 +349,8 @@ export default function AccommodationPage() {
                     <SelectValue placeholder="Select Country" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableCountries?.map(country => (
-                      <SelectItem key={country.value} value={country.value}>
+                    {availableCountries?.map((country, index) => (
+                      <SelectItem key={`${country.value}-${index}`} value={country.value}>
                         {country.label}
                       </SelectItem>
                     )) || []}
@@ -366,8 +366,8 @@ export default function AccommodationPage() {
                     <SelectValue placeholder="Select Destination" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableDestinations?.map(destination => (
-                      <SelectItem key={destination.value} value={destination.value}>
+                    {availableDestinations?.map((destination, index) => (
+                      <SelectItem key={`${destination.value}-${index}`} value={destination.value}>
                         {destination.label}
                       </SelectItem>
                     )) || []}
@@ -383,8 +383,8 @@ export default function AccommodationPage() {
                     <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableClasses?.map(cls => (
-                      <SelectItem key={cls.value} value={cls.value}>
+                    {availableClasses?.map((cls, index) => (
+                      <SelectItem key={`${cls.value}-${index}`} value={cls.value}>
                         {cls.label}
                       </SelectItem>
                     )) || []}
