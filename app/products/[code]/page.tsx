@@ -124,13 +124,18 @@ export default function ProductDetailsPage() {
     setIsClient(true)
   }, [])
 
+  // Debug effect to track high-res image detection changes
+  useEffect(() => {
+    console.log(`🔄 [${productCode}] hasHighResImages changed to:`, hasHighResImages)
+  }, [hasHighResImages, productCode])
+
   // Fetch Sanity images effect
   useEffect(() => {
     const fetchSanityImages = async () => {
       if (!productCode) return
 
       try {
-        console.log('Fetching Sanity images for:', productCode)
+        console.log(`🖼️ [${productCode}] Fetching Sanity images from API...`)
         const response = await fetch(`/api/sanity/product-images/${productCode}`, {
           cache: 'no-store',
           next: { revalidate: 0 }
@@ -138,7 +143,7 @@ export default function ProductDetailsPage() {
         const result = await response.json()
         
         if (result.success && result.data) {
-          console.log('Sanity images loaded:', result.data)
+          console.log(`🖼️ [${productCode}] Sanity images loaded:`, result.data)
           setSanityImages(result.data)
           
           // Check if this product has high-resolution images by examining actual image dimensions
@@ -146,55 +151,81 @@ export default function ProductDetailsPage() {
           // Old images are ~600x347, so we detect based on width >= 1000 for gallery images
           
           if (result.data.gallery && result.data.gallery.length > 0) {
+            console.log(`🖼️ [${productCode}] Found ${result.data.gallery.length} gallery images:`, result.data.gallery)
             // Try to detect high-res images by checking image URLs or loading one image to check dimensions
             const firstGalleryImage = result.data.gallery[0]?.url
+            console.log(`🖼️ [${productCode}] First gallery image URL:`, firstGalleryImage)
             if (firstGalleryImage) {
-              try {
-                // Create a temporary image to check dimensions
-                const img = new Image()
-                img.onload = function() {
-                  // High-res detection: width >= 1000px (distinguishes 1200x800 from 600x347)
-                  const isHighRes = this.width >= 1000
-                  setHasHighResImages(isHighRes)
-                  console.log(`🖼️ Gallery image dimensions: ${this.width}x${this.height}, High-res: ${isHighRes}`)
+              // For Sanity images, we can detect high-res from the URL dimensions
+              // Sanity URLs contain dimensions like: .../image-1720x1110.jpg
+              const dimensionMatch = firstGalleryImage.match(/-(\d+)x(\d+)\./);
+              if (dimensionMatch) {
+                const width = parseInt(dimensionMatch[1]);
+                const height = parseInt(dimensionMatch[2]);
+                const isHighRes = width >= 1000;
+                setHasHighResImages(isHighRes);
+                console.log(`🖼️ [${productCode}] Sanity image dimensions from URL: ${width}x${height}, High-res: ${isHighRes}`);
+              } else {
+                // Fallback: try Image constructor approach
+                try {
+                  const img = document.createElement('img');
+                  img.onload = function() {
+                    const isHighRes = this.width >= 1000;
+                    setHasHighResImages(isHighRes);
+                    console.log(`🖼️ [${productCode}] Gallery image dimensions: ${this.width}x${this.height}, High-res: ${isHighRes}`);
+                  };
+                  img.onerror = function() {
+                    console.error(`🖼️ [${productCode}] Could not load image for dimension check:`, firstGalleryImage);
+                    // Final fallback: assume high-res for Sanity CDN images
+                    setHasHighResImages(true);
+                    console.log(`🖼️ [${productCode}] Using fallback: assuming high-res for Sanity image`);
+                  };
+                  img.crossOrigin = 'anonymous';
+                  img.src = firstGalleryImage;
+                } catch (error) {
+                  console.log(`🖼️ [${productCode}] Error with Image constructor:`, error);
+                  // Final fallback: assume high-res for Sanity CDN images
+                  setHasHighResImages(true);
+                  console.log(`🖼️ [${productCode}] Using final fallback: assuming high-res for Sanity image`);
                 }
-                img.onerror = function() {
-                  console.log('Could not load image for dimension check, using fallback detection')
-                  // Fallback: check if the URL suggests high resolution (contains certain patterns)
-                  const urlSuggetsHighRes = firstGalleryImage.includes('1200') || 
-                                           firstGalleryImage.includes('800') ||
-                                           firstGalleryImage.includes('high') ||
-                                           firstGalleryImage.includes('large')
-                  setHasHighResImages(urlSuggetsHighRes)
-                }
-                img.src = firstGalleryImage
-              } catch (error) {
-                console.log('Error checking image dimensions:', error)
-                setHasHighResImages(false)
               }
             }
           } else {
+            console.log(`🖼️ [${productCode}] No gallery images found or empty gallery:`, result.data.gallery)
             setHasHighResImages(false)
           }
           
           // Also check map image resolution if available
           if (result.data.mapImage) {
-            try {
-              const mapImg = new Image()
-              mapImg.onload = function() {
-                // Map high-res detection: width > 600px (distinguishes 800x800 from smaller maps)
-                const isHighResMap = this.width > 600
-                setHasHighResMap(isHighResMap)
-                console.log(`Map image dimensions: ${this.width}x${this.height}, High-res map: ${isHighResMap}`)
+            // For Sanity map images, detect dimensions from URL
+            const mapDimensionMatch = result.data.mapImage.match(/-(\d+)x(\d+)\./);
+            if (mapDimensionMatch) {
+              const mapWidth = parseInt(mapDimensionMatch[1]);
+              const mapHeight = parseInt(mapDimensionMatch[2]);
+              const isHighResMap = mapWidth > 600;
+              setHasHighResMap(isHighResMap);
+              console.log(`🖼️ [${productCode}] Map image dimensions from URL: ${mapWidth}x${mapHeight}, High-res map: ${isHighResMap}`);
+            } else {
+              // Fallback for map images
+              try {
+                const mapImg = document.createElement('img');
+                mapImg.onload = function() {
+                  const isHighResMap = this.width > 600;
+                  setHasHighResMap(isHighResMap);
+                  console.log(`🖼️ [${productCode}] Map image dimensions: ${this.width}x${this.height}, High-res map: ${isHighResMap}`);
+                };
+                mapImg.onerror = function() {
+                  console.log(`🖼️ [${productCode}] Could not load map image for dimension check`);
+                  // Assume high-res for Sanity CDN maps
+                  setHasHighResMap(true);
+                };
+                mapImg.crossOrigin = 'anonymous';
+                mapImg.src = result.data.mapImage;
+              } catch (error) {
+                console.log(`🖼️ [${productCode}] Error checking map image dimensions:`, error);
+                // Assume high-res for Sanity CDN maps
+                setHasHighResMap(true);
               }
-              mapImg.onerror = function() {
-                console.log('Could not load map image for dimension check')
-                setHasHighResMap(false)
-              }
-              mapImg.src = result.data.mapImage
-            } catch (error) {
-              console.log('Error checking map image dimensions:', error)
-              setHasHighResMap(false)
             }
           } else {
             setHasHighResMap(false)
@@ -202,28 +233,14 @@ export default function ProductDetailsPage() {
           
           console.log('Checking high resolution images for', productCode)
         } else {
-          console.log('No Sanity images found for product:', productCode)
+          console.log(`🖼️ [${productCode}] No Sanity images found. Response:`, result)
           setSanityImages(null)
           
           // Check if this product has hardcoded high-res images
           if (productCode === 'NBOGTSAFHQEAETIA') {
-            console.log('🖼️ Checking hardcoded images for NBOGTSAFHQEAETIA')
-            try {
-              const img = new Image()
-              img.onload = function() {
-                const isHighRes = this.width >= 1000
-                setHasHighResImages(isHighRes)
-                console.log(`🖼️ Hardcoded image dimensions: ${this.width}x${this.height}, High-res: ${isHighRes}`)
-              }
-              img.onerror = function() {
-                console.log('🖼️ Could not load hardcoded image, assuming high-res for NBOGTSAFHQEAETIA')
-                setHasHighResImages(true)
-              }
-              img.src = '/images/products/NBOGTSAFHEQ-AETIA-1.jpg'
-            } catch (error) {
-              console.log('🖼️ Error checking hardcoded image, assuming high-res for NBOGTSAFHQEAETIA')
-              setHasHighResImages(true)
-            }
+            console.log('🖼️ [NBOGTSAFHQEAETIA] Using hardcoded high-res images')
+            // We know NBOGTSAFHQEAETIA has high-res images, so set directly
+            setHasHighResImages(true)
           } else {
             setHasHighResImages(false)
           }
@@ -668,7 +685,7 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* Gallery and Map Section */}
-        {console.log('🖼️ hasHighResImages:', hasHighResImages, 'hasHighResMap:', hasHighResMap, 'productCode:', productCode)}
+        {console.log('🖼️ RENDER hasHighResImages:', hasHighResImages, 'hasHighResMap:', hasHighResMap, 'productCode:', productCode, 'sanityImagesLoaded:', sanityImagesLoaded)}
         <div className={`relative ${hasHighResImages ? 'h-[80vh] w-full' : 'h-[60vh] flex justify-center'}`}>
           <div className={hasHighResImages ? 'h-full w-full flex gap-6 px-6 py-4' : 'flex justify-center w-full'}>
             {/* Left Side - Map or Alternative Image */}
