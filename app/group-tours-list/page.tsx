@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Search, Loader2, Star, Calendar } from "lucide-react"
 import { getAvailableCountriesFromAPI, getAvailableDestinationsFromAPI, getTourPlanDestinationNameFromValue } from "@/lib/dynamic-destination-mapping"
 import { shouldShowDepartureDay, getDepartureDayMessage } from "@/lib/group-tours-availability"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 
 export default function GroupToursPage() {
@@ -22,7 +23,6 @@ export default function GroupToursPage() {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [availableClasses, setAvailableClasses] = useState<string[]>([])
@@ -31,44 +31,7 @@ export default function GroupToursPage() {
   const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
-  // Load the product image index once on component mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        if (!response.ok) {
-          console.warn('Product image index not found, using default images')
-          return
-        }
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) {
-          console.warn('Product image index returned non-JSON response')
-          return
-        }
-        const imageIndex = await response.json()
-        
-        // Create a mapping of product codes to their primary images
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            // Use the first available image as primary
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    loadImageIndex()
-    
     // Load available countries dynamically from TourPlan API
     const loadCountries = async () => {
       try {
@@ -82,6 +45,8 @@ export default function GroupToursPage() {
     }
     
     loadCountries()
+    // Load image map in background for better initial page load performance
+    preloadImageMapBackground()
   }, [])
 
   // Update available destinations and classes when country changes
@@ -167,17 +132,12 @@ export default function GroupToursPage() {
     }
   }
 
-  // Function to get product-specific image from cached data or fallback
+  // Function to get product-specific image using the image mapping function
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/products/Lion-1-1200x800.jpg"
+    if (!tourCode) return "/images/products/1001187777125043.jpg"
     
-    // Check if we have the image cached
-    if (productImages[tourCode]) {
-      return productImages[tourCode]
-    }
-    
-    // Fallback to generic safari image
-    return "/images/products/Lion-1-1200x800.jpg"
+    // Use the image mapping function for fast image loading
+    return getLocalProductImageSync(tourCode)
   }
 
   // Check if a product has available dates
@@ -311,13 +271,9 @@ export default function GroupToursPage() {
         setAvailableDestinationFilters(uniqueCountries)
         console.log('🌍 Available destination filters:', uniqueCountries)
         
-        // Check availability for each product to determine Book Now vs Get Quote
-        tourList.forEach((tour: any) => {
-          if (tour.code) {
-            console.log(`🔍 Checking availability for product: ${tour.code}`)
-            checkProductAvailability(tour.code)
-          }
-        })
+        // Skip individual availability checks for performance (like packages page)
+        // Use rate-based logic instead for Book Now vs Get Quote buttons
+        console.log('🚀 Skipping individual availability checks for better performance')
       } else {
         console.error("🦁 Group tours search failed:", result.message || result.error || 'Unknown error')
         console.error("🦁 Full failed response:", result)
@@ -523,19 +479,16 @@ export default function GroupToursPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTours.map((tour) => (
                       <div key={tour.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                        <div className="relative h-48">
+                        <div className="relative h-48 bg-white">
                           <Image 
                             src={getProductImage(tour.code)} 
                             alt={tour.name} 
                             fill 
                             className="object-cover"
-                            onError={(e) => {
-                              // Fallback to generic safari image if product image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/images/products/Lion-1-1200x800.jpg";
-                            }}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            loading="lazy"
                           />
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 z-20">
                             <Badge className="bg-amber-500 hover:bg-amber-600">Guided group tour</Badge>
                           </div>
                         </div>

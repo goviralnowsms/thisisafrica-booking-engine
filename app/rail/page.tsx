@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Search, Loader2, Star, Train, Calendar } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 import { hasRailAvailability, getRailAvailability } from "@/lib/rail-availability"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 
 export default function RailPage() {
@@ -22,45 +23,19 @@ export default function RailPage() {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
   const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
-  // Load the product image index once on component mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        const imageIndex = await response.json()
-        
-        // Create a mapping of product codes to their primary images
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            // Use the first available image as primary
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    loadImageIndex()
-    
     // Initialize available countries for Rail
     const countries = getAvailableCountries('Rail')
     setAvailableCountries(countries)
+    
+    // Load image map in background for better initial page load performance
+    preloadImageMapBackground()
   }, [])
 
   // Update available destinations when country changes
@@ -103,17 +78,12 @@ export default function RailPage() {
     }
   }
 
-  // Function to get product-specific image from cached data or fallback
+  // Function to get product-specific image using the image mapping function
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/rail-journey.jpg"
+    if (!tourCode) return "/images/products/1007857754228357.jpg"
     
-    // Check if we have the image cached
-    if (productImages[tourCode]) {
-      return productImages[tourCode]
-    }
-    
-    // Fallback to generic rail image
-    return "/images/rail-journey.jpg"
+    // Use the image mapping function for fast image loading
+    return getLocalProductImageSync(tourCode)
   }
 
   // Check if a product has available dates
@@ -204,10 +174,9 @@ export default function RailPage() {
         setAvailableDestinationFilters(uniqueCountries)
         console.log('🌍 Available destination filters:', uniqueCountries)
         
-        // Check availability for each product
-        toursData.forEach((tour: any) => {
-          checkProductAvailability(tour.code)
-        })
+        // Skip individual availability checks for performance (like packages page)
+        // Use rate-based logic instead for Book Now vs Get Quote buttons
+        console.log('🚀 Skipping individual availability checks for better performance')
       } else {
         console.error("🚂 Rail search failed:", result.error)
         setTours([])
@@ -395,19 +364,16 @@ export default function RailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTours.map((tour) => (
                       <div key={tour.id} className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                        <div className="relative h-48">
+                        <div className="relative h-48 bg-white">
                           <Image 
                             src={getProductImage(tour.code)} 
                             alt={tour.name} 
                             fill 
                             className="object-cover"
-                            onError={(e) => {
-                              // Fallback to generic rail image if product image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/images/rail-journey.jpg";
-                            }}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            loading="lazy"
                           />
-                          <div className="absolute top-4 left-4">
+                          <div className="absolute top-4 left-4 z-20">
                             <Badge className="bg-amber-500 hover:bg-amber-600">Rail Journey</Badge>
                           </div>
                         </div>
