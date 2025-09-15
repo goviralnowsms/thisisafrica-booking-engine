@@ -14,15 +14,18 @@ export async function GET(request: NextRequest) {
     // Extract search parameters
     const destination = searchParams.get('destination') || undefined
     const productCode = searchParams.get('productCode') || undefined
-    const dateFrom = searchParams.get('dateFrom') || '2025-07-15'
-    const dateTo = searchParams.get('dateTo') || '2025-07-18'
+    const roomClass = searchParams.get('class') || undefined // Room type filter
+    const dateFrom = searchParams.get('dateFrom') || '2026-07-15'
+    const dateTo = searchParams.get('dateTo') || '2026-07-18'
     const adults = searchParams.get('adults') ? parseInt(searchParams.get('adults')!) : 2
     const children = searchParams.get('children') ? parseInt(searchParams.get('children')!) : 0
     const useButtonDestinations = searchParams.get('useButtonDestinations') === 'true'
+    const groupByHotel = searchParams.get('groupByHotel') !== 'false' // Default to true unless explicitly false
 
     console.log('🏨 Accommodation search request:', {
       destination,
       productCode,
+      roomClass,
       dateFrom,
       dateTo,
       adults,
@@ -66,8 +69,8 @@ export async function GET(request: NextRequest) {
 </Request>`;
     } else if (useButtonDestinations && destination) {
       // Strategy 2: Use TourPlan recommended ButtonDestinations structure
-      // Use Info="G" (general only) to show all accommodations without pricing
-      // This forces customers to contact This is Africa for quotes
+      // Use Info="G" (general) to get all accommodations first
+      // Can switch to "GS" later if we need pricing
       const infoParam = 'G';
       
       xml = `<?xml version="1.0"?>
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
       <RoomConfig>
         <Adults>${adults}</Adults>
         ${children > 0 ? `<Children>${children}</Children>` : ''}
-        <RoomType>DB</RoomType>
+        <Type>DB</Type>
       </RoomConfig>
     </RoomConfigs>
   </OptionInfoRequest>
@@ -243,7 +246,63 @@ export async function GET(request: NextRequest) {
       })
       console.log(`🏨 Filtered from ${beforeFilter} to ${accommodations.length} accommodation-focused results`)
     } else if (useButtonDestinations) {
-      console.log('🏨 Using real accommodation results from ButtonDestinations - no filtering needed')
+      console.log('🏨 Using real accommodation results from ButtonDestinations')
+      
+      // Apply room type filtering if specified
+      if (roomClass) {
+        console.log(`🏨 Filtering by room type: ${roomClass}`)
+        const beforeFilter = accommodations.length
+        accommodations = accommodations.filter((acc: any) => {
+          const roomType = acc.roomType?.toLowerCase() || ''
+          const name = acc.name?.toLowerCase() || ''
+          const description = acc.description?.toLowerCase() || ''
+          const classFilter = roomClass.toLowerCase().replace('-', ' ')
+          
+          // Exact matching for specific room types
+          if (classFilter.includes('luxury')) {
+            // Luxury Room should ONLY match "luxury" but NOT "deluxe" or "tent"
+            return (roomType.includes('luxury') && !roomType.includes('deluxe') && !roomType.includes('tent')) ||
+                   (name.includes('luxury') && !name.includes('deluxe') && !name.includes('tent'))
+          } else if (classFilter.includes('deluxe')) {
+            // Deluxe Suite should only match deluxe
+            return roomType.includes('deluxe') || name.includes('deluxe')
+          } else if (classFilter.includes('tent')) {
+            // Luxury Tent should only match tent
+            return roomType.includes('tent') || name.includes('tent')
+          } else {
+            // Other room types - normal matching
+            return roomType.includes(classFilter) || 
+                   name.includes(classFilter) || 
+                   description.includes(classFilter)
+          }
+        })
+        console.log(`🏨 Filtered from ${beforeFilter} to ${accommodations.length} results for room type: ${roomClass}`)
+      } else if (groupByHotel) {
+        // Group by hotel name when no room type specified AND grouping is enabled
+        console.log('🏨 Grouping accommodations by hotel name')
+        const hotelMap = new Map()
+        
+        accommodations.forEach((acc: any) => {
+          const hotelName = acc.hotelName || acc.supplier || acc.name
+          console.log(`🏨 Processing: ${acc.name}, hotelName: ${hotelName}, supplier: ${acc.supplier}`)
+          
+          if (hotelName && !hotelMap.has(hotelName)) {
+            // Use the first room type found for this hotel as the representative
+            hotelMap.set(hotelName, {
+              ...acc,
+              name: hotelName,
+              roomType: `Various room types available`,
+              description: `${hotelName} - Multiple room options, contact us for availability`
+            })
+          }
+        })
+        
+        accommodations = Array.from(hotelMap.values())
+        console.log(`🏨 Grouped into ${accommodations.length} unique hotels`)
+      } else {
+        // Don't group - return all individual room products
+        console.log('🏨 Returning individual room products without grouping')
+      }
     }
 
     console.log(`🏨 Successfully found ${accommodations.length} accommodations`)

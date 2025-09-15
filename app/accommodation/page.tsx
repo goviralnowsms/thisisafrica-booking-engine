@@ -22,11 +22,13 @@ import {
   Tent,
   Hotel,
   Mail,
-  Phone
+  Phone,
+  Calendar
 } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations } from "@/lib/destination-mapping"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
-// Generic accommodation images for different types
+// Generic accommodation images for different types - optimized paths
 const genericImages = {
   lodge: [
     "/images/products/sabi-sabi1.png",
@@ -49,6 +51,22 @@ const genericImages = {
     "/images/products/accomm-hero.jpg",
     "/images/products/portswood-hotel-dining-1920x.jpg"
   ]
+}
+
+// Preload common images for better performance
+if (typeof window !== 'undefined') {
+  const preloadImages = [
+    "/images/products/sabi-sabi1.png",
+    "/images/products/portswood-captains-suite.jpg",
+    "/images/products/savannah-lodge-honeymoon.png"
+  ]
+  preloadImages.forEach(src => {
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'image'
+    link.href = src
+    document.head.appendChild(link)
+  })
 }
 
 // Get a specific image for accommodation type and name
@@ -107,7 +125,7 @@ export default function AccommodationPage() {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
+  // Removed productImages state - using direct image paths for faster loading
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [availableClasses, setAvailableClasses] = useState<{value: string, label: string}[]>([])
@@ -115,41 +133,22 @@ export default function AccommodationPage() {
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  // Load product image index and initialize countries
+  // Initialize countries on mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        const imageIndex = await response.json()
-        
-        const imageMap: {[key: string]: string} = {}
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    loadImageIndex()
-    
     // Initialize available countries for Accommodation
     const countries = getAvailableCountries('Accommodation')
-    setAvailableCountries(countries)
+    // Sort countries alphabetically by label
+    const sortedCountries = countries.sort((a, b) => a.label.localeCompare(b.label))
+    setAvailableCountries(sortedCountries)
+    
+    // Start loading image map in background (non-blocking)
+    preloadImageMapBackground()
   }, [])
 
   // Update available destinations when country changes
   useEffect(() => {
     const loadDestinationsFromAPI = async () => {
-      if (selectedCountry) {
+      if (selectedCountry && availableCountries.length > 0) {
         try {
           console.log('🏨 Fetching destinations for country:', selectedCountry)
           
@@ -159,7 +158,13 @@ export default function AccommodationPage() {
           
           if (result.success && result.destinations) {
             console.log('🏨 Got destinations from API:', result.destinations)
-            setAvailableDestinations(result.destinations)
+            // Transform string array to {value, label} format
+            const transformedDestinations = result.destinations.map((dest: string) => ({
+              value: dest.toLowerCase().replace(/\s+/g, '-'),
+              label: dest,
+              tourPlanName: dest
+            }))
+            setAvailableDestinations(transformedDestinations)
           } else {
             console.warn('🏨 Failed to get destinations from API, falling back to hardcoded list')
             const destinations = getAvailableDestinations('Accommodation', selectedCountry)
@@ -182,7 +187,7 @@ export default function AccommodationPage() {
   // Update available classes when country changes
   useEffect(() => {
     const loadClassesFromAPI = async () => {
-      if (selectedCountry) {
+      if (selectedCountry && availableCountries.length > 0) {
         try {
           console.log('🏨 Fetching classes for country:', selectedCountry)
           
@@ -191,24 +196,29 @@ export default function AccommodationPage() {
           const response = await fetch(`/api/tourplan/destinations?productType=Accommodation&country=${encodeURIComponent(tourPlanCountry)}`)
           const result = await response.json()
           
-          if (result.success && result.classes) {
-            console.log('🏨 Got classes from API:', result.classes)
-            setAvailableClasses(result.classes)
-          } else {
-            console.log('🏨 No classes from API, using default accommodation classes')
-            setAvailableClasses([
-              { value: 'Standard', label: 'Standard Room' },
-              { value: 'Suite', label: 'Suite' },
-              { value: 'Luxury', label: 'Luxury Room' },
-              { value: 'Villa', label: 'Villa' }
-            ])
-          }
+          // Skip the API classes as they return star ratings, not room types
+          // Use actual TourPlan room types instead
+          console.log('🏨 Using actual TourPlan room types')
+          setAvailableClasses([
+            { value: 'standard', label: 'Standard Room' },
+            { value: 'luxury', label: 'Luxury Room' },
+            { value: 'suite', label: 'Suite' },
+            { value: 'executive', label: 'Executive Suite' },
+            { value: 'deluxe', label: 'Deluxe Suite' },
+            { value: 'villa', label: 'Villa' },
+            { value: 'family', label: 'Family Room' },
+            { value: 'tent', label: 'Luxury Tent' },
+            { value: 'royal', label: 'Royal Suite' },
+            { value: 'spa', label: 'Spa Suite' },
+            { value: 'manor', label: 'Manor House' }
+          ])
         } catch (error) {
           console.error('🏨 Error fetching classes from API:', error)
           setAvailableClasses([
-            { value: 'Standard', label: 'Standard Room' },
-            { value: 'Suite', label: 'Suite' },
-            { value: 'Luxury', label: 'Luxury Room' }
+            { value: 'standard', label: 'Standard Room' },
+            { value: 'luxury', label: 'Luxury Room' },
+            { value: 'suite', label: 'Suite' },
+            { value: 'villa', label: 'Villa' }
           ])
         }
       } else {
@@ -219,6 +229,17 @@ export default function AccommodationPage() {
     
     loadClassesFromAPI()
   }, [selectedCountry, availableCountries])
+
+  // Reset dependent fields when country changes
+  useEffect(() => {
+    // Clear destination and class when country changes
+    setSelectedDestination("")
+    setSelectedClass("")
+    setSearchPerformed(false)
+    setTours([])
+    setFilteredTours([])
+    setError(null)
+  }, [selectedCountry])
   
   // Apply destination filtering when selectedDestinationFilters changes
   useEffect(() => {
@@ -250,6 +271,11 @@ export default function AccommodationPage() {
       alert('Please select a country to search for Accommodation')
       return
     }
+
+    // Room class is now optional - if not selected, shows grouped hotels
+    // if (selectedClass && selectedClass === "select-option") {
+    //   selectedClass = undefined // Treat as no selection
+    // }
 
     setLoading(true)
     setError(null)
@@ -286,7 +312,8 @@ export default function AccommodationPage() {
           ...acc,
           id: acc.code || acc.id,
           name: acc.displayName || acc.name || `${acc.hotelName || 'Hotel'} - ${acc.roomType || 'Room'}`,
-          image: productImages[acc.code] || acc.image || getAccommodationImage(acc.type || 'hotel', acc.name || '', acc.supplier || ''),
+          // Use direct image path for faster loading - no Sanity checks
+          image: getAccommodationImage(acc.type || 'hotel', acc.name || '', acc.supplier || ''),
           description: acc.description || acc.hotelDescription || '',
           duration: `${acc.roomType || 'Accommodation'}`,
           destination: tourPlanDestination,
@@ -347,6 +374,8 @@ export default function AccommodationPage() {
           fill
           priority
           className="object-cover"
+          sizes="100vw"
+          quality={85}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60">
           <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
@@ -366,6 +395,9 @@ export default function AccommodationPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-100 rounded-lg p-6">
+              <p className="text-sm text-gray-700 mb-4 text-center">
+                Select a country and room type to find specific accommodations. Room type selection helps filter to your preferred accommodation level.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500">
@@ -403,7 +435,7 @@ export default function AccommodationPage() {
                   disabled={!selectedCountry || !availableClasses || availableClasses.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder="Select Class" />
+                    <SelectValue placeholder="Select Room Type (Optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableClasses?.map((cls, index) => (
@@ -479,7 +511,7 @@ export default function AccommodationPage() {
                   <p className="text-gray-600">Searching accommodations...</p>
                 ) : filteredTours.length > 0 ? (
                   <div className="text-sm text-gray-600">
-                    Showing results for {selectedCountry || selectedDestination}
+                    Showing {selectedClass} accommodations in {selectedDestination || selectedCountry}
                     {filteredTours.some(tour => tour._isHybridFallback) && (
                       <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                         <div className="flex items-center">
@@ -519,10 +551,19 @@ export default function AccommodationPage() {
                   <Card key={tour.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
                     <div className="relative h-64">
                       <Image
-                        src={tour.image || getGenericImage('lodge')}
+                        src={tour.image || getLocalProductImageSync(tour.code || tour.id)}
                         alt={tour.name}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                        onError={(e) => {
+                          // Fallback to generic image if mapping fails
+                          const target = e.target as HTMLImageElement;
+                          target.src = getGenericImage('lodge');
+                        }}
                       />
                     </div>
                     
@@ -548,12 +589,12 @@ export default function AccommodationPage() {
                       {/* CTA Buttons */}
                       <div className="flex flex-col gap-2">
                         <Link 
-                          href={`/products/${tour.code || tour.id}`}
+                          href={`/accommodation/${encodeURIComponent(tour.name.split(' - ')[0])}/select-dates`}
                           className="w-full"
                         >
                           <Button className="w-full bg-amber-500 hover:bg-amber-600">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Check Availability
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Button>
                         </Link>
