@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { TourPlanXMLParser } from '@/lib/tourplan/xml-parser'
+import { getProductImages, getImageUrl } from '@/lib/sanity-product-images'
 
 const credentials = {
   agentId: process.env.TOURPLAN_AGENT_ID || 'SAMAGT',
@@ -243,11 +244,35 @@ export async function GET(request: NextRequest) {
     
     console.log(`🏨 Returning ${uniqueRooms.length} unique room types`)
     
+    // Fetch Sanity images for room products
+    const roomCodes = uniqueRooms.map((room: any) => room.productCode).filter(Boolean)
+    const sanityImages = await getProductImages(roomCodes)
+    
+    // Add Sanity image URLs to rooms
+    const roomsWithImages = uniqueRooms.map((room: any) => {
+      const sanityImage = sanityImages[room.productCode]
+      
+      if (sanityImage?.primaryImage) {
+        const imageUrl = getImageUrl(sanityImage.primaryImage, {
+          width: 800,
+          height: 600,
+          quality: 85
+        })
+        
+        if (imageUrl) {
+          room.image = imageUrl
+          room.imageAlt = sanityImage.primaryImage.alt || room.roomType
+        }
+      }
+      
+      return room
+    })
+    
     return NextResponse.json({
       success: true,
-      rooms: uniqueRooms,
+      rooms: roomsWithImages,
       totalRooms: hotelRooms.length,
-      message: `Found ${uniqueRooms.length} room types for ${hotelName}`
+      message: `Found ${roomsWithImages.length} room types for ${hotelName}`
     })
     
   } catch (error) {

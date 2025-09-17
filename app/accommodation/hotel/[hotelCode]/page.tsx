@@ -33,6 +33,7 @@ interface RoomType {
   currency?: string
   amenities?: string[]
   image?: string
+  imageAlt?: string
 }
 
 interface HotelDetails {
@@ -120,7 +121,9 @@ export default function HotelDetailsPage() {
               name: room.roomType || room.name,
               description: room.description || `Comfortable ${room.roomType} with modern amenities.`,
               type: room.roomType?.includes('Suite') ? 'Suite' : 'Double',
-              capacity: room.roomType?.includes('Family') ? 4 : 2
+              capacity: room.roomType?.includes('Family') ? 4 : 2,
+              image: room.image,
+              imageAlt: room.imageAlt
             }))
           }
           setHotel(hotelData)
@@ -224,8 +227,8 @@ export default function HotelDetailsPage() {
                 {/* Room Image */}
                 <div className="relative h-48">
                   <Image
-                    src={getRoomImage(room.name)}
-                    alt={room.name}
+                    src={room.image || getRoomImage(room.name)}
+                    alt={room.imageAlt || room.name}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { TourPlanXMLBuilder } from '@/lib/tourplan/xml-builder'
 import { TourPlanXMLParser } from '@/lib/tourplan/xml-parser'
+import { getProductImages, getImageUrl } from '@/lib/sanity-product-images'
 
 const credentials = {
   agentId: process.env.TOURPLAN_AGENT_ID || 'SAMAGT',
@@ -389,11 +390,36 @@ export async function GET(request: NextRequest) {
 
     console.log(`🏨 Successfully found ${accommodations.length} accommodations`)
 
+    // Fetch Sanity images for all accommodations
+    const productCodes = accommodations.map((acc: any) => acc.code).filter(Boolean)
+    const sanityImages = await getProductImages(productCodes)
+    
+    // Add Sanity image URLs to accommodations
+    const accommodationsWithImages = accommodations.map((acc: any) => {
+      const sanityImage = sanityImages[acc.code]
+      
+      if (sanityImage?.primaryImage) {
+        // Use Sanity image if available
+        const imageUrl = getImageUrl(sanityImage.primaryImage, { 
+          width: 800, 
+          height: 600, 
+          quality: 85 
+        })
+        
+        if (imageUrl) {
+          acc.image = imageUrl
+          acc.imageAlt = sanityImage.primaryImage.alt || acc.name
+        }
+      }
+      
+      return acc
+    })
+
     return NextResponse.json({
       success: true,
-      accommodations: accommodations,
-      totalResults: accommodations.length,
-      message: `Found ${accommodations.length} accommodation options`
+      accommodations: accommodationsWithImages,
+      totalResults: accommodationsWithImages.length,
+      message: `Found ${accommodationsWithImages.length} accommodation options`
     })
     
   } catch (error) {
