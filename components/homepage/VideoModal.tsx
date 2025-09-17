@@ -40,16 +40,27 @@ export default function VideoModal({ isOpen, onClose, videoUrl }: VideoModalProp
 
         {/* Video player */}
         <div className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
-          <video
-            ref={videoRef}
-            className="w-full h-full"
-            controls
-            autoPlay
-            playsInline
-          >
-            <source src={videoUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          {videoUrl.includes('vimeo.com') ? (
+            <iframe
+              src={`https://player.vimeo.com/video/${videoUrl.split('/').pop()?.split('?')[0]}?autoplay=1&color=f59e0b`}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title="Vimeo video player"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              className="w-full h-full"
+              controls
+              autoPlay
+              playsInline
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )}
         </div>
       </div>
     </div>
