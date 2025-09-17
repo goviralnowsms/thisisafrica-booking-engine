@@ -39,7 +39,6 @@ interface HotelDetails {
   name: string
   location: string
   description: string
-  starRating?: number
   roomTypes: RoomType[]
 }
 
@@ -116,7 +115,6 @@ export default function HotelDetailsPage() {
             name: hotelName,
             location: data.rooms[0]?.locality || "Africa",
             description: `Experience luxury and comfort at ${hotelName}. Contact us for the best rates and availability.`,
-            starRating: 4,
             roomTypes: data.rooms.map((room: any) => ({
               code: room.productCode,
               name: room.roomType || room.name,
@@ -187,11 +185,6 @@ export default function HotelDetailsPage() {
                   <MapPin className="h-4 w-4" />
                   {hotel.location}
                 </span>
-                {hotel.starRating && (
-                  <span className="flex items-center gap-1">
-                    {"⭐".repeat(hotel.starRating)}
-                  </span>
-                )}
               </div>
             </div>
             
