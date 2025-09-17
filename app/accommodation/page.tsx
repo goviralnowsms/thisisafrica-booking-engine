@@ -393,12 +393,10 @@ export default function AccommodationPage() {
         // Extract available destination filters from tour results
         const destinationSet = new Set<string>()
         transformedTours.forEach((tour: any) => {
-          // Add locality as destination filter if available
+          // Prefer locality over destination for more specific filtering
           if (tour.locality && tour.locality.trim() !== '') {
             destinationSet.add(tour.locality)
-          }
-          // Also add the main destination
-          if (tour.destination) {
+          } else if (tour.destination && tour.destination !== tour.locality) {
             destinationSet.add(tour.destination)
           }
         })
