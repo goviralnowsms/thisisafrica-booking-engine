@@ -261,11 +261,6 @@ export default function AccommodationPage() {
       const destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
       if (destinationLabel) {
         filtered = filtered.filter((tour: any) => {
-          // Debug logging for Sabi Sand
-          if (destinationLabel.toLowerCase().includes('sabi')) {
-            console.log(`🔍 Checking tour: ${tour.name}, locality: "${tour.locality}", destination: "${tour.destination}"`)
-          }
-          
           // Check if the accommodation's locality matches the selected destination
           const localityMatch = tour.locality === destinationLabel
           
@@ -278,7 +273,7 @@ export default function AccommodationPage() {
           const normalizedDestination = destinationLabel.toLowerCase().replace(/\s+/g, ' ').trim()
           const normalizedLocality = (tour.locality || '').toLowerCase().replace(/\s+/g, ' ').trim()
           
-          // Handle "Sabi Sand" vs "Sabi Sabi" variations - more comprehensive
+          // Handle "Sabi Sand" vs "Sabi Sabi" variations
           const sabiMatch = (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sabi')) ||
                            (normalizedDestination.includes('sabi sabi') && normalizedLocality.includes('sabi sand')) ||
                            (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sand')) ||
@@ -288,16 +283,9 @@ export default function AccommodationPage() {
           const gameReserveMatch = normalizedDestination.includes('game reserve') && normalizedLocality.includes('game reserve') &&
             normalizedDestination.replace('game reserve', '').trim() === normalizedLocality.replace('game reserve', '').trim()
           
-          const matches = localityMatch || partialLocalityMatch || sabiMatch || gameReserveMatch ||
-                         tour.destination === destinationLabel ||
-                         tour.actualDestination === destinationLabel
-          
-          // Debug logging for Sabi Sand matches
-          if (destinationLabel.toLowerCase().includes('sabi')) {
-            console.log(`   Match result: ${matches} (localityMatch: ${localityMatch}, partialMatch: ${partialLocalityMatch}, sabiMatch: ${sabiMatch})`)
-          }
-          
-          return matches
+          return localityMatch || partialLocalityMatch || sabiMatch || gameReserveMatch ||
+                 tour.destination === destinationLabel ||
+                 tour.actualDestination === destinationLabel
         })
         console.log(`🎯 Further filtered to ${filtered.length} tours for destination: ${destinationLabel}`)
       }
@@ -452,7 +440,7 @@ export default function AccommodationPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-[50vh] md:h-[60vh]">
+      <section className="relative h-[40vh] md:h-[45vh]">
         <Image
           src="/images/products/accomm-hero.jpg"
           alt="African safari lodge at sunset"
