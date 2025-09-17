@@ -17,11 +17,16 @@ export default function Home() {
       {/* Hero Section with Lion Image - Made Taller */}
       <section className="relative h-[80vh] md:h-screen">
         <Image src="/images/lion-home.jpeg" alt="Majestic African lion" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent">
-          <div className="container mx-auto px-4 py-20 md:py-48 flex flex-col items-center justify-center text-center h-full">
-            <h1 className="text-4xl md:text-7xl font-bold text-white mb-4">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/50">
+          {/* Main heading positioned higher */}
+          <div className="container mx-auto px-4 pt-32 md:pt-48 text-center">
+            <h1 className="text-4xl md:text-7xl font-bold text-white">
               TRAVEL WITH <span className="text-amber-500">EXPERIENCE</span>
             </h1>
+          </div>
+          
+          {/* Subtitle and buttons positioned at bottom */}
+          <div className="container mx-auto px-4 flex flex-col items-center justify-end text-center h-full pb-56 md:pb-72">
             <p className="text-lg md:text-xl text-white/90 max-w-3xl mb-8">
               "Simply amazing... fabulous. We will definitely recommend your company".
             </p>
@@ -392,7 +397,7 @@ export default function Home() {
       <VideoModal 
         isOpen={isVideoOpen}
         onClose={() => setIsVideoOpen(false)}
-        videoUrl="https://tia-promo.b-cdn.net/tia-promo.mp4"
+        videoUrl="https://vimeo.com/1119297386"
       />
     </main>
   )
