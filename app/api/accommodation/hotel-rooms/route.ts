@@ -211,7 +211,10 @@ export async function GET(request: NextRequest) {
         else if (descLower.includes('luxury') && !descLower.includes('tent')) roomType = 'Luxury Room'
         else if (descLower.includes('suite')) roomType = 'Suite'
         else if (descLower.includes('villa')) roomType = 'Villa'
-        else if (descLower.includes('standard')) roomType = 'Standard Room'
+        else if (descLower.includes('standard')) {
+          // Preserve specific standard room variations (like "Ver 2")
+          roomType = description.includes('Ver 2') ? 'Standard Room Ver 2' : 'Standard Room'
+        }
         else if (descLower.includes('superior')) roomType = 'Superior Room'
       }
       

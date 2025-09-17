@@ -178,13 +178,95 @@ export async function GET(request: NextRequest) {
       const isRealAccommodation = option.OptStayResults != null
       const stayResults = option.OptStayResults || {}
       
+      // Extract locality with fallback to address fields for better filtering
+      let locality = option.OptGeneral?.LocalityDescription || ''
+      
+      // Normalize Sabi variations to consistent naming
+      if (locality && locality.toLowerCase().includes('sabi sabi')) {
+        console.log(`🏨 Normalizing Sabi locality from "${locality}" to "Sabi Sand Game Reserve"`)
+        locality = 'Sabi Sand Game Reserve'
+      }
+      
+      // If locality is empty, check address fields for location information
+      if (!locality) {
+        const address1 = option.OptGeneral?.Address1 || ''
+        const address2 = option.OptGeneral?.Address2 || ''
+        const address3 = option.OptGeneral?.Address3 || ''
+        
+        // Check for Victoria & Alfred Waterfront patterns
+        const vawPatterns = [
+          'Victoria & Alfred Waterfront',
+          'V & A Waterfront', 
+          'Victoria and Alfred Waterfront',
+          'V&A Waterfront'
+        ]
+        
+        const addressText = `${address1} ${address2} ${address3}`.toLowerCase()
+        
+        for (const pattern of vawPatterns) {
+          if (addressText.includes(pattern.toLowerCase())) {
+            locality = 'Victoria & Alfred Waterfront'
+            break
+          }
+        }
+        
+        // Check for Sabi Sand/Sabi Sabi patterns in address
+        if (!locality) {
+          const sabiPatterns = [
+            'sabi sabi',
+            'sabi sand', 
+            'sabi-sabi',
+            'sabi-sand'
+          ]
+          
+          for (const pattern of sabiPatterns) {
+            if (addressText.includes(pattern)) {
+              console.log(`🏨 Found Sabi pattern "${pattern}" in address, setting locality to "Sabi Sand Game Reserve"`)
+              locality = 'Sabi Sand Game Reserve'
+              break
+            }
+          }
+        }
+        
+        // Check for Sabi patterns in supplier name if still no locality
+        if (!locality) {
+          const supplierName = (option.OptGeneral?.SupplierName || '').toLowerCase()
+          const sabiPatterns = ['sabi sabi', 'sabi sand', 'sabi-sabi', 'sabi-sand']
+          
+          for (const pattern of sabiPatterns) {
+            if (supplierName.includes(pattern)) {
+              console.log(`🏨 Found Sabi pattern "${pattern}" in supplier name "${option.OptGeneral?.SupplierName}", setting locality to "Sabi Sand Game Reserve"`)
+              locality = 'Sabi Sand Game Reserve'
+              break
+            }
+          }
+        }
+        
+        // Check for other common Cape Town areas
+        if (!locality) {
+          if (addressText.includes('cape town') || addressText.includes('capetown')) {
+            if (addressText.includes('city bowl') || addressText.includes('city center')) {
+              locality = 'Cape Town City Bowl'
+            } else if (addressText.includes('camps bay')) {
+              locality = 'Camps Bay'
+            } else if (addressText.includes('sea point')) {
+              locality = 'Sea Point'
+            } else if (addressText.includes('green point')) {
+              locality = 'Green Point'
+            } else {
+              locality = 'Cape Town'
+            }
+          }
+        }
+      }
+      
       return {
         id: option.Opt || option.OptCode,
         code: option.Opt || option.OptCode,
         name: option.OptGeneral?.SupplierName || option.OptGeneral?.Description || option.Description || 'Safari Tour',
         supplier: option.OptGeneral?.SupplierName || option.SupplierName || '',
         description: `${option.OptGeneral?.Description || ''} - ${option.OptGeneral?.Comment || ''}`.trim().replace(/^- |^$/, ''),
-        destination: destination || option.OptGeneral?.LocalityDescription || '',
+        destination: destination || locality || '',
         country: extractCountryFromDestination(destination || ''),
         type: isRealAccommodation ? 'hotel' : determineAccommodationType(option.OptGeneral?.Description || '', option.OptGeneral?.Comment || ''),
         category: option.OptGeneral?.ClassDescription?.toLowerCase().includes('4') ? 'luxury' : 'standard',
@@ -208,7 +290,7 @@ export async function GET(request: NextRequest) {
           option.OptGeneral?.Address4
         ].filter(Boolean).join(', '),
         starRating: option.OptGeneral?.Class || '',
-        locality: option.OptGeneral?.LocalityDescription || '',
+        locality: locality,
         // Pricing info (convert from cents to dollars)
         pricePerNight: isRealAccommodation && stayResults.TotalPrice ? Math.round(stayResults.TotalPrice / 100) : null,
         totalPrice: isRealAccommodation && stayResults.TotalPrice ? Math.round(stayResults.TotalPrice / 100) : null
@@ -291,8 +373,8 @@ export async function GET(request: NextRequest) {
             hotelMap.set(hotelName, {
               ...acc,
               name: hotelName,
-              roomType: `Various room types available`,
-              description: `${hotelName} - Multiple room options, contact us for availability`
+              roomType: `Check room types and availability`,
+              description: `${hotelName} - Contact us for room options and availability`
             })
           }
         })
