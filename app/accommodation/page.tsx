@@ -261,6 +261,11 @@ export default function AccommodationPage() {
       const destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
       if (destinationLabel) {
         filtered = filtered.filter((tour: any) => {
+          // Debug logging for Sabi Sand
+          if (destinationLabel.toLowerCase().includes('sabi')) {
+            console.log(`🔍 Checking tour: ${tour.name}, locality: "${tour.locality}", destination: "${tour.destination}"`)
+          }
+          
           // Check if the accommodation's locality matches the selected destination
           const localityMatch = tour.locality === destinationLabel
           
@@ -273,17 +278,26 @@ export default function AccommodationPage() {
           const normalizedDestination = destinationLabel.toLowerCase().replace(/\s+/g, ' ').trim()
           const normalizedLocality = (tour.locality || '').toLowerCase().replace(/\s+/g, ' ').trim()
           
-          // Handle "Sabi Sand" vs "Sabi Sabi" variations
+          // Handle "Sabi Sand" vs "Sabi Sabi" variations - more comprehensive
           const sabiMatch = (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sabi')) ||
-                           (normalizedDestination.includes('sabi sabi') && normalizedLocality.includes('sabi sand'))
+                           (normalizedDestination.includes('sabi sabi') && normalizedLocality.includes('sabi sand')) ||
+                           (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sand')) ||
+                           (normalizedDestination.includes('sabi') && normalizedLocality.includes('sabi'))
           
           // Handle other game reserve variations
           const gameReserveMatch = normalizedDestination.includes('game reserve') && normalizedLocality.includes('game reserve') &&
             normalizedDestination.replace('game reserve', '').trim() === normalizedLocality.replace('game reserve', '').trim()
           
-          return localityMatch || partialLocalityMatch || sabiMatch || gameReserveMatch ||
-                 tour.destination === destinationLabel ||
-                 tour.actualDestination === destinationLabel
+          const matches = localityMatch || partialLocalityMatch || sabiMatch || gameReserveMatch ||
+                         tour.destination === destinationLabel ||
+                         tour.actualDestination === destinationLabel
+          
+          // Debug logging for Sabi Sand matches
+          if (destinationLabel.toLowerCase().includes('sabi')) {
+            console.log(`   Match result: ${matches} (localityMatch: ${localityMatch}, partialMatch: ${partialLocalityMatch}, sabiMatch: ${sabiMatch})`)
+          }
+          
+          return matches
         })
         console.log(`🎯 Further filtered to ${filtered.length} tours for destination: ${destinationLabel}`)
       }
