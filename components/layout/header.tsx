@@ -25,11 +25,14 @@ export function Header() {
   const [isMobileToursOpen, setIsMobileToursOpen] = useState(false)
   const pathname = usePathname()
 
-  // Check if current page has a hero section that might need transparent header
-  const hasHeroSection = pathname === "/" || pathname.startsWith("/group-tours-list") || 
-                        pathname.startsWith("/packages") || pathname.startsWith("/accommodation") ||
-                        pathname.startsWith("/rail") || pathname.startsWith("/cruise") ||
-                        pathname.startsWith("/special-offers") || pathname.startsWith("/tailor-made")
+  // Check if current page has a dark hero section that needs white text
+  const hasDarkHeroSection = pathname === "/" || pathname.startsWith("/group-tours-list") || 
+                            pathname.startsWith("/packages") || pathname.startsWith("/rail") || 
+                            pathname.startsWith("/cruise") || pathname.startsWith("/special-offers") || 
+                            pathname.startsWith("/tailor-made")
+  
+  // Accommodation pages have light backgrounds, so they need dark text even with hero sections
+  const needsDarkText = !hasDarkHeroSection || pathname.startsWith("/accommodation")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +46,7 @@ export function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled || !hasHeroSection 
+        isScrolled || needsDarkText 
           ? "bg-white shadow-md" 
           : "bg-transparent"
       }`}
@@ -66,7 +69,7 @@ export function Header() {
             <Link
               href="/"
               className={`font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -78,7 +81,7 @@ export function Header() {
             <div className="relative group">
               <button
                 className={`font-medium transition-colors flex items-center gap-1 ${
-                  isScrolled || !hasHeroSection 
+                  isScrolled || needsDarkText 
                     ? "text-gray-700 hover:text-amber-500" 
                     : "text-white hover:text-amber-300"
                 }`}
@@ -97,6 +100,12 @@ export function Header() {
                 onMouseEnter={() => setIsToursDropdownOpen(true)}
                 onMouseLeave={() => setIsToursDropdownOpen(false)}
               >
+                <Link
+                  href="/accommodation"
+                  className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                >
+                  Accommodation
+                </Link>
                 <Link
                   href="/cruise"
                   className="block px-4 py-2 text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
@@ -134,7 +143,7 @@ export function Header() {
             <div className="relative group">
               <button
                 className={`font-medium transition-colors flex items-center gap-1 ${
-                  isScrolled || !hasHeroSection 
+                  isScrolled || needsDarkText 
                     ? "text-gray-700 hover:text-amber-500" 
                     : "text-white hover:text-amber-300"
                 }`}
@@ -176,7 +185,7 @@ export function Header() {
             <Link
               href="/insurance"
               className={`font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -188,7 +197,7 @@ export function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className={`font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -198,7 +207,7 @@ export function Header() {
             <Link
               href="/contact"
               className={`font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -208,7 +217,7 @@ export function Header() {
             <Link
               href="/my-bookings"
               className={`font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -222,7 +231,7 @@ export function Header() {
             <a 
               href="tel:+61296649187" 
               className={`flex items-center gap-2 font-medium transition-colors ${
-                isScrolled || !hasHeroSection 
+                isScrolled || needsDarkText 
                   ? "text-gray-700 hover:text-amber-500" 
                   : "text-white hover:text-amber-300"
               }`}
@@ -231,7 +240,7 @@ export function Header() {
               <span>+61 2 9664 9187</span>
             </a>
             <Button 
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="hidden lg:block bg-amber-500 hover:bg-amber-600 text-white"
               onClick={() => {
                 if (pathname === "/") {
                   // On homepage, scroll to tour cards
@@ -248,28 +257,13 @@ export function Header() {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
-            <Button 
-              size="sm" 
-              className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3"
-              onClick={() => {
-                if (pathname === "/") {
-                  // On homepage, scroll to tour cards
-                  document.getElementById('tour-cards')?.scrollIntoView({ behavior: 'smooth' })
-                } else {
-                  // On other pages, navigate to group tours
-                  window.location.href = '/group-tours-list'
-                }
-              }}
-            >
-              Book now
-            </Button>
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={`${
-                    isScrolled || !hasHeroSection 
+                    isScrolled || needsDarkText 
                       ? "text-gray-700 hover:text-amber-500" 
                       : "text-white hover:text-amber-300"
                   }`}
@@ -299,6 +293,13 @@ export function Header() {
                   
                   {/* Tours Dropdown Items */}
                   <div className={`ml-4 mt-2 space-y-2 ${isMobileToursOpen ? 'block' : 'hidden'}`}>
+                    <Link
+                      href="/accommodation"
+                      className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Accommodation
+                    </Link>
                     <Link
                       href="/cruise"
                       className="block text-gray-700 hover:text-amber-500 transition-colors py-1"
