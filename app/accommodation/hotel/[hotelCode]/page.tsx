@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import GoogleMap from "@/components/GoogleMap"
 import { 
   Bed, 
   Users, 
@@ -41,6 +42,7 @@ interface HotelDetails {
   location: string
   description: string
   roomTypes: RoomType[]
+  supplierCode?: string
 }
 
 // Placeholder room images using existing project images
@@ -70,21 +72,21 @@ const getRoomImage = (roomType: string): string => {
   return roomImages.default
 }
 
-// Mock amenities based on room type
-const getRoomAmenities = (roomType: string): string[] => {
-  const baseAmenities = ["Free WiFi", "Air Conditioning", "En-suite Bathroom", "Daily Housekeeping"]
+// Mock inclusions based on room type
+const getRoomInclusions = (roomType: string): string[] => {
+  const baseInclusions = ["Free WiFi", "Air Conditioning", "En-suite Bathroom", "Daily Housekeeping"]
   const type = roomType.toLowerCase()
   
   if (type.includes('deluxe') || type.includes('luxury')) {
-    return [...baseAmenities, "Mini Bar", "Bathtub", "Living Area", "Balcony/Terrace"]
+    return [...baseInclusions, "Mini Bar", "Bathtub", "Living Area", "Balcony/Terrace"]
   }
   if (type.includes('suite')) {
-    return [...baseAmenities, "Separate Living Room", "Mini Bar", "Bathtub", "Work Desk", "Ocean/Garden View"]
+    return [...baseInclusions, "Separate Living Room", "Mini Bar", "Bathtub", "Work Desk", "Ocean/Garden View"]
   }
   if (type.includes('family')) {
-    return [...baseAmenities, "Extra Beds", "Kitchenette", "Dining Area", "Multiple Bathrooms"]
+    return [...baseInclusions, "Extra Beds", "Kitchenette", "Dining Area", "Multiple Bathrooms"]
   }
-  return baseAmenities
+  return baseInclusions
 }
 
 export default function HotelDetailsPage() {
@@ -112,10 +114,22 @@ export default function HotelDetailsPage() {
         
         if (data.success && data.rooms) {
           // Transform API response to hotel format
+          // Extract supplier code from first room's product code
+          const firstRoom = data.rooms[0]
+          let supplierCode = ''
+          if (firstRoom?.productCode) {
+            // Extract supplier code from product code (e.g., CPTACPOR002PORTST -> POR002)
+            const match = firstRoom.productCode.match(/([A-Z]{3}\d{3})/)
+            if (match) {
+              supplierCode = match[1]
+            }
+          }
+          
           const hotelData: HotelDetails = {
             name: hotelName,
             location: data.rooms[0]?.locality || "Africa",
             description: `Experience luxury and comfort at ${hotelName}. Contact us for the best rates and availability.`,
+            supplierCode,
             roomTypes: data.rooms.map((room: any) => ({
               code: room.productCode,
               name: room.roomType || room.name,
@@ -265,14 +279,14 @@ export default function HotelDetailsPage() {
                     {room.description || "Comfortable room with modern amenities and excellent service."}
                   </p>
                   
-                  {/* Amenities */}
+                  {/* Inclusions */}
                   <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Room Amenities:</p>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Room Inclusions:</p>
                     <div className="grid grid-cols-2 gap-2">
-                      {getRoomAmenities(room.name).slice(0, 4).map((amenity, i) => (
+                      {getRoomInclusions(room.name).slice(0, 4).map((inclusion, i) => (
                         <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
                           <CheckCircle className="h-3 w-3 text-green-500" />
-                          <span>{amenity}</span>
+                          <span>{inclusion}</span>
                         </div>
                       ))}
                     </div>
@@ -317,8 +331,27 @@ export default function HotelDetailsPage() {
         </div>
       </section>
       
+      {/* Location Map Section */}
+      <section className="py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Location</h2>
+            <p className="text-gray-600">View {hotel.name} on the map</p>
+          </div>
+          
+          <div className="max-w-4xl mx-auto">
+            <GoogleMap 
+              supplierCode={hotel.supplierCode}
+              hotelName={hotel.name}
+              height="400px"
+              className="shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Contact Section */}
-      <section className="bg-white py-12 mt-8 border-t">
+      <section className="bg-white py-12 border-t">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-2xl font-bold mb-4">Need Help Choosing?</h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
