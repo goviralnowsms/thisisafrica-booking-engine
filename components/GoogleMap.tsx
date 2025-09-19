@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { Loader2, MapPin } from 'lucide-react'
+import Image from 'next/image'
 
 interface GoogleMapProps {
   supplierCode?: string
   hotelName?: string
   fallbackCoordinates?: { lat: number; lng: number }
+  fallbackMapImage?: string
   height?: string
   className?: string
 }
@@ -15,6 +17,7 @@ export default function GoogleMap({
   supplierCode, 
   hotelName = "Hotel",
   fallbackCoordinates,
+  fallbackMapImage,
   height = "400px",
   className = "" 
 }: GoogleMapProps) {
@@ -41,8 +44,11 @@ export default function GoogleMap({
         if (data.success && data.coordinates) {
           setCoordinates(data.coordinates)
         } else if (fallbackCoordinates) {
-          // Use fallback if API doesn't return coordinates
+          // Use fallback coordinates if API doesn't return coordinates
           setCoordinates(fallbackCoordinates)
+        } else if (fallbackMapImage) {
+          // If no GPS coordinates but we have a Sanity map image, we'll show that instead
+          setError('gps_unavailable_use_image')
         } else {
           setError('GPS coordinates not available for this location')
         }
@@ -50,6 +56,8 @@ export default function GoogleMap({
         console.error('Error fetching GPS:', err)
         if (fallbackCoordinates) {
           setCoordinates(fallbackCoordinates)
+        } else if (fallbackMapImage) {
+          setError('gps_unavailable_use_image')
         } else {
           setError('Failed to load map')
         }
@@ -75,6 +83,22 @@ export default function GoogleMap({
     )
   }
 
+  // If GPS failed but we have a Sanity map image, show that instead
+  if (error === 'gps_unavailable_use_image' && fallbackMapImage) {
+    return (
+      <div className={`rounded-lg overflow-hidden ${className}`} style={{ height }}>
+        <Image
+          src={fallbackMapImage}
+          alt={`Map of ${hotelName}`}
+          width={800}
+          height={400}
+          className="w-full h-full object-cover"
+          sizes="(max-width: 768px) 100vw, 800px"
+        />
+      </div>
+    )
+  }
+
   if (error || !coordinates) {
     return (
       <div 
@@ -83,7 +107,7 @@ export default function GoogleMap({
       >
         <div className="text-center text-gray-500">
           <MapPin className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">{error || 'Map not available'}</p>
+          <p className="text-sm">{error === 'gps_unavailable_use_image' ? 'Map image will load from Sanity' : error || 'Map not available'}</p>
         </div>
       </div>
     )

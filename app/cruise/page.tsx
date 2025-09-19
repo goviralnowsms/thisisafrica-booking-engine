@@ -12,6 +12,7 @@ import { Clock, MapPin, Users, Search, Loader2, Star, Ship, Calendar } from "luc
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
 import { hasCruiseAvailability, getCruiseAvailability } from "@/lib/cruise-availability"
 import { shouldShowDestinationAndClass } from "@/lib/cruise-region-mapping"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 
 export default function CruisesPage() {
@@ -23,45 +24,19 @@ export default function CruisesPage() {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
   const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
-  // Load the product image index once on component mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        const imageIndex = await response.json()
-        
-        // Create a mapping of product codes to their primary images
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            // Use the first available image as primary
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    loadImageIndex()
-    
     // Initialize available countries for Cruises
     const countries = getAvailableCountries('Cruises')
     setAvailableCountries(countries)
+    
+    // Start loading image map in background (non-blocking)
+    preloadImageMapBackground()
   }, [])
 
   // Update available destinations when country changes
@@ -104,17 +79,12 @@ export default function CruisesPage() {
     }
   }
 
-  // Function to get product-specific image from cached data or fallback
+  // Function to get product-specific image using the mapping
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/cruise-ship.jpg"
+    if (!tourCode) return "/images/products/cruise-hero.jpg"
     
-    // Check if we have the image cached
-    if (productImages[tourCode]) {
-      return productImages[tourCode]
-    }
-    
-    // Fallback to generic cruise image
-    return "/images/cruise-ship.jpg"
+    // Use sync function that never blocks - falls back immediately if map not ready
+    return getLocalProductImageSync(tourCode)
   }
 
   // Check if a product has available dates
@@ -452,10 +422,29 @@ export default function CruisesPage() {
                             alt={tour.name} 
                             fill 
                             className="object-cover"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            loading="lazy"
+                            placeholder="blur"
+                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
                             onError={(e) => {
-                              // Fallback to generic cruise image if product image fails to load
+                              // Fallback hierarchy if product image fails to load
                               const target = e.target as HTMLImageElement;
-                              target.src = "/images/zambezi-queen.png";
+                              const code = tour.code?.toUpperCase() || '';
+                              
+                              // Try .jpg version first
+                              if (target.src.endsWith('.png')) {
+                                target.src = `/images/products/${tour.code}.jpg`;
+                                return;
+                              }
+                              
+                              // If both PNG and JPG fail, use cruise-type specific fallback
+                              if (code.includes('ZAM') || code.includes('ZAMBEZI')) {
+                                target.src = "/images/zambezi-queen.png";
+                              } else if (code.includes('CHOBE') || code.includes('BBK')) {
+                                target.src = "/images/products/chobe-national-park.jpg";
+                              } else {
+                                target.src = "/images/products/cruise-hero.jpg";
+                              }
                             }}
                           />
                           <div className="absolute top-4 left-4">

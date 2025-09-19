@@ -1,0 +1,20 @@
+Console Error
+
+Each child in a list should have a unique "key" prop.
+
+Check the render method of `HotelRoomsPage`. See https://react.dev/link/warning-keys for more information.
+
+app\accommodation\[hotelName]\rooms\page.tsx (397:19) @ HotelRoomsPage/<.children<.children<.children<.children<.children<
+
+  395 |               <div className="space-y-4">
+  396 |                 {filteredRooms.map((room) => (
+> 397 |                   <Card key={room.productCode} className="overflow-hidden hover:shadow-lg transition-shadow">
+      |                   ^
+  398 |                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+  399 |                       {/* Room Image */}
+  400 |                       <div className="relative h-48 md:h-full rounded-lg overflow-hidden bg-gray-200">
+
+Call Stack 22
+Show 20 ignore-listed frame(s)
+HotelRoomsPage/<.children<.children<.children<.children<.children<
+app\accommodation\[hotelName]\rooms\page.tsx (397:19)

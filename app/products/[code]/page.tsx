@@ -10,7 +10,9 @@ import Link from "next/link"
 // Temporary fix for lucide-react module resolution issue
 // import { MapPin, Clock, Users, Download, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import PricingCalendar from "@/components/booking/PricingCalendar"
+import GoogleMap from "@/components/GoogleMap"
 
 // CSS for tour content styling
 const tourContentStyles = `
@@ -97,6 +99,10 @@ export default function ProductDetailsPage() {
   const [sanityImagesLoaded, setSanityImagesLoaded] = useState(false)
   const [hasHighResImages, setHasHighResImages] = useState(false)
   const [hasHighResMap, setHasHighResMap] = useState(false)
+  const [supplierCode, setSupplierCode] = useState<string | null>(null)
+  const [availableRoomTypes, setAvailableRoomTypes] = useState<any[]>([])
+  const [selectedRoomType, setSelectedRoomType] = useState<string>('')
+  const [loadingRoomTypes, setLoadingRoomTypes] = useState(false)
   
   // Check if this is an accommodation product
   const isAccommodation = useMemo(() => {
@@ -104,7 +110,18 @@ export default function ProductDetailsPage() {
     // Accommodation codes typically contain 'AC' after the airport code
     // Examples: CPTACPOR002PORTST, JNBAC*, etc.
     const pattern = /^[A-Z]{3}AC/
-    return pattern.test(productCode)
+    const isAccomm = pattern.test(productCode)
+    
+    // Extract supplier code for accommodation products
+    if (isAccomm) {
+      // Extract supplier code from product code (e.g., CPTACPOR002PORTST -> POR002)
+      const match = productCode.match(/([A-Z]{3}\d{3})/)
+      if (match) {
+        setSupplierCode(match[1])
+      }
+    }
+    
+    return isAccomm
   }, [productCode])
   
   // Format display name for accommodation products
@@ -606,6 +623,41 @@ export default function ProductDetailsPage() {
     fetchProductDetails()
   }, [productCode, isClient])
 
+  // Fetch available room types for accommodation products
+  useEffect(() => {
+    const fetchRoomTypes = async () => {
+      if (!isAccommodation || !product?.supplierName) return
+      
+      setLoadingRoomTypes(true)
+      try {
+        console.log(`🏨 Fetching room types for hotel: ${product.supplierName}`)
+        const response = await fetch(`/api/accommodation/room-types/${encodeURIComponent(product.supplierName)}?currentCode=${productCode}`)
+        const result = await response.json()
+        
+        if (result.success && result.roomTypes) {
+          setAvailableRoomTypes(result.roomTypes)
+          console.log(`🏨 Found ${result.roomTypes.length} room types:`, result.roomTypes)
+        } else {
+          console.log('🏨 No room types found or API failed:', result)
+          setAvailableRoomTypes([])
+        }
+      } catch (error) {
+        console.error('Error fetching room types:', error)
+      } finally {
+        setLoadingRoomTypes(false)
+      }
+    }
+    
+    fetchRoomTypes()
+  }, [isAccommodation, product?.supplierName])
+
+  // Handle room type selection
+  const handleRoomTypeChange = (newRoomTypeCode: string) => {
+    console.log(`🏨 Switching to room type: ${newRoomTypeCode}`)
+    // Navigate to the new product page
+    router.push(`/products/${newRoomTypeCode}`)
+  }
+
   if (loading || !isClient) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -681,6 +733,49 @@ export default function ProductDetailsPage() {
               )}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{displayName}</h1>
+            
+            {/* Room Type Selector for Accommodation */}
+            {isAccommodation && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                <div className="text-sm text-gray-600 mb-2">
+                  Debug: Accommodation={isAccommodation ? 'Yes' : 'No'}, 
+                  Loading={loadingRoomTypes ? 'Yes' : 'No'}, 
+                  Room Types Found={availableRoomTypes.length}
+                </div>
+                {(availableRoomTypes.length > 1 || loadingRoomTypes) && (
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium text-gray-700">
+                      Select Room Type:
+                    </label>
+                    <Select 
+                      value={selectedRoomType || productCode} 
+                      onValueChange={handleRoomTypeChange}
+                      disabled={loadingRoomTypes}
+                    >
+                      <SelectTrigger className="w-64">
+                        <SelectValue placeholder="Choose room type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableRoomTypes.map((roomType) => (
+                          <SelectItem 
+                            key={roomType.productCode} 
+                            value={roomType.productCode}
+                          >
+                            {roomType.roomType}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {loadingRoomTypes && (
+                      <span className="text-sm text-gray-500">Loading room types...</span>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  Different room types may have different pricing and availability
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -690,10 +785,20 @@ export default function ProductDetailsPage() {
           <div className={hasHighResImages ? 'h-full w-full flex gap-6 px-6 py-4' : 'flex justify-center w-full'}>
             {/* Left Side - Map or Alternative Image - Square but 1/3 of space */}
             <div className={`hidden lg:block ${hasHighResImages ? 'w-1/3 h-full rounded-lg overflow-hidden shadow-lg flex-shrink-0' : 'w-1/3 h-full border-r'} bg-white relative`}>
-              {leftSideImage ? (
+              {isAccommodation && supplierCode ? (
+                // For accommodation: Show Google Maps with GPS first, fallback to Sanity map image
+                <GoogleMap 
+                  supplierCode={supplierCode}
+                  hotelName={product?.supplierName || 'Hotel'}
+                  fallbackMapImage={leftSideImage || undefined}
+                  height="100%"
+                  className="h-full"
+                />
+              ) : leftSideImage ? (
+                // For tours: Show regular map image
                 <Image
                   src={leftSideImage}
-                  alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : isAccommodation ? "Hotel Image" : "Tour Image"}
+                  alt={leftSideImage.includes('/maps/') || leftSideImage.includes('Map') ? "Tour Route Map" : "Tour Image"}
                   fill
                   className={hasHighResImages ? "object-cover object-left" : "object-contain p-4"}
                   quality={100}
@@ -703,7 +808,7 @@ export default function ProductDetailsPage() {
                 <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                   <div className="text-center">
                     <div className="h-12 w-12 mx-auto mb-2 flex items-center justify-center text-2xl">📍</div>
-                    <p className="font-semibold">Tour Route Map</p>
+                    <p className="font-semibold">{isAccommodation ? 'Hotel Location Map' : 'Tour Route Map'}</p>
                     <p className="text-sm">Map will be available soon</p>
                   </div>
                 </div>
@@ -817,10 +922,10 @@ export default function ProductDetailsPage() {
                   return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
                 }) ? (
                   <Link 
-                    href={`/booking/create?tourId=${product.code}`}
-                    className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-8 py-3 rounded-lg text-lg"
+                    href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&inquiry=best-rates`}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
                   >
-                    Book This Adventure
+                    Contact Us for Best Rates
                   </Link>
                 ) : (
                   <Link 
@@ -857,7 +962,7 @@ export default function ProductDetailsPage() {
                   <TabsList className="grid w-full grid-cols-4 rounded-t-lg h-12">
                     <TabsTrigger value="introduction" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Overview' : 'Introduction'}</TabsTrigger>
                     <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rooms' : 'Details'}</TabsTrigger>
-                    <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Amenities' : 'Inclusions'}</TabsTrigger>
+                    <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Inclusions' : 'Inclusions'}</TabsTrigger>
                     <TabsTrigger value="pricing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rates' : 'Pricing'}</TabsTrigger>
                   </TabsList>
                   
@@ -908,9 +1013,9 @@ export default function ProductDetailsPage() {
                           productCode={product.code}
                           onDateSelect={(date, pricing) => {
                             console.log('Selected date:', date, 'with pricing:', pricing)
-                            // Navigate to booking page with pre-selected date
-                            const bookingUrl = `/booking/create?tourId=${product.code}&date=${date}`
-                            router.push(bookingUrl)
+                            // Navigate to contact page with pre-selected date for best rates inquiry
+                            const contactUrl = `/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&date=${date}&inquiry=best-rates`
+                            router.push(contactUrl)
                           }}
                         />
                         
@@ -987,15 +1092,13 @@ export default function ProductDetailsPage() {
                     
                     // Show appropriate button based on pricing and availability
                     if (hasRates && hasAvailableDates === true) {
-                      // Has pricing AND available dates - show Book Now
+                      // Has pricing AND available dates - show Contact for Best Rates
                       return (
                         <Link 
-                          href={`/booking/create?tourId=${product.code}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&inquiry=best-rates`}
                           className="block w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 text-center rounded-lg"
                         >
-                          🚀 Book Now
+                          📞 Contact Us for Best Rates
                         </Link>
                       );
                     } else if (hasRates && hasAvailableDates === false) {
@@ -1049,9 +1152,12 @@ export default function ProductDetailsPage() {
                       </button>
                     )}
                     
-                    <button className="border border-blue-200 hover:bg-blue-50 px-3 py-2 rounded text-sm">
-                      💬 Get Quote
-                    </button>
+                    <Link 
+                      href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&inquiry=best-rates`}
+                      className="border border-blue-200 hover:bg-blue-50 px-3 py-2 rounded text-sm block text-center"
+                    >
+                      💬 Best Rates
+                    </Link>
                   </div>
                 </div>
 

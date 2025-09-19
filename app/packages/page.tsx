@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, MapPin, Users, Search, Loader2, Star, Package } from "lucide-react"
 import { getAvailableCountries, getAvailableDestinations, getTourPlanDestinationName } from "@/lib/destination-mapping"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 
 export default function PackagesPage() {
@@ -21,40 +22,13 @@ export default function PackagesPage() {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [selectedDestination, setSelectedDestination] = useState("")
   const [selectedClass, setSelectedClass] = useState("")
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [availableClasses, setAvailableClasses] = useState<{value: string, label: string}[]>([])
   const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([]) // Countries from tour amenities
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([]) // Selected country filters
 
-  // Load the product image index once on component mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        const imageIndex = await response.json()
-        
-        // Create a mapping of product codes to their primary images
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            // Use the first available image as primary
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
     const loadCountriesFromAPI = async () => {
       try {
         console.log('📦 Fetching available countries for Packages from TourPlan API...')
@@ -88,8 +62,9 @@ export default function PackagesPage() {
       }
     }
     
-    loadImageIndex()
     loadCountriesFromAPI()
+    // Load image map in background for better initial page load performance
+    preloadImageMapBackground()
   }, [])
 
   // Update available destinations when country changes
@@ -226,40 +201,12 @@ export default function PackagesPage() {
     }
   }
 
-  // Function to get product-specific image from cached data or fallback
+  // Function to get product-specific image using the image mapping function
   const getProductImage = (tourCode: string) => {
-    if (!tourCode) return "/images/products/Lion-1-1200x800.jpg"
+    if (!tourCode) return "/images/products/packages-hero.jpg"
     
-    // Check for specific product code mappings first
-    // Botswana packages (Chobe)
-    if (tourCode === 'BBKPKCHO0153NIGPA' || tourCode === 'BBKPKCHO015STDBUS') {
-      return "/images/products/chobe-national-park.jpg" // Use existing Chobe image
-    }
-    // Kenya packages
-    if (tourCode === 'NBOGPARP001CKSLP') {
-      return "/images/products/NBOGPARP001CKSLP.png" // Use specific package image
-    }
-    if (tourCode === 'NBOPKARP001CKSNPK') {
-      return "/images/products/classic-kenya.png" // Use generic Kenya image for Sentrim
-    }
-    // Zimbabwe packages - Victoria Falls
-    if (tourCode === 'VFAPKTHISSAFETST' || tourCode === 'VFAPKTHISSAVFCH01' || 
-        tourCode === 'VFAPKTVT001FEVHPC' || tourCode === 'VFAPKTVT001FSD3CS' || 
-        tourCode === 'VFAPKTVT001FSD3NW') {
-      return "/images/victoria-falls.png" // Use existing VF image
-    }
-    // Uganda packages - Lake Victoria and Mountain Gorillas
-    if (tourCode === 'EBBPKARP001BAIRDX' || tourCode === 'EBBPKARP001BAIRST') {
-      return "/images/gorilla-news.png" // Use existing gorilla image
-    }
-    
-    // Check if we have the image cached from product-image-index.json
-    if (productImages[tourCode]) {
-      return productImages[tourCode]
-    }
-    
-    // Fallback to generic safari image
-    return "/images/products/Lion-1-1200x800.jpg"
+    // Use the image mapping function for fast image loading
+    return getLocalProductImageSync(tourCode)
   }
 
   const handleSearch = async () => {
@@ -540,11 +487,10 @@ export default function PackagesPage() {
                             alt={tour.name} 
                             fill 
                             className="object-cover"
-                            onError={(e) => {
-                              // Fallback to generic package image if product image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/images/package-safari.jpg";
-                            }}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            loading="lazy"
+                            placeholder="blur"
+                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
                           />
                           <div className="absolute top-4 left-4">
                             <Badge className="bg-amber-500 hover:bg-amber-600">Package</Badge>

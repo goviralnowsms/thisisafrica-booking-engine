@@ -7,71 +7,28 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Clock, MapPin, Loader2, Star, Gift, Calendar } from "lucide-react"
+import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 export default function SpecialOffersPage() {
   const router = useRouter()
   const [offers, setOffers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [productAvailability, setProductAvailability] = useState<{[key: string]: boolean}>({}) // Track availability for each product
 
-  // Load the product image index once on component mount
   useEffect(() => {
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        const imageIndex = await response.json()
-        
-        // Create a mapping of product codes to their primary images
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            // Use the first available image as primary
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    loadImageIndex()
     loadSpecialOffers()
+    
+    // Load image map in background for better initial page load performance
+    preloadImageMapBackground()
   }, [])
 
 
-  // Function to get product-specific image from cached data or fallback
+  // Function to get product-specific image using the image mapping function
   const getProductImage = (offer: any) => {
-    // Map specific product codes to appropriate images (same as homepage)
-    const productCode = offer.code?.toUpperCase() || ''
+    if (!offer || !offer.code) return '/images/products/Lion-1-1200x800.jpg'
     
-    if (productCode === 'HDSSPMAKUTSMSSCLS' || productCode.includes('KRUGER')) {
-      return offer.image || '/images/products/kruger-package.jpeg' // Classic Kruger Package
-    }
-    if (productCode.includes('SABI') || productCode.includes('GKPSPSABBLDSABBLS')) {
-      return '/images/products/sabi-sabi1.png' // Sabi Sabi - use actual lodge image (PNG format)
-    }
-    if (productCode.includes('SAVANNA') || productCode.includes('GKPSPSAV002SAVLHM')) {
-      return '/images/products/savannah-lodge-honeymoon.png' // Savanna Lodge - specific honeymoon image
-    }
-    if (productCode.includes('MAKUTSI') || productCode.includes('HDSSPMAKUTSMSSCLS')) {
-      return '/images/safari-elephants.png' // Makutsi - family safari theme
-    }
-    
-    // Check if we have the image cached from product-image-index.json
-    if (productImages[offer.code]) {
-      return productImages[offer.code]
-    }
-    
-    // Default fallback (same as homepage)
-    return offer.image || '/images/products/Lion-1-1200x800.jpg'
+    // Use the image mapping function for fast image loading
+    return getLocalProductImageSync(offer.code)
   }
 
   // Check if a product has available dates
@@ -191,11 +148,10 @@ export default function SpecialOffersPage() {
                       alt={offer.name} 
                       fill 
                       className="object-cover"
-                      onError={(e) => {
-                        // Fallback to generic safari image if product image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/images/products/Lion-1-1200x800.jpg";
-                      }}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      loading="lazy"
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
                     />
                     <div className="absolute top-4 left-4">
                       <Badge className="bg-red-500 hover:bg-red-600 text-white">Special Offer</Badge>

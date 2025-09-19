@@ -7,6 +7,7 @@ import staticPage from './staticPage'
 import productImage from './productImage'
 import galleryImage from './galleryImage'
 import insurancePage from './insurancePage'
+import siteSettings from './siteSettings'
 
 export const schemaTypes = [
   homepage,
@@ -18,4 +19,5 @@ export const schemaTypes = [
   productImage,
   galleryImage,
   insurancePage,
+  siteSettings,
 ]

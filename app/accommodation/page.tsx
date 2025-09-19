@@ -440,7 +440,7 @@ export default function AccommodationPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-[40vh] md:h-[45vh]">
+      <section className="relative h-[50vh] md:h-[60vh]">
         <Image
           src="/images/products/accomm-hero.jpg"
           alt="African safari lodge at sunset"
@@ -451,7 +451,7 @@ export default function AccommodationPage() {
           quality={85}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60">
-          <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
+          <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center text-center pt-16 md:pt-20">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">African Accommodations</h1>
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mb-6">
               From luxury safari lodges to intimate tented camps

@@ -1,0 +1,437 @@
+{
+  "success": true,
+  "totalHotels": 50,
+  "uniqueHotels": 26,
+  "hotelMapping": {
+    "chobe bakwena": [
+      "BBKACCHOBAKBAK4DY",
+      "BBKACCHOBAKBAKDAY"
+    ],
+    "entumoto private safari camp": [
+      "MMRACENTDIRENTMC"
+    ],
+    "crowne plaza nairobi (lazizi)": [
+      "NBOACCRNALPCRNSUP"
+    ],
+    "house of waine": [
+      "NBOACHOU1  HOUSTD"
+    ],
+    "intercontinental hotel nairobi": [
+      "NBOACINT001INTN",
+      "NBOACINT001NBINDX"
+    ],
+    "giraffe manor": [
+      "NBOACSCGM  FINCH",
+      "NBOACSCGM  GMSUP",
+      "NBOACSCGM  KAREN"
+    ],
+    "the cape grace": [
+      "CPTACCAP001CAPLUX"
+    ],
+    "the portswood hotel": [
+      "CPTACPOR002PORTST"
+    ],
+    "protea hotel breakwater lodge": [
+      "CPTACPRO087BREABB"
+    ],
+    "the table bay hotel": [
+      "CPTACTAB000TAAC01",
+      "CPTACTAB000TABEXS",
+      "CPTACTAB000TABLKP"
+    ],
+    "becks safari lodge": [
+      "GKPACBEC002BECDEL"
+    ],
+    "kapama buffalo camp": [
+      "GKPACKPMBUFKPMBU1"
+    ],
+    "kapama karula": [
+      "GKPACKPMKARKPMKR1",
+      "GKPACKPMKARKPMKR2"
+    ],
+    "kapama river lodge": [
+      "GKPACKPMKRLKPMDX",
+      "GKPACKPMKRLKPMRL1",
+      "GKPACKPMKRLKPMRL2",
+      "GKPACKPMKRLKPMRL3",
+      "GKPACKPMKRLKPMRL4"
+    ],
+    "kapama southern camp": [
+      "GKPACKPMSTHKPMST1",
+      "GKPACKPMSTHKPMST2",
+      "GKPACKPMSTHKPMST3"
+    ],
+    "kuname river lodge": [
+      "GKPACKUN001KUNLUX",
+      "GKPACKUN001KUNMAN",
+      "GKPACKUN001KUNPRS"
+    ],
+    "sabi sabi bush lodge": [
+      "GKPACSAB019MANSUI",
+      "GKPACSAB019SABSUI",
+      "GKPACSAB019SABVIL"
+    ],
+    "sabi sabi bush lodge - direct": [
+      "GKPACSABBLDSABBLM",
+      "GKPACSABBLDSABBLV",
+      "GKPACSABBLDSABDLS"
+    ],
+    "sabi sabi earth lodge - direct": [
+      "GKPACSABEALSABEAV",
+      "GKPACSABEALSABELX"
+    ],
+    "sabi sabi little bush - direct": [
+      "GKPACSABLBDSABLBL"
+    ],
+    "sabi sabi selati camp - direct": [
+      "GKPACSABSCDSABSCL",
+      "GKPACSABSCDSABSIV",
+      "GKPACSABSCDSABSLM"
+    ],
+    "simbavati hilltop lodge": [
+      "GKPACSIM018SIMHTS"
+    ],
+    "karongwe river lodge": [
+      "HDSACKAR015KARFAM",
+      "HDSACKAR015KARLUX"
+    ],
+    "peermont d’oreale grande (emperors palace)": [
+      "JNBACDOR005DORCLS"
+    ],
+    "breezes beach club and spa": [
+      "ZNZACALPBREBREDLX",
+      "ZNZACALPBREBRESTD"
+    ],
+    "zanzibar serena inn hotel": [
+      "ZNZACALPZSEZSERST"
+    ]
+  },
+  "summary": [
+    {
+      "hotelName": "Chobe Bakwena",
+      "country": "Botswana",
+      "roomCount": 2,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "BBKACCHOBAKBAK4DY",
+        "BBKACCHOBAKBAKDAY"
+      ]
+    },
+    {
+      "hotelName": "Entumoto Private Safari Camp",
+      "country": "Kenya",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "MMRACENTDIRENTMC"
+      ]
+    },
+    {
+      "hotelName": "Crowne Plaza Nairobi (Lazizi)",
+      "country": "Kenya",
+      "roomCount": 1,
+      "roomTypes": [
+        "Superior Room"
+      ],
+      "productCodes": [
+        "NBOACCRNALPCRNSUP"
+      ]
+    },
+    {
+      "hotelName": "House of Waine",
+      "country": "Kenya",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "NBOACHOU1  HOUSTD"
+      ]
+    },
+    {
+      "hotelName": "InterContinental Hotel Nairobi",
+      "country": "Kenya",
+      "roomCount": 2,
+      "roomTypes": [
+        "Superior Room",
+        "Deluxe Room"
+      ],
+      "productCodes": [
+        "NBOACINT001INTN",
+        "NBOACINT001NBINDX"
+      ]
+    },
+    {
+      "hotelName": "Giraffe Manor",
+      "country": "Kenya",
+      "roomCount": 3,
+      "roomTypes": [
+        "Suite",
+        "Superior Room"
+      ],
+      "productCodes": [
+        "NBOACSCGM  FINCH",
+        "NBOACSCGM  GMSUP",
+        "NBOACSCGM  KAREN"
+      ]
+    },
+    {
+      "hotelName": "The Cape Grace",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "CPTACCAP001CAPLUX"
+      ]
+    },
+    {
+      "hotelName": "The Portswood Hotel",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "CPTACPOR002PORTST"
+      ]
+    },
+    {
+      "hotelName": "Protea Hotel Breakwater Lodge",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "CPTACPRO087BREABB"
+      ]
+    },
+    {
+      "hotelName": "The Table Bay Hotel",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Executive Suite",
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "CPTACTAB000TAAC01",
+        "CPTACTAB000TABEXS",
+        "CPTACTAB000TABLKP"
+      ]
+    },
+    {
+      "hotelName": "Becks Safari Lodge",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Deluxe Room"
+      ],
+      "productCodes": [
+        "GKPACBEC002BECDEL"
+      ]
+    },
+    {
+      "hotelName": "Kapama Buffalo Camp",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "GKPACKPMBUFKPMBU1"
+      ]
+    },
+    {
+      "hotelName": "Kapama Karula",
+      "country": "South Africa",
+      "roomCount": 2,
+      "roomTypes": [
+        "Villa",
+        "Family Suite"
+      ],
+      "productCodes": [
+        "GKPACKPMKARKPMKR1",
+        "GKPACKPMKARKPMKR2"
+      ]
+    },
+    {
+      "hotelName": "Kapama River Lodge",
+      "country": "South Africa",
+      "roomCount": 5,
+      "roomTypes": [
+        "Deluxe Room",
+        "Suite",
+        "Family Suite"
+      ],
+      "productCodes": [
+        "GKPACKPMKRLKPMDX",
+        "GKPACKPMKRLKPMRL1",
+        "GKPACKPMKRLKPMRL2",
+        "GKPACKPMKRLKPMRL3",
+        "GKPACKPMKRLKPMRL4"
+      ]
+    },
+    {
+      "hotelName": "Kapama Southern Camp",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Suite",
+        "Luxury Room",
+        "Family Suite"
+      ],
+      "productCodes": [
+        "GKPACKPMSTHKPMST1",
+        "GKPACKPMSTHKPMST2",
+        "GKPACKPMSTHKPMST3"
+      ]
+    },
+    {
+      "hotelName": "Kuname River Lodge",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Luxury Room",
+        "Standard Room",
+        "Suite"
+      ],
+      "productCodes": [
+        "GKPACKUN001KUNLUX",
+        "GKPACKUN001KUNMAN",
+        "GKPACKUN001KUNPRS"
+      ]
+    },
+    {
+      "hotelName": "Sabi Sabi Bush Lodge",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Deluxe Room",
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "GKPACSAB019MANSUI",
+        "GKPACSAB019SABSUI",
+        "GKPACSAB019SABVIL"
+      ]
+    },
+    {
+      "hotelName": "Sabi Sabi Bush Lodge - Direct",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Deluxe Room",
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "GKPACSABBLDSABBLM",
+        "GKPACSABBLDSABBLV",
+        "GKPACSABBLDSABDLS"
+      ]
+    },
+    {
+      "hotelName": "Sabi Sabi Earth Lodge - Direct",
+      "country": "South Africa",
+      "roomCount": 2,
+      "roomTypes": [
+        "Villa",
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "GKPACSABEALSABEAV",
+        "GKPACSABEALSABELX"
+      ]
+    },
+    {
+      "hotelName": "Sabi Sabi Little Bush - Direct",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "GKPACSABLBDSABLBL"
+      ]
+    },
+    {
+      "hotelName": "Sabi Sabi Selati Camp - Direct",
+      "country": "South Africa",
+      "roomCount": 3,
+      "roomTypes": [
+        "Luxury Room",
+        "Suite"
+      ],
+      "productCodes": [
+        "GKPACSABSCDSABSCL",
+        "GKPACSABSCDSABSIV",
+        "GKPACSABSCDSABSLM"
+      ]
+    },
+    {
+      "hotelName": "Simbavati Hilltop Lodge",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Suite"
+      ],
+      "productCodes": [
+        "GKPACSIM018SIMHTS"
+      ]
+    },
+    {
+      "hotelName": "Karongwe River Lodge",
+      "country": "South Africa",
+      "roomCount": 2,
+      "roomTypes": [
+        "Family Suite",
+        "Luxury Room"
+      ],
+      "productCodes": [
+        "HDSACKAR015KARFAM",
+        "HDSACKAR015KARLUX"
+      ]
+    },
+    {
+      "hotelName": "Peermont D’oreale Grande (Emperors Palace)",
+      "country": "South Africa",
+      "roomCount": 1,
+      "roomTypes": [
+        "Suite"
+      ],
+      "productCodes": [
+        "JNBACDOR005DORCLS"
+      ]
+    },
+    {
+      "hotelName": "Breezes Beach Club and Spa",
+      "country": "Tanzania",
+      "roomCount": 2,
+      "roomTypes": [
+        "Luxury Room",
+        "Standard Room"
+      ],
+      "productCodes": [
+        "ZNZACALPBREBREDLX",
+        "ZNZACALPBREBRESTD"
+      ]
+    },
+    {
+      "hotelName": "Zanzibar Serena Inn Hotel",
+      "country": "Tanzania",
+      "roomCount": 1,
+      "roomTypes": [
+        "Standard Room"
+      ],
+      "productCodes": [
+        "ZNZACALPZSEZSERST"
+      ]
+    }
+  ]
+}

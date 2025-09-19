@@ -1,0 +1,52 @@
+Info specifies the categories of option data to return. One letter is used to specify each category of data are available, and any combination of the available letters can be specified:
+G (general),
+A (availability),
+I (detailed availability),
+E (full availability),
+R (rates),
+S (stay pricing and availability),
+D (rate date ranges),
+B (package details),
+N (enquiry notes),
+T (multiple enquiry notes),
+F (FYIs),
+M (amenities),
+L (supplier replicated locations, LocationCodes only),
+P (supplier replicated locations, LocationCodes with pickup points, option pickup points),
+V (replicated locations encountered in search).
+
+If the Info data item is empty, or is omitted, then only option identifiers and ValidLocations are returned. Note that only one of the rate types ( R , S , D ) can be asked for. Also, if S is asked for then no A or E or I data is returned.
+
+If info G returns data and info S does not, if you try doing info GS no data will return as there is no data for S.
+So any combination you do with S will return blank.
+
+Once you have valid stay pricing (a Confirmed rate status that is not zero) then you would get results returning.
+
+I see that product CPTACPOR002PORTST was updated with a Confirmed Rate Status with valid rates for 01-Jan-2026 - 31-Dec-2026
+
+Please try the below and let me know if you get any results returning.
+
+<?xml version="1.0"?>
+<!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
+<Request>
+<OptionInfoRequest>
+<AgentID>SAMAGT</AgentID>
+<Password>S@MAgt01</Password>
+<ButtonDestinations>
+<ButtonDestination>
+<ButtonName>Accommodation</ButtonName>
+<DestinationName>South Africa</DestinationName>
+</ButtonDestination>
+</ButtonDestinations>
+<Info>GS</Info>
+<DateFrom>2026-07-15</DateFrom>
+<DateTo>2026-07-18</DateTo>
+<RoomConfigs>
+<RoomConfig>
+<Adults>2</Adults>
+<Children>0</Children>
+<RoomType>DB</RoomType>
+</RoomConfig>
+</RoomConfigs>
+</OptionInfoRequest>
+</Request>

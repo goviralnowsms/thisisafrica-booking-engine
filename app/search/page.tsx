@@ -45,7 +45,6 @@ export default function SearchResultsPage() {
   const [availableCountries, setAvailableCountries] = useState<{value: string, label: string}[]>([])
   const [availableDestinations, setAvailableDestinations] = useState<{value: string, label: string, tourPlanName: string}[]>([])
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['Group Tours', 'Packages', 'Rail', 'Cruises'])
-  const [productImages, setProductImages] = useState<{[key: string]: string}>({})
   const [sanityImages, setSanityImages] = useState<{[key: string]: any}>({})
 
   // Initialize countries and perform initial search
@@ -92,36 +91,8 @@ export default function SearchResultsPage() {
       }
     }
     
-    // Load local image index as fallback
-    const loadImageIndex = async () => {
-      try {
-        const response = await fetch('/images/product-image-index.json')
-        if (!response.ok) return
-        
-        const contentType = response.headers.get('content-type')
-        if (!contentType || !contentType.includes('application/json')) return
-        
-        const imageIndex = await response.json()
-        const imageMap: {[key: string]: string} = {}
-        
-        Object.keys(imageIndex).forEach(productCode => {
-          const images = imageIndex[productCode]
-          if (images && images.length > 0) {
-            const primaryImage = images.find((img: any) => img.status === 'exists')
-            if (primaryImage && primaryImage.localPath) {
-              imageMap[productCode] = primaryImage.localPath
-            }
-          }
-        })
-        
-        setProductImages(imageMap)
-      } catch (error) {
-        console.warn('Failed to load image index:', error)
-      }
-    }
-    
-    // Load both in parallel
-    Promise.all([loadSanityImages(), loadImageIndex()])
+    // Load Sanity images only
+    loadSanityImages()
     
     // Perform initial search if we have parameters
     if (initialCountry) {
@@ -252,11 +223,6 @@ export default function SearchResultsPage() {
     // Check Sanity images first (fastest)
     if (sanityImages[tour.code]?.primaryImage?.asset?.url) {
       return sanityImages[tour.code].primaryImage.asset.url
-    }
-    
-    // Check local image index
-    if (productImages[tour.code]) {
-      return productImages[tour.code]
     }
     
     // Fallback to product-specific default images
