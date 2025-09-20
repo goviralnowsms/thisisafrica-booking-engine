@@ -106,10 +106,30 @@ export default function HotelDetailsPage() {
       setError(null)
       
       try {
+        // Get the product code from URL params
+        const urlParams = new URLSearchParams(window.location.search)
+        const productCode = urlParams.get('productCode') || ''
+        
+        // Extract supplier code from product code if available
+        let supplierCode = ''
+        if (productCode) {
+          // Extract supplier code (e.g., MPTSACSAB003SABST -> SAB003)
+          const match = productCode.match(/([A-Z]{3}\d{3})/)
+          if (match) {
+            supplierCode = match[1]
+            console.log('🏨 Extracted supplier code:', supplierCode, 'from product:', productCode)
+          }
+        }
+        
         // Fetch room types for this hotel
-        // Convert hotel code to hotel name for the API
         const hotelName = decodeURIComponent(hotelCode)
-        const response = await fetch(`/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}`)
+        const apiUrl = productCode 
+          ? `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}&productCode=${productCode}`
+          : supplierCode 
+            ? `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}&supplierCode=${supplierCode}`
+            : `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}`
+        
+        const response = await fetch(apiUrl)
         const data = await response.json()
         
         if (data.success && data.rooms) {

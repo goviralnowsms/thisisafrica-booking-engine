@@ -10,9 +10,13 @@ const credentials = {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
+    const apiEndpoint = process.env.TOURPLAN_API_URL || 'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi'
+    const xmlParser = new TourPlanXMLParser()
     
     // Extract search parameters
     const hotelName = searchParams.get('hotelName') || ''
+    const productCode = searchParams.get('productCode') || ''
+    const supplierCodeParam = searchParams.get('supplierCode') || ''
     const destination = searchParams.get('destination') || 'South Africa'
     const dateFrom = searchParams.get('dateFrom') || '2026-07-15'
     const dateTo = searchParams.get('dateTo') || '2026-07-18'
@@ -21,6 +25,8 @@ export async function GET(request: NextRequest) {
 
     console.log('🏨 Hotel rooms search request:', {
       hotelName,
+      productCode,
+      supplierCodeParam,
       destination,
       dateFrom,
       dateTo,
@@ -28,9 +34,50 @@ export async function GET(request: NextRequest) {
       children
     })
 
-    // Strategy: Search for all accommodation in the destination
-    // Then filter client-side for the specific hotel
-    // This ensures we get ALL room products, not grouped
+    // Extract supplier code from the product code if provided
+    let extractedSupplierCode = ''
+    
+    if (productCode) {
+      // Extract supplier code from product code
+      // Format: GKPACSABBLDSABBLV where SABBLD is the supplier code
+      // Pattern: [3 letters][AC][supplier code][room suffix]
+      
+      const acIndex = productCode.indexOf('AC')
+      if (acIndex > 0 && acIndex < productCode.length - 2) {
+        const afterAC = productCode.substring(acIndex + 2)
+        
+        // The supplier code ends where it repeats (usually 3 letters from start)
+        // SABBLD -> SAB is repeated as SABBLV at the end
+        // SABEAL -> SAB is repeated as SABEAV at the end
+        // KAR015 -> KAR is repeated as KARFAM at the end
+        
+        // Find where the first 3 chars of afterAC appear again
+        const firstThree = afterAC.substring(0, 3).toUpperCase()
+        
+        // Search for the second occurrence of these 3 letters
+        let secondOccurrence = -1
+        for (let i = 3; i < afterAC.length - 2; i++) {
+          if (afterAC.substring(i, i + 3).toUpperCase() === firstThree) {
+            secondOccurrence = i
+            break
+          }
+        }
+        
+        if (secondOccurrence > 0) {
+          extractedSupplierCode = afterAC.substring(0, secondOccurrence)
+          console.log(`🏨 Extracted supplier code '${extractedSupplierCode}' from product code '${productCode}'`)
+        } else {
+          // Fallback: might be a code like POR002 (6 chars)
+          const match = afterAC.match(/^([A-Z]{3}\d{3})/i)
+          if (match) {
+            extractedSupplierCode = match[1]
+            console.log(`🏨 Extracted supplier code '${extractedSupplierCode}' (standard format) from product code '${productCode}'`)
+          }
+        }
+      }
+    }
+    
+    // Now search for all accommodation, we'll filter by supplier name
     const xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
@@ -59,7 +106,6 @@ export async function GET(request: NextRequest) {
     console.log('🏨 Hotel rooms XML request:', xml)
     
     // Make API call to TourPlan
-    const apiEndpoint = process.env.TOURPLAN_API_URL || 'https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi'
     const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
@@ -77,7 +123,6 @@ export async function GET(request: NextRequest) {
     console.log('🏨 Raw TourPlan response length:', xmlResponse.length)
     
     // Parse response
-    const xmlParser = new TourPlanXMLParser()
     let parsedResponse;
     try {
       parsedResponse = xmlParser.parseResponse(xmlResponse)
@@ -100,39 +145,71 @@ export async function GET(request: NextRequest) {
     
     console.log(`🏨 Total raw options found: ${rawOptions.length}`)
     
-    // First, try to find ANY product for this hotel to get the supplier code
-    let supplierCode = ''
-    const hotelNameLower = hotelName.toLowerCase()
+    // Filter by extracted supplier code if we have it
+    let hotelRooms = []
     
-    // Extract the main hotel name word for searching (e.g., "portswood" from "The Portswood Hotel")
-    const mainHotelWord = hotelNameLower
-      .replace(/\bthe\b/g, '')
-      .replace(/\bhotel\b/g, '')
-      .replace(/\band\b/g, '')
-      .trim()
-      .split(/\s+/)[0] // Get first significant word
-    
-    console.log(`🏨 Searching for hotel with main word: "${mainHotelWord}"`)
-    
-    // Find a product that matches the hotel name to extract supplier code
-    for (const option of rawOptions) {
-      const supplier = (option.OptGeneral?.SupplierName || '').toLowerCase()
-      const code = option.Opt || option.OptCode || ''
+    if (extractedSupplierCode) {
+      // We have the supplier code from the product code
+      console.log(`🏨 Filtering by extracted supplier code: "${extractedSupplierCode}"`)
+      hotelRooms = rawOptions.filter((option: any) => {
+        const optCode = option.Opt || option.OptCode || ''
+        
+        // Check if this product has the same supplier code
+        const acIndex = optCode.indexOf('AC')
+        if (acIndex > 0) {
+          const afterAC = optCode.substring(acIndex + 2)
+          
+          // Check if it starts with our supplier code
+          const isMatch = afterAC.toUpperCase().startsWith(extractedSupplierCode.toUpperCase())
+          
+          if (isMatch) {
+            console.log(`  ✓ Matched: ${optCode} - ${option.OptGeneral?.SupplierName}`)
+          }
+          return isMatch
+        }
+        return false
+      })
       
-      if (supplier.includes(mainHotelWord)) {
-        // Extract supplier code from product code
-        // Format: CPTACPOR002PORTST - POR002 is the supplier code
-        const codeMatch = code.match(/([A-Z]{3}\d{3})/i)
-        if (codeMatch) {
-          supplierCode = codeMatch[1]
-          console.log(`🏨 Found supplier code ${supplierCode} from product ${code} (supplier: ${option.OptGeneral?.SupplierName})`)
-          break
+      console.log(`🏨 Found ${hotelRooms.length} rooms with supplier code ${extractedSupplierCode}`)
+    } else {
+      // Fallback to the old logic if no product code was provided
+      let supplierCode = supplierCodeParam
+      const hotelNameLower = hotelName.toLowerCase()
+    
+    if (!supplierCode) {
+      // If no supplier code provided, try to find ANY product for this hotel to get the supplier code
+      
+      // Extract the main hotel name word for searching (e.g., "portswood" from "The Portswood Hotel")
+      const mainHotelWord = hotelNameLower
+        .replace(/\bthe\b/g, '')
+        .replace(/\bhotel\b/g, '')
+        .replace(/\band\b/g, '')
+        .trim()
+        .split(/\s+/)[0] // Get first significant word
+      
+      console.log(`🏨 No supplier code provided, searching for hotel with main word: "${mainHotelWord}"`)
+      
+      // Find a product that matches the hotel name to extract supplier code
+      for (const option of rawOptions) {
+        const supplier = (option.OptGeneral?.SupplierName || '').toLowerCase()
+        const code = option.Opt || option.OptCode || ''
+        
+        if (supplier.includes(mainHotelWord)) {
+          // Extract supplier code from product code
+          // Format: CPTACPOR002PORTST - POR002 is the supplier code
+          const codeMatch = code.match(/([A-Z]{3}\d{3})/i)
+          if (codeMatch) {
+            supplierCode = codeMatch[1]
+            console.log(`🏨 Found supplier code ${supplierCode} from product ${code} (supplier: ${option.OptGeneral?.SupplierName})`)
+            break
+          }
         }
       }
+    } else {
+      console.log(`🏨 Using provided supplier code: ${supplierCode}`)
     }
     
     // Now find ALL products with this supplier code
-    let hotelRooms = []
     
     if (supplierCode) {
       // Search by supplier code
@@ -176,6 +253,7 @@ export async function GET(request: NextRequest) {
         return isMatch
       })
     }
+    } // Close the else block for when no supplierName
     
     console.log(`🏨 Found ${hotelRooms.length} rooms for ${hotelName}`)
     
