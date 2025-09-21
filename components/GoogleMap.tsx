@@ -113,14 +113,15 @@ export default function GoogleMap({
     )
   }
 
-  // Generate Google Maps Embed URL
-  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}&q=${coordinates.lat},${coordinates.lng}&zoom=15`
+  // Generate Google Maps Embed URL - use the API key
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCxyjEmbeCc4jnlLPLch2Pv6EW5uwMGM3Q'
+  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${coordinates.lat},${coordinates.lng}&zoom=15`
   
   // Alternative: Static map image (doesn't require API key for basic usage)
   const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${coordinates.lat},${coordinates.lng}&zoom=15&size=800x400&markers=color:red%7C${coordinates.lat},${coordinates.lng}&scale=2`
 
   // If no Google Maps API key, show a link to Google Maps
-  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+  if (!apiKey) {
     return (
       <div className={`bg-gray-100 rounded-lg overflow-hidden ${className}`} style={{ height }}>
         <a 

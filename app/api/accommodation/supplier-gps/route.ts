@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     const xmlResponse = await response.text()
-    
+
     // Extract GPS coordinates from response
     // Looking for pattern like: -33.905932, 18.418143
     const gpsPattern = /<SupplierNote>[\s\S]*?<NoteCategory>GPS<\/NoteCategory>[\s\S]*?<NoteText>([^<]+)<\/NoteText>[\s\S]*?<\/SupplierNote>/

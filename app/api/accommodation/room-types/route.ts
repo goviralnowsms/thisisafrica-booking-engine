@@ -139,36 +139,34 @@ export async function GET(request: NextRequest) {
             : parsedResponse.OptionInfoReply.Option
           
           if (option) {
-            // Extract room type from code suffix and description
-            const codeSuffix = productCode.slice(-2).toUpperCase()
-            let roomType = 'Standard Room'
-            
-            // Check specific Table Bay Hotel codes first
-            if (productCode === 'CPTACTAB000TAAC01') roomType = 'Standard Room'
-            else if (productCode === 'CPTACTAB000TABEXS') roomType = 'Executive Suite'
-            else if (productCode === 'CPTACTAB000TABLKP') roomType = 'Luxury Room'
-            
-            // General suffix patterns
-            else if (codeSuffix === 'ST') roomType = 'Standard Room'
-            else if (codeSuffix === 'EX' || codeSuffix === 'XS') roomType = 'Executive Suite'
-            else if (codeSuffix === 'FM') roomType = 'Family Suite'
-            else if (codeSuffix === 'DL') roomType = 'Deluxe Room'
-            else if (codeSuffix === 'SU') roomType = 'Suite'
-            else if (codeSuffix === 'LX' || codeSuffix === 'KP') roomType = 'Luxury Room'
-            else if (codeSuffix === '01') roomType = 'Standard Room'
-            
-            // Check description as fallback
-            else {
-              const desc = (option.OptGeneral?.Description || '').toLowerCase()
-              if (desc.includes('executive')) roomType = 'Executive Suite'
-              else if (desc.includes('family')) roomType = 'Family Suite'
-              else if (desc.includes('deluxe')) roomType = 'Deluxe Room'
-              else if (desc.includes('luxury')) roomType = 'Luxury Room'
-              else if (desc.includes('standard')) roomType = 'Standard Room'
-              else if (desc.includes('suite') && !desc.includes('executive') && !desc.includes('family')) roomType = 'Suite'
+            // Use the TourPlan description as the room type name for display
+            // This ensures it matches exactly what's in TourPlan
+            const description = option.OptGeneral?.Description || ''
+            let roomType = description || 'Standard Room'
+
+            // If no description, fall back to suffix-based naming
+            if (!description || description.trim() === '') {
+              const codeSuffix = productCode.slice(-2).toUpperCase()
+
+              // Check specific codes first
+              if (productCode === 'CPTACTAB000TAAC01') roomType = 'Standard Room'
+              else if (productCode === 'CPTACTAB000TABEXS') roomType = 'Executive Suite'
+              else if (productCode === 'CPTACTAB000TABLKP') roomType = 'Luxury Room'
+
+              // General suffix patterns
+              else if (codeSuffix === 'ST') roomType = 'Standard Room'
+              else if (codeSuffix === 'EX' || codeSuffix === 'XS') roomType = 'Executive Suite'
+              else if (codeSuffix === 'FM') roomType = 'Family Suite'
+              else if (codeSuffix === 'DL') roomType = 'Deluxe Suite'
+              else if (codeSuffix === 'SU') roomType = 'Suite'
+              else if (codeSuffix === 'LS') roomType = 'Luxury Suite'
+              else if (codeSuffix === 'LM') roomType = 'Manor Suite'
+              else if (codeSuffix === 'LV' || codeSuffix === 'IL') roomType = 'Villa'
+              else if (codeSuffix === 'LX' || codeSuffix === 'KP') roomType = 'Luxury Room'
+              else if (codeSuffix === '01') roomType = 'Standard Room'
             }
-            
-            console.log(`🏨 Room type mapping: ${productCode} → ${roomType}`)
+
+            console.log(`🏨 Room type mapping: ${productCode} → "${roomType}" (from: ${description ? 'description' : 'suffix'})`)
             
             roomResults.push({
               productCode: productCode,
@@ -195,12 +193,15 @@ export async function GET(request: NextRequest) {
       knownCodes.forEach(code => {
         const codeSuffix = code.slice(-2).toUpperCase()
         let roomType = 'Standard Room'
-        
+
         if (codeSuffix === 'ST') roomType = 'Standard Room'
         else if (codeSuffix === 'EX') roomType = 'Executive Suite'
         else if (codeSuffix === 'FM') roomType = 'Family Suite'
-        else if (codeSuffix === 'DL') roomType = 'Deluxe Room'
+        else if (codeSuffix === 'DL') roomType = 'Deluxe Suite'  // Changed to Suite
         else if (codeSuffix === 'SU') roomType = 'Suite'
+        else if (codeSuffix === 'LS') roomType = 'Luxury Suite'
+        else if (codeSuffix === 'LM') roomType = 'Manor Suite'
+        else if (codeSuffix === 'LV' || codeSuffix === 'IL') roomType = 'Villa'
         
         roomResults.push({
           productCode: code,

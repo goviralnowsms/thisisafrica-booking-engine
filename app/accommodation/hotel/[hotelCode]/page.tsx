@@ -113,11 +113,38 @@ export default function HotelDetailsPage() {
         // Extract supplier code from product code if available
         let supplierCode = ''
         if (productCode) {
-          // Extract supplier code (e.g., MPTSACSAB003SABST -> SAB003)
-          const match = productCode.match(/([A-Z]{3}\d{3})/)
-          if (match) {
-            supplierCode = match[1]
-            console.log('🏨 Extracted supplier code:', supplierCode, 'from product:', productCode)
+          // Extract supplier code from product code
+          // Formats:
+          // CPTACPOR002PORTST -> POR002 (3 letters + 3 digits)
+          // GKPACSABBLDSABBLM -> SABBLD (6 letters)
+
+          const acIndex = productCode.indexOf('AC')
+          if (acIndex > 0) {
+            const afterAC = productCode.substring(acIndex + 2)
+
+            // For codes like SABBLD, find where the first 3 chars repeat
+            const firstThree = afterAC.substring(0, 3)
+            let supplierEndIndex = -1
+
+            // Look for where the first 3 chars appear again
+            for (let i = 3; i < afterAC.length - 2; i++) {
+              if (afterAC.substring(i, i + 3) === firstThree) {
+                supplierEndIndex = i
+                break
+              }
+            }
+
+            if (supplierEndIndex > 0) {
+              supplierCode = afterAC.substring(0, supplierEndIndex)
+              console.log(`🏨 Extracted supplier code: '${supplierCode}' from ${productCode}`)
+            } else {
+              // Try standard format (3 letters + 3 digits)
+              const match = afterAC.match(/^([A-Z]{3}\d{3})/i)
+              if (match) {
+                supplierCode = match[1].toUpperCase()
+                console.log(`🏨 Extracted supplier code: '${supplierCode}' (standard) from ${productCode}`)
+              }
+            }
           }
         }
         

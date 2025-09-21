@@ -264,40 +264,44 @@ export async function GET(request: NextRequest) {
       const description = option.OptGeneral?.Description || ''
       const name = `${supplier}${description ? ` - ${description}` : ''}`
       
-      // Extract room type from code suffix and description
-      let roomType = 'Standard Room'
-      
-      // First check the product code suffix (last part after supplier code)
-      // Format: CPTACPOR002PORTST where ST = Standard, EX = Executive, FM = Family, etc.
+      // Use the TourPlan description as the room name/type for display
+      // This ensures the displayed name matches exactly what's in TourPlan
+      let roomType = description || 'Standard Room'
+
+      // Also extract a category from the code suffix for filtering purposes
       const codeSuffix = code.slice(-2).toUpperCase()
-      
-      // Common room type suffixes
-      if (codeSuffix === 'ST' || code.toUpperCase().endsWith('STD')) roomType = 'Standard Room'
-      else if (codeSuffix === 'EX' || codeSuffix === 'EXE') roomType = 'Executive Suite'
-      else if (codeSuffix === 'FM' || codeSuffix === 'FAM') roomType = 'Family Suite'
-      else if (codeSuffix === 'DL' || codeSuffix === 'DLX') roomType = 'Deluxe Room'
-      else if (codeSuffix === 'SU' || codeSuffix === 'SUI') roomType = 'Suite'
-      else if (codeSuffix === 'LX' || codeSuffix === 'LUX') roomType = 'Luxury Room'
-      else if (codeSuffix === 'VL' || codeSuffix === 'VIL') roomType = 'Villa'
-      else if (codeSuffix === 'SP' || codeSuffix === 'SUP') roomType = 'Superior Room'
-      
-      // If suffix didn't match, try description
-      else {
-        const descLower = description.toLowerCase()
-        if (descLower.includes('executive')) roomType = 'Executive Suite'
-        else if (descLower.includes('family')) roomType = 'Family Suite'
-        else if (descLower.includes('deluxe')) roomType = 'Deluxe Room'
-        else if (descLower.includes('luxury') && !descLower.includes('tent')) roomType = 'Luxury Room'
-        else if (descLower.includes('suite')) roomType = 'Suite'
-        else if (descLower.includes('villa')) roomType = 'Villa'
-        else if (descLower.includes('standard')) {
-          // Preserve specific standard room variations (like "Ver 2")
-          roomType = description.includes('Ver 2') ? 'Standard Room Ver 2' : 'Standard Room'
+      let roomCategory = 'standard'
+
+      // Categorize based on suffix for filtering
+      if (codeSuffix === 'ST' || code.toUpperCase().endsWith('STD')) roomCategory = 'standard'
+      else if (codeSuffix === 'EX' || codeSuffix === 'EXE') roomCategory = 'executive'
+      else if (codeSuffix === 'FM' || codeSuffix === 'FAM') roomCategory = 'family'
+      else if (codeSuffix === 'DL' || codeSuffix === 'DLX') roomCategory = 'deluxe'
+      else if (codeSuffix === 'SU' || codeSuffix === 'SUI') roomCategory = 'suite'
+      else if (codeSuffix === 'LS') roomCategory = 'luxury-suite'
+      else if (codeSuffix === 'LX' || codeSuffix === 'LUX') roomCategory = 'luxury'
+      else if (codeSuffix === 'LM' || codeSuffix === 'MAN') roomCategory = 'manor'
+      else if (codeSuffix === 'LV' || codeSuffix === 'VL' || codeSuffix === 'VIL') roomCategory = 'villa'
+      else if (codeSuffix === 'SP' || codeSuffix === 'SUP') roomCategory = 'superior'
+
+      // If no description provided, create a default based on category
+      if (!description || description.trim() === '') {
+        const categoryNames: Record<string, string> = {
+          'standard': 'Standard Room',
+          'executive': 'Executive Suite',
+          'family': 'Family Suite',
+          'deluxe': 'Deluxe Suite',
+          'suite': 'Suite',
+          'luxury-suite': 'Luxury Suite',
+          'luxury': 'Luxury Room',
+          'manor': 'Manor Suite',
+          'villa': 'Villa',
+          'superior': 'Superior Room'
         }
-        else if (descLower.includes('superior')) roomType = 'Superior Room'
+        roomType = categoryNames[roomCategory] || 'Standard Room'
       }
-      
-      console.log(`🏨 Room type for ${code}: ${roomType} (suffix: ${codeSuffix})`)
+
+      console.log(`🏨 Room for ${code}: "${roomType}" (category: ${roomCategory}, suffix: ${codeSuffix})`)
       
       return {
         productCode: code,

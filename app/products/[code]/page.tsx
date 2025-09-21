@@ -114,10 +114,40 @@ export default function ProductDetailsPage() {
     
     // Extract supplier code for accommodation products
     if (isAccomm) {
-      // Extract supplier code from product code (e.g., CPTACPOR002PORTST -> POR002)
-      const match = productCode.match(/([A-Z]{3}\d{3})/)
-      if (match) {
-        setSupplierCode(match[1])
+      // Extract supplier code from product code
+      // Formats:
+      // CPTACPOR002PORTST -> POR002 (3 letters + 3 digits)
+      // GKPACSABBLDSABBLM -> SABBLD (6 letters)
+
+      const acIndex = productCode.indexOf('AC')
+      if (acIndex > 0) {
+        const afterAC = productCode.substring(acIndex + 2)
+
+        // For codes like SABBLD, find where the first 3 chars repeat
+        const firstThree = afterAC.substring(0, 3)
+        let supplierEndIndex = -1
+
+        // Look for where the first 3 chars appear again
+        for (let i = 3; i < afterAC.length - 2; i++) {
+          if (afterAC.substring(i, i + 3) === firstThree) {
+            supplierEndIndex = i
+            break
+          }
+        }
+
+        if (supplierEndIndex > 0) {
+          // Found repetition - supplier code is everything before it
+          const supplier = afterAC.substring(0, supplierEndIndex)
+          setSupplierCode(supplier)
+          console.log(`🏨 Extracted supplier code: '${supplier}' from ${productCode}`)
+        } else {
+          // Try standard format (3 letters + 3 digits)
+          const match = afterAC.match(/^([A-Z]{3}\d{3})/i)
+          if (match) {
+            setSupplierCode(match[1].toUpperCase())
+            console.log(`🏨 Extracted supplier code: '${match[1]}' from ${productCode}`)
+          }
+        }
       }
     }
     
