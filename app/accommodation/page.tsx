@@ -25,7 +25,6 @@ import {
   Phone,
   Calendar
 } from "lucide-react"
-import { getAvailableCountries, getAvailableDestinations } from "@/lib/destination-mapping"
 import { getLocalProductImageSync, preloadImageMapBackground } from "@/lib/product-images"
 
 // Generic accommodation images for different types - optimized paths
@@ -132,29 +131,55 @@ export default function AccommodationPage() {
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize countries on mount
+  // Initialize countries on mount - dynamically discover countries with actual accommodations
   useEffect(() => {
-    // Initialize available countries for Accommodation
-    const countries = getAvailableCountries('Accommodation')
-    // Sort countries alphabetically by label
-    const sortedCountries = countries.sort((a, b) => a.label.localeCompare(b.label))
-    setAvailableCountries(sortedCountries)
-    
-    // Start loading image map in background (non-blocking)
+    const loadAvailableCountries = async () => {
+      try {
+        console.log('🌍 Loading countries with accommodation products...')
+
+        const response = await fetch('/api/accommodation/countries')
+        const result = await response.json()
+
+        if (result.success && result.countries) {
+          console.log('🌍 Loaded countries:', result.countries)
+          setAvailableCountries(result.countries)
+
+          if (result.fallback) {
+            console.warn('⚠️ Using fallback countries due to API error')
+          }
+        } else {
+          console.error('❌ Failed to load countries, using fallback')
+          // Fallback to minimum viable countries
+          setAvailableCountries([
+            { value: 'south-africa', label: 'South Africa' },
+            { value: 'kenya', label: 'Kenya' }
+          ])
+        }
+      } catch (error) {
+        console.error('❌ Error loading countries:', error)
+        // Fallback to minimum viable countries
+        setAvailableCountries([
+          { value: 'south-africa', label: 'South Africa' },
+          { value: 'kenya', label: 'Kenya' }
+        ])
+      }
+    }
+
+    loadAvailableCountries()
     preloadImageMapBackground()
   }, [])
 
-  // Update available destinations when country changes
+  // Update available destinations when country changes - ONLY from API
   useEffect(() => {
     const loadDestinationsFromAPI = async () => {
       if (selectedCountry && availableCountries.length > 0) {
         try {
           console.log('🏨 Fetching destinations for country:', selectedCountry)
-          
+
           const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
           const response = await fetch(`/api/tourplan/destinations?productType=Accommodation&country=${encodeURIComponent(countryLabel)}`)
           const result = await response.json()
-          
+
           if (result.success && result.destinations) {
             console.log('🏨 Got destinations from API:', result.destinations)
             // Transform string array to {value, label} format
@@ -165,68 +190,51 @@ export default function AccommodationPage() {
             }))
             setAvailableDestinations(transformedDestinations)
           } else {
-            console.warn('🏨 Failed to get destinations from API, falling back to hardcoded list')
-            const destinations = getAvailableDestinations('Accommodation', selectedCountry)
-            setAvailableDestinations(destinations)
+            console.warn('🏨 No destinations found in API for this country')
+            setAvailableDestinations([])
           }
         } catch (error) {
           console.error('🏨 Error fetching destinations from API:', error)
-          const destinations = getAvailableDestinations('Accommodation', selectedCountry)
-          setAvailableDestinations(destinations)
+          setAvailableDestinations([])
         }
       } else {
         setAvailableDestinations([])
         setSelectedDestination("")
       }
     }
-    
+
     loadDestinationsFromAPI()
   }, [selectedCountry, availableCountries])
 
-  // Update available classes when country changes
+  // Update available room types when country changes - ONLY from API
   useEffect(() => {
-    const loadClassesFromAPI = async () => {
+    const loadRoomTypesFromAPI = async () => {
       if (selectedCountry && availableCountries.length > 0) {
         try {
-          console.log('🏨 Fetching classes for country:', selectedCountry)
-          
-          const country = availableCountries.find(c => c.value === selectedCountry)
-          const tourPlanCountry = country?.label || selectedCountry
-          const response = await fetch(`/api/tourplan/destinations?productType=Accommodation&country=${encodeURIComponent(tourPlanCountry)}`)
+          console.log('🏨 Fetching room types for country:', selectedCountry)
+
+          const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
+          const response = await fetch(`/api/accommodation/room-types-for-country?country=${encodeURIComponent(countryLabel)}`)
           const result = await response.json()
-          
-          // Skip the API classes as they return star ratings, not room types
-          // Use actual TourPlan room types instead
-          console.log('🏨 Using actual TourPlan room types')
-          setAvailableClasses([
-            { value: 'standard', label: 'Standard Room' },
-            { value: 'luxury', label: 'Luxury Room' },
-            { value: 'suite', label: 'Suite' },
-            { value: 'executive', label: 'Executive Suite' },
-            { value: 'deluxe', label: 'Deluxe Suite' },
-            { value: 'villa', label: 'Villa' },
-            { value: 'family', label: 'Family Room' },
-            { value: 'tent', label: 'Luxury Tent' },
-            { value: 'royal', label: 'Royal Suite' },
-            { value: 'spa', label: 'Spa Suite' },
-            { value: 'manor', label: 'Manor House' }
-          ])
+
+          if (result.success && result.roomTypes) {
+            console.log('🏨 Got room types from API:', result.roomTypes)
+            setAvailableClasses(result.roomTypes)
+          } else {
+            console.warn('🏨 No room types found in API for this country')
+            setAvailableClasses([])
+          }
         } catch (error) {
-          console.error('🏨 Error fetching classes from API:', error)
-          setAvailableClasses([
-            { value: 'standard', label: 'Standard Room' },
-            { value: 'luxury', label: 'Luxury Room' },
-            { value: 'suite', label: 'Suite' },
-            { value: 'villa', label: 'Villa' }
-          ])
+          console.error('🏨 Error fetching room types from API:', error)
+          setAvailableClasses([])
         }
       } else {
         setAvailableClasses([])
         setSelectedClass("")
       }
     }
-    
-    loadClassesFromAPI()
+
+    loadRoomTypesFromAPI()
   }, [selectedCountry, availableCountries])
 
   // Reset dependent fields when country changes
@@ -391,17 +399,19 @@ export default function AccommodationPage() {
         }))
         
         setTours(transformedTours)
-        
+
         // Extract available destination filters from tour results
         const destinationSet = new Set<string>()
+
         transformedTours.forEach((tour: any) => {
-          // Prefer locality over destination for more specific filtering
+          // Add to destination filters
           if (tour.locality && tour.locality.trim() !== '') {
             destinationSet.add(tour.locality)
           } else if (tour.destination && tour.destination !== tour.locality) {
             destinationSet.add(tour.destination)
           }
         })
+
         setAvailableDestinationFilters(Array.from(destinationSet))
         
       } else {

@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
       availability: availability,
       response: response,
       pricing: {
-        singleRate: availability.bestRate?.singleRate ? formatPrice(availability.bestRate.singleRate) : null,
-        doubleRate: availability.bestRate?.doubleRate ? formatPrice(availability.bestRate.doubleRate) : null,
-        twinRate: availability.bestRate?.twinRate ? formatPrice(availability.bestRate.twinRate) : null,
+        singleRate: availability.bestRate?.singleRate ? formatPrice(availability.bestRate.singleRate, 'single') : null,
+        doubleRate: availability.bestRate?.doubleRate ? formatPrice(availability.bestRate.doubleRate, 'double') : null,
+        twinRate: availability.bestRate?.twinRate ? formatPrice(availability.bestRate.twinRate, 'twin') : null,
         currency: availability.bestRate?.currency || 'AUD'
       },
       dates: availability.availableDates
@@ -148,8 +148,8 @@ function generateAvailabilityResponse(product: any, availability: any): string {
   let response = `Great news! ${productName} is currently available. `
 
   if (availability.bestRate) {
-    const twinPrice = availability.bestRate.twinRate ? formatPrice(availability.bestRate.twinRate) : null
-    const singlePrice = availability.bestRate.singleRate ? formatPrice(availability.bestRate.singleRate) : null
+    const twinPrice = availability.bestRate.twinRate ? formatPrice(availability.bestRate.twinRate, 'twin') : null
+    const singlePrice = availability.bestRate.singleRate ? formatPrice(availability.bestRate.singleRate, 'single') : null
     
     if (twinPrice) {
       response += `Current pricing starts from ${twinPrice} per person twin share`
@@ -173,9 +173,18 @@ function generateAvailabilityResponse(product: any, availability: any): string {
   return response
 }
 
-function formatPrice(priceInCents: number): string {
-  // Convert from cents to dollars and format for per-person pricing
-  const dollarsPerPerson = Math.round(priceInCents / 200) // Divide by 200 (100 for cents + 2 for twin share)
+function formatPrice(priceInCents: number, rateType: 'single' | 'twin' | 'double' = 'twin'): string {
+  // Convert from cents to dollars and format correctly per rate type
+  let dollarsPerPerson: number
+
+  if (rateType === 'single') {
+    // Single rates are already per person, just convert from cents
+    dollarsPerPerson = Math.round(priceInCents / 100)
+  } else {
+    // Twin/double rates are total for 2 people, divide by 200 (100 for cents + 2 for per person)
+    dollarsPerPerson = Math.round(priceInCents / 200)
+  }
+
   return `AUD $${dollarsPerPerson.toLocaleString()}`
 }
 
@@ -202,7 +211,7 @@ export async function POST(request: NextRequest) {
             productCode,
             productName: product.name,
             available: availability.hasAvailability,
-            bestPrice: availability.bestRate?.twinRate ? formatPrice(availability.bestRate.twinRate) : 'POA',
+            bestPrice: availability.bestRate?.twinRate ? formatPrice(availability.bestRate.twinRate, 'twin') : 'POA',
             summary: availability.hasAvailability ? 'Available' : 'On request'
           })
         } else {

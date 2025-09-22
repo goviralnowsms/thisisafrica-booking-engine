@@ -1,8 +1,11 @@
 // Product image utility functions for efficient image loading
-// Uses local images for search results (fast) and Sanity for product details (high-res)
+// Uses Sanity primary images first, then local images as fallback
 
 let imageMap: Map<string, string> | null = null
 let imageMapPromise: Promise<Map<string, string>> | null = null
+
+let sanityPrimaryImages: Map<string, string> | null = null
+let sanityPrimaryImagesPromise: Promise<Map<string, string>> | null = null
 
 // Load and cache the image mapping (lazy loaded)
 function loadImageMap(): Promise<Map<string, string>> {
@@ -37,51 +40,109 @@ function loadImageMap(): Promise<Map<string, string>> {
   return imageMapPromise
 }
 
+// Load and cache Sanity primary images
+function loadSanityPrimaryImages(): Promise<Map<string, string>> {
+  if (sanityPrimaryImages) return Promise.resolve(sanityPrimaryImages)
+  if (sanityPrimaryImagesPromise) return sanityPrimaryImagesPromise
+
+  sanityPrimaryImagesPromise = (async () => {
+    try {
+      const response = await fetch('/api/sanity/primary-images', {
+        cache: 'force-cache',
+        next: { revalidate: 300 } // Cache for 5 minutes
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      sanityPrimaryImages = new Map<string, string>()
+
+      if (result.success && result.data) {
+        Object.entries(result.data).forEach(([productCode, imageUrl]) => {
+          if (typeof imageUrl === 'string') {
+            sanityPrimaryImages!.set(productCode, imageUrl)
+          }
+        })
+        console.log(`🖼️ Loaded ${sanityPrimaryImages.size} Sanity primary images`)
+      }
+
+      return sanityPrimaryImages
+    } catch (error) {
+      console.warn('Error loading Sanity primary images, using local fallbacks:', error)
+      // Return empty map on error
+      sanityPrimaryImages = new Map<string, string>()
+      return sanityPrimaryImages
+    }
+  })()
+
+  return sanityPrimaryImagesPromise
+}
+
 /**
- * Get local product image for search results (optimized for speed)
- * Now loads mapping on-demand rather than blocking component mount
+ * Get product image for search results - checks Sanity primary image first, then local images
+ * Optimized for speed with fallbacks
  */
 export async function getLocalProductImage(productCode: string): Promise<string> {
   try {
-    const map = await loadImageMap()
-    
-    // Check if we have a mapped image for this product code
-    const mappedImage = map.get(productCode)
-    if (mappedImage) {
-      return mappedImage
+    // First check Sanity primary images
+    const sanityMap = await loadSanityPrimaryImages()
+    const sanityImage = sanityMap.get(productCode)
+    if (sanityImage) {
+      console.log(`🖼️ Using Sanity primary image for ${productCode}`)
+      return sanityImage
+    }
+
+    // Fallback to local image map
+    const localMap = await loadImageMap()
+    const localImage = localMap.get(productCode)
+    if (localImage) {
+      console.log(`🖼️ Using local image for ${productCode}`)
+      return localImage
     }
   } catch (error) {
-    console.warn('Failed to load image map, using fallback:', error)
+    console.warn('Failed to load image maps, using fallback:', error)
   }
-  
-  // Fallback based on product type (using product code prefix)
+
+  // Final fallback based on product type (using product code prefix)
+  console.log(`🖼️ Using fallback image for ${productCode}`)
   return getProductTypeFallbackImage(productCode)
 }
 
 /**
- * Synchronous version that immediately returns fallback if no map is loaded
+ * Synchronous version that checks cached Sanity images first, then local images
  * This prevents blocking and ensures images always render quickly
  */
 export function getLocalProductImageSync(productCode: string | undefined, preloadedMap?: Map<string, string>): string {
-  // If we have a preloaded map, use it
+  // Safety check for undefined productCode
+  if (!productCode) {
+    return '/images/products/accommodation-hero.jpg'
+  }
+
+  // First check cached Sanity primary images if available
+  if (sanityPrimaryImages && sanityPrimaryImages.size > 0) {
+    const sanityImage = sanityPrimaryImages.get(productCode)
+    if (sanityImage) {
+      console.log(`🖼️ Using cached Sanity primary image for ${productCode}`)
+      return sanityImage
+    }
+  }
+
+  // If we have a preloaded local map, use it
   if (preloadedMap && preloadedMap.size > 0) {
     const mappedImage = preloadedMap.get(productCode)
     if (mappedImage) {
       return mappedImage
     }
   }
-  
-  // If we have the cached map, use it
+
+  // If we have the cached local map, use it
   if (imageMap && imageMap.size > 0) {
     const mappedImage = imageMap.get(productCode)
     if (mappedImage) {
       return mappedImage
     }
-  }
-  
-  // Safety check for undefined productCode
-  if (!productCode) {
-    return '/images/products/accommodation-hero.jpg'
   }
 
   // For group tours, try using an actual product image that's likely to be cached
@@ -90,7 +151,7 @@ export function getLocalProductImageSync(productCode: string | undefined, preloa
     // Use a specific product image that should load quickly
     return '/images/products/1522221588867576.jpg'
   }
-  
+
   // Always return immediate fallback - never block rendering
   return getProductTypeFallbackImage(productCode)
 }
@@ -144,12 +205,18 @@ export async function getLocalProductImages(productCode: string): Promise<string
 }
 
 /**
- * Preload image map in background (non-blocking)
+ * Preload both Sanity and local image maps in background (non-blocking)
  * Call this in useEffect to start loading but don't wait for it
  */
 export function preloadImageMapBackground(): void {
+  // Load Sanity images first (higher priority)
+  loadSanityPrimaryImages().catch(error => {
+    console.warn('Background Sanity image preload failed:', error)
+  })
+
+  // Load local images as backup
   loadImageMap().catch(error => {
-    console.warn('Background image map preload failed:', error)
+    console.warn('Background local image map preload failed:', error)
   })
 }
 

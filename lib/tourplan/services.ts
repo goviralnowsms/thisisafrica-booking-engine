@@ -1806,6 +1806,7 @@ export async function getProductDetails(productCode: string) {
       locality: option.OptGeneral?.LocalityDescription,
       class: option.OptGeneral?.ClassDescription,
       countries: extractCountriesFromAmenities(option.Amenities),
+      amenities: extractAmenitiesFromTourPlan(option.Amenities),
     };
   } catch (error) {
     console.error('Error getting product details:', error);
@@ -3138,6 +3139,33 @@ function getRailProductPricing(productCode: string) {
  * Extract countries from TourPlan amenities data
  * Countries are stored as amenities with category "CTY"
  */
+/**
+ * Extract amenities from TourPlan amenities data for accommodation products
+ */
+function extractAmenitiesFromTourPlan(amenities: any): string[] {
+  if (!amenities || !amenities.Amenity) {
+    return [];
+  }
+
+  // Handle both single amenity and array of amenities
+  const amenityArray = Array.isArray(amenities.Amenity) ? amenities.Amenity : [amenities.Amenity];
+
+  // Extract all non-country amenities (excluding CTY category)
+  const amenitiesList: string[] = [];
+
+  amenityArray.forEach((amenity: any) => {
+    // Skip country amenities (handled by extractCountriesFromAmenities)
+    if (amenity.AmenityCategory !== 'CTY' && amenity.AmenityDescription) {
+      const amenityName = amenity.AmenityDescription.trim();
+      if (amenityName && !amenitiesList.includes(amenityName)) {
+        amenitiesList.push(amenityName);
+      }
+    }
+  });
+
+  return amenitiesList.sort();
+}
+
 function extractCountriesFromAmenities(amenities: any): string[] {
   if (!amenities || !amenities.Amenity) {
     return [];
@@ -3145,11 +3173,11 @@ function extractCountriesFromAmenities(amenities: any): string[] {
 
   // Handle both single amenity and array of amenities
   const amenityArray = Array.isArray(amenities.Amenity) ? amenities.Amenity : [amenities.Amenity];
-  
+
   // Country mapping from TourPlan codes to display names
   const countryMapping: {[key: string]: string} = {
     'BW': 'Botswana',
-    'KE': 'Kenya', 
+    'KE': 'Kenya',
     'TZ': 'Tanzania',
     'ZW': 'Zimbabwe',
     'ZM': 'Zambia',

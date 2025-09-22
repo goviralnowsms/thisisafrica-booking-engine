@@ -991,7 +991,7 @@ export default function ProductDetailsPage() {
                 <Tabs defaultValue="introduction" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 rounded-t-lg h-12">
                     <TabsTrigger value="introduction" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Overview' : 'Introduction'}</TabsTrigger>
-                    <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rooms' : 'Details'}</TabsTrigger>
+                    <TabsTrigger value="details" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Amenities' : 'Details'}</TabsTrigger>
                     <TabsTrigger value="inclusions" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Inclusions' : 'Inclusions'}</TabsTrigger>
                     <TabsTrigger value="pricing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">{isAccommodation ? 'Rates' : 'Pricing'}</TabsTrigger>
                   </TabsList>
@@ -1011,14 +1011,49 @@ export default function ProductDetailsPage() {
                     </TabsContent>
                     
                     <TabsContent value="details" className="mt-0">
-                      <h2 className="text-2xl font-bold mb-4 text-amber-600">{isAccommodation ? 'Room Details' : 'Tour Details'}</h2>
+                      <h2 className="text-2xl font-bold mb-4 text-amber-600">{isAccommodation ? 'Amenities' : 'Tour Details'}</h2>
                       <div className="prose max-w-none">
-                        {product.content?.introduction ? (
-                          <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                            {product.content.introduction}
+                        {isAccommodation && product.amenities && product.amenities.length > 0 ? (
+                          <div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                              {product.amenities.map((amenity: string, index: number) => (
+                                <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                                  <div className="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0"></div>
+                                  <span className="text-gray-700 text-sm">{amenity}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {product.content?.introduction && (
+                              <div className="mt-6 pt-6 border-t border-gray-200">
+                                <h3 className="text-lg font-semibold mb-3 text-gray-800">Additional Information</h3>
+                                <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                                  {product.content.introduction}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : isAccommodation ? (
+                          <div>
+                            <p className="text-gray-600 mb-4">Amenities information is being updated. Please contact us for details about facilities and services.</p>
+                            {product.content?.introduction ? (
+                              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                                {product.content.introduction}
+                              </div>
+                            ) : (
+                              <p className="text-gray-700">{product.description}</p>
+                            )}
                           </div>
                         ) : (
-                          <p className="text-gray-700">{product.description}</p>
+                          // Non-accommodation products show normal details
+                          <div>
+                            {product.content?.introduction ? (
+                              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                                {product.content.introduction}
+                              </div>
+                            ) : (
+                              <p className="text-gray-700">{product.description}</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </TabsContent>
