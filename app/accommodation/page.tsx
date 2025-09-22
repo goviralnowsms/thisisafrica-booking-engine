@@ -169,32 +169,26 @@ export default function AccommodationPage() {
     preloadImageMapBackground()
   }, [])
 
-  // Update available destinations when country changes - ONLY from API
+  // Update available destinations when country changes - get destinations with actual accommodations
   useEffect(() => {
     const loadDestinationsFromAPI = async () => {
       if (selectedCountry && availableCountries.length > 0) {
         try {
-          console.log('🏨 Fetching destinations for country:', selectedCountry)
+          console.log('🏨 Fetching destinations with accommodations for country:', selectedCountry)
 
           const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
-          const response = await fetch(`/api/tourplan/destinations?productType=Accommodation&country=${encodeURIComponent(countryLabel)}`)
+          const response = await fetch(`/api/accommodation/destinations-for-country?country=${encodeURIComponent(countryLabel)}`)
           const result = await response.json()
 
           if (result.success && result.destinations) {
-            console.log('🏨 Got destinations from API:', result.destinations)
-            // Transform string array to {value, label} format
-            const transformedDestinations = result.destinations.map((dest: string) => ({
-              value: dest.toLowerCase().replace(/\s+/g, '-'),
-              label: dest,
-              tourPlanName: dest
-            }))
-            setAvailableDestinations(transformedDestinations)
+            console.log('🏨 Got destinations with accommodations:', result.destinations)
+            setAvailableDestinations(result.destinations)
           } else {
-            console.warn('🏨 No destinations found in API for this country')
+            console.warn('🏨 No destinations with accommodations found for this country')
             setAvailableDestinations([])
           }
         } catch (error) {
-          console.error('🏨 Error fetching destinations from API:', error)
+          console.error('🏨 Error fetching destinations with accommodations:', error)
           setAvailableDestinations([])
         }
       } else {
@@ -206,26 +200,39 @@ export default function AccommodationPage() {
     loadDestinationsFromAPI()
   }, [selectedCountry, availableCountries])
 
-  // Update available room types when country changes - ONLY from API
+  // Update available room types when country or destination changes - progressive filtering
   useEffect(() => {
     const loadRoomTypesFromAPI = async () => {
       if (selectedCountry && availableCountries.length > 0) {
         try {
-          console.log('🏨 Fetching room types for country:', selectedCountry)
-
           const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
-          const response = await fetch(`/api/accommodation/room-types-for-country?country=${encodeURIComponent(countryLabel)}`)
+          let destinationLabel = null
+
+          // If a destination is selected, get its label for filtering
+          if (selectedDestination && selectedDestination !== "select-option" && selectedDestination !== "all-destinations") {
+            destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
+          }
+
+          console.log('🏨 Fetching room types for:', { country: selectedCountry, destination: destinationLabel })
+
+          // Build API URL with progressive filtering
+          let apiUrl = `/api/accommodation/room-types-for-destination?country=${encodeURIComponent(countryLabel)}`
+          if (destinationLabel) {
+            apiUrl += `&destination=${encodeURIComponent(destinationLabel)}`
+          }
+
+          const response = await fetch(apiUrl)
           const result = await response.json()
 
           if (result.success && result.roomTypes) {
-            console.log('🏨 Got room types from API:', result.roomTypes)
+            console.log('🏨 Got room types:', result.roomTypes)
             setAvailableClasses(result.roomTypes)
           } else {
-            console.warn('🏨 No room types found in API for this country')
+            console.warn('🏨 No room types found for this location')
             setAvailableClasses([])
           }
         } catch (error) {
-          console.error('🏨 Error fetching room types from API:', error)
+          console.error('🏨 Error fetching room types:', error)
           setAvailableClasses([])
         }
       } else {
@@ -235,7 +242,7 @@ export default function AccommodationPage() {
     }
 
     loadRoomTypesFromAPI()
-  }, [selectedCountry, availableCountries])
+  }, [selectedCountry, availableCountries, selectedDestination, availableDestinations])
 
   // Reset dependent fields when country changes
   useEffect(() => {
@@ -247,6 +254,12 @@ export default function AccommodationPage() {
     setFilteredTours([])
     setError(null)
   }, [selectedCountry])
+
+  // Reset room type when destination changes
+  useEffect(() => {
+    // Clear class when destination changes (room types are destination-specific)
+    setSelectedClass("")
+  }, [selectedDestination])
   
   // Apply destination filtering when selectedDestinationFilters changes
   useEffect(() => {
