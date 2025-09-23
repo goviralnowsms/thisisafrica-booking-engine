@@ -40,12 +40,28 @@ pnpm build || { echo "❌ Build failed"; exit 1; }
 echo "🔍 Checking current PM2 processes..."
 pm2 list
 
-echo "🛑 Stopping all PM2 processes..."
-pm2 stop all
-pm2 delete all
+# Check if ecosystem config exists locally
+if [ -f ecosystem.config.js ]; then
+    echo "🔄 Using PM2 ecosystem config for zero-downtime deployment..."
 
-echo "🚀 Starting new PM2 process..."
-PORT=3000 pm2 start pnpm --name updated-tia -- start
+    # Check if app is already running
+    if pm2 list | grep -q "thisisafrica"; then
+        echo "♻️ Performing zero-downtime reload..."
+        pm2 reload ecosystem.config.js --update-env
+    else
+        echo "🚀 Starting application with cluster mode..."
+        pm2 start ecosystem.config.js
+    fi
+else
+    # Fallback to old method if ecosystem config doesn't exist
+    echo "⚠️  No ecosystem.config.js found, using legacy deployment (will cause downtime)..."
+    echo "🛑 Stopping all PM2 processes..."
+    pm2 stop all
+    pm2 delete all
+
+    echo "🚀 Starting new PM2 process..."
+    PORT=3000 pm2 start pnpm --name updated-tia -- start
+fi
 
 echo "💾 Saving PM2 configuration..."
 pm2 save
