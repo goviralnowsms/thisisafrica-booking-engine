@@ -52,6 +52,44 @@ const genericImages = {
   ]
 }
 
+// Function to fetch supplier images from Sanity
+const fetchSupplierImages = async (): Promise<Map<string, { imageUrl: string, alt: string }>> => {
+  try {
+    const response = await fetch('/api/sanity/accommodation-suppliers')
+    const result = await response.json()
+
+    const imageMap = new Map<string, { imageUrl: string, alt: string }>()
+
+    if (result.success && Array.isArray(result.data)) {
+      result.data.forEach((supplier: any) => {
+        if (supplier.supplierName && supplier.primaryImageUrl) {
+          // Store by supplier name (normalized to lowercase for matching)
+          const normalizedName = supplier.supplierName.toLowerCase().trim()
+          imageMap.set(normalizedName, {
+            imageUrl: supplier.primaryImageUrl,
+            alt: supplier.primaryImageAlt || supplier.supplierName
+          })
+
+          // Also store by associated product codes if available
+          if (supplier.associatedProductCodes && Array.isArray(supplier.associatedProductCodes)) {
+            supplier.associatedProductCodes.forEach((code: string) => {
+              imageMap.set(code, {
+                imageUrl: supplier.primaryImageUrl,
+                alt: supplier.primaryImageAlt || supplier.supplierName
+              })
+            })
+          }
+        }
+      })
+    }
+
+    return imageMap
+  } catch (error) {
+    console.error('Error fetching supplier images:', error)
+    return new Map()
+  }
+}
+
 // Preload common images for better performance
 if (typeof window !== 'undefined') {
   const preloadImages = [
@@ -69,20 +107,80 @@ if (typeof window !== 'undefined') {
 }
 
 // Get a specific image for accommodation type and name
-const getAccommodationImage = (type: string, name: string, supplier: string): string => {
+const getAccommodationImage = (
+  type: string,
+  name: string,
+  supplier: string,
+  productCode: string,
+  supplierImages: Map<string, { imageUrl: string, alt: string }> | null
+): { imageUrl: string, alt: string } => {
+  // First, try to get image from Sanity supplier images
+  if (supplierImages) {
+    // Try by product code first
+    if (productCode && supplierImages.has(productCode)) {
+      return supplierImages.get(productCode)!
+    }
+
+    // Try by supplier name (normalized)
+    const normalizedSupplier = supplier.toLowerCase().trim()
+    if (normalizedSupplier && supplierImages.has(normalizedSupplier)) {
+      return supplierImages.get(normalizedSupplier)!
+    }
+
+    // Try by hotel name from the full name (e.g., "Portswood Hotel - Standard Room" -> "portswood hotel")
+    const hotelNameMatch = name.toLowerCase().split(' - ')[0].trim()
+    if (hotelNameMatch && supplierImages.has(hotelNameMatch)) {
+      return supplierImages.get(hotelNameMatch)!
+    }
+
+    // Try partial matches for known variations
+    for (const [key, value] of supplierImages.entries()) {
+      if (key.includes('portswood') && (name.toLowerCase().includes('portswood') || supplier.toLowerCase().includes('portswood'))) {
+        return value
+      }
+      if (key.includes('sabi') && (name.toLowerCase().includes('sabi') || supplier.toLowerCase().includes('sabi'))) {
+        return value
+      }
+      if (key.includes('table bay') && (name.toLowerCase().includes('table bay') || supplier.toLowerCase().includes('table bay'))) {
+        return value
+      }
+      if (key.includes('cape grace') && (name.toLowerCase().includes('cape grace') || supplier.toLowerCase().includes('cape grace'))) {
+        return value
+      }
+    }
+  }
+
+  // Fallback to static images if no Sanity match
   const lowerName = (name + ' ' + supplier).toLowerCase()
-  
+
   // Specific accommodation mappings
-  if (lowerName.includes('portswood')) return '/images/products/portswood-captains-suite.jpg'
-  if (lowerName.includes('table bay')) return '/images/products/portswood-hotel-dining-1920x.jpg'
-  if (lowerName.includes('cape grace')) return '/images/products/portswoodhotelexterior10_facilities-1920.jpg'
-  if (lowerName.includes('sabi sabi')) return '/images/products/sabi-sabi1.png'
-  if (lowerName.includes('kapama')) return '/images/products/sabi-sabi2.jpg'
-  if (lowerName.includes('kuname')) return '/images/products/savannah-lodge-honeymoon.png'
-  if (lowerName.includes('savannah') || lowerName.includes('serena')) return '/images/products/savannah-suite.jpg'
-  
-  // Fallback to Portswood captains suite as the default accommodation image
-  return '/images/products/portswood-captains-suite.jpg'
+  let imageUrl = '/images/products/portswood-captains-suite.jpg' // default
+  let alt = 'Accommodation'
+
+  if (lowerName.includes('portswood')) {
+    imageUrl = '/images/products/portswood-captains-suite.jpg'
+    alt = 'Portswood Hotel'
+  } else if (lowerName.includes('table bay')) {
+    imageUrl = '/images/products/portswood-hotel-dining-1920x.jpg'
+    alt = 'Table Bay Hotel'
+  } else if (lowerName.includes('cape grace')) {
+    imageUrl = '/images/products/portswoodhotelexterior10_facilities-1920.jpg'
+    alt = 'Cape Grace Hotel'
+  } else if (lowerName.includes('sabi sabi')) {
+    imageUrl = '/images/products/sabi-sabi1.png'
+    alt = 'Sabi Sabi Bush Lodge'
+  } else if (lowerName.includes('kapama')) {
+    imageUrl = '/images/products/sabi-sabi2.jpg'
+    alt = 'Kapama Lodge'
+  } else if (lowerName.includes('kuname')) {
+    imageUrl = '/images/products/savannah-lodge-honeymoon.png'
+    alt = 'Kuname Lodge'
+  } else if (lowerName.includes('savannah') || lowerName.includes('serena')) {
+    imageUrl = '/images/products/savannah-suite.jpg'
+    alt = 'Savannah Lodge'
+  }
+
+  return { imageUrl, alt }
 }
 
 // Get a random generic image for accommodation type (kept for backward compatibility)
@@ -130,6 +228,7 @@ export default function AccommodationPage() {
   const [availableDestinationFilters, setAvailableDestinationFilters] = useState<string[]>([])
   const [selectedDestinationFilters, setSelectedDestinationFilters] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [supplierImages, setSupplierImages] = useState<Map<string, { imageUrl: string, alt: string }> | null>(null)
 
   // Initialize countries on mount - dynamically discover countries with actual accommodations
   useEffect(() => {
@@ -165,7 +264,14 @@ export default function AccommodationPage() {
       }
     }
 
+    const loadSupplierImages = async () => {
+      const images = await fetchSupplierImages()
+      console.log(`🖼️ Loaded ${images.size} supplier images from Sanity`)
+      setSupplierImages(images)
+    }
+
     loadAvailableCountries()
+    loadSupplierImages()
     preloadImageMapBackground()
   }, [])
 
@@ -395,21 +501,31 @@ export default function AccommodationPage() {
         console.log(`🏨 Found ${data.accommodations.length} accommodations`)
         
         // Transform accommodations to match tour structure
-        const transformedTours = data.accommodations.map((acc: any) => ({
-          ...acc,
-          id: acc.code || acc.id,
-          name: acc.displayName || acc.name || `${acc.hotelName || 'Hotel'} - ${acc.roomType || 'Room'}`,
-          // Use direct image path for faster loading - no Sanity checks
-          image: getAccommodationImage(acc.type || 'hotel', acc.name || '', acc.supplier || ''),
-          description: acc.description || acc.hotelDescription || '',
-          duration: `${acc.roomType || 'Accommodation'}`,
-          destination: tourPlanDestination,
-          locality: acc.locality || '',
-          actualDestination: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
-          roomTypeForFiltering: acc.roomType || '',
-          selectedDestinationFromDropdown: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
-          countries: [selectedCountry] // For filtering
-        }))
+        const transformedTours = data.accommodations.map((acc: any) => {
+          const imageData = getAccommodationImage(
+            acc.type || 'hotel',
+            acc.name || '',
+            acc.supplier || '',
+            acc.code || acc.id,
+            supplierImages
+          )
+
+          return {
+            ...acc,
+            id: acc.code || acc.id,
+            name: acc.displayName || acc.name || `${acc.hotelName || 'Hotel'} - ${acc.roomType || 'Room'}`,
+            image: imageData.imageUrl,
+            imageAlt: imageData.alt,
+            description: acc.description || acc.hotelDescription || '',
+            duration: `${acc.roomType || 'Accommodation'}`,
+            destination: tourPlanDestination,
+            locality: acc.locality || '',
+            actualDestination: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
+            roomTypeForFiltering: acc.roomType || '',
+            selectedDestinationFromDropdown: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
+            countries: [selectedCountry] // For filtering
+          }
+        })
         
         setTours(transformedTours)
 
@@ -662,7 +778,7 @@ export default function AccommodationPage() {
                     <div className="relative h-64">
                       <Image
                         src={tour.image || '/images/products/portswood-captains-suite.jpg'}
-                        alt={tour.name}
+                        alt={tour.imageAlt || tour.name}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
