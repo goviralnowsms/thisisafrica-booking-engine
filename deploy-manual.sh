@@ -9,23 +9,41 @@ cd /root/updated-tia || { echo "❌ Project directory not found"; exit 1; }
 echo "📥 Pulling latest code..."
 git pull origin main || { echo "❌ Git pull failed"; exit 1; }
 
-echo "🔧 Setting up environment..."
-if [ -f update-env-production.sh ]; then
-  chmod +x update-env-production.sh
-  ./update-env-production.sh
+echo "🔧 Checking environment setup..."
+
+# CRITICAL: Never overwrite existing .env.production.local
+if [ -f .env.production.local ]; then
+  echo "✅ Using existing .env.production.local"
+
+  # Run update script if it exists (for adding new variables)
+  if [ -f update-env-production.sh ]; then
+    echo "📝 Running environment update script..."
+    chmod +x update-env-production.sh
+    ./update-env-production.sh
+  fi
 else
-  echo "⚠️  update-env-production.sh not found, creating basic .env.production.local"
-  cat > .env.production.local << 'EOF'
-NEXT_PUBLIC_APP_URL=https://book.thisisafrica.com.au
-TOURPLAN_API_URL=https://pa-thisis.nx.tourplan.net/hostconnect/api/hostConnectApi
-TOURPLAN_AGENT_ID=SAMAGT
-TOURPLAN_PASSWORD=S@MAgt01
-STRIPE_SECRET_KEY=sk_test_51RYzX3I7q377qvY0tV1r8zvaaFqc6VRpfJBSjKS8yLqwVncitScxUi03ZofSAdOpD4JsXuEQHc4apGKqj7cI6nBX00KKzvpGtZ
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51RYzX3I7q377qvY08WDWHO5slz0a2Lua9lw8ibgNvAcAcmy1OFsiupYkjJSuiWEbubKcrXnx1xAsD3fVP8NPUTSm00isPspOLB
-NODE_ENV=production
-EOF
-  chmod 600 .env.production.local
+  echo "⚠️  .env.production.local not found!"
+
+  # Try to copy from .env.local if it exists
+  if [ -f .env.local ]; then
+    echo "📋 Creating .env.production.local from .env.local"
+    cp .env.local .env.production.local
+
+    # Update app URL for production
+    sed -i 's|NEXT_PUBLIC_APP_URL=.*|NEXT_PUBLIC_APP_URL=https://book.thisisafrica.com.au|g' .env.production.local
+    sed -i 's|NODE_ENV=.*|NODE_ENV=production|g' .env.production.local
+
+    echo "✅ Created .env.production.local from .env.local"
+  else
+    echo "❌ ERROR: No environment file found!"
+    echo "Please create .env.production.local with all necessary variables"
+    echo "You can copy from your local .env.local file"
+    exit 1
+  fi
 fi
+
+# Ensure proper permissions
+chmod 600 .env.production.local
 
 echo "🧹 Clearing build cache..."
 rm -rf .next

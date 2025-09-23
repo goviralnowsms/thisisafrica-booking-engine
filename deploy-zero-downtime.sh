@@ -48,15 +48,36 @@ git pull origin main || {
 
 # Step 2: Check for environment file
 if [ ! -f ".env.production.local" ]; then
-    print_warning ".env.production.local not found. Creating from .env.local..."
+    print_warning ".env.production.local not found!"
+
+    # Try to copy from .env.local if it exists
     if [ -f ".env.local" ]; then
+        print_status "Creating .env.production.local from .env.local..."
         cp .env.local .env.production.local
-        print_success "Created .env.production.local"
+
+        # Update app URL for production
+        sed -i 's|NEXT_PUBLIC_APP_URL=.*|NEXT_PUBLIC_APP_URL=https://book.thisisafrica.com.au|g' .env.production.local
+        sed -i 's|NODE_ENV=.*|NODE_ENV=production|g' .env.production.local
+
+        print_success "Created .env.production.local from .env.local"
     else
         print_error "No environment file found. Please create .env.production.local"
+        print_error "You can copy from your local .env.local file"
         exit 1
     fi
+else
+    print_success "Using existing .env.production.local"
+
+    # Run update script if it exists (for adding new variables)
+    if [ -f "update-env-production.sh" ]; then
+        print_status "Running environment update script..."
+        chmod +x update-env-production.sh
+        ./update-env-production.sh
+    fi
 fi
+
+# Ensure proper permissions
+chmod 600 .env.production.local
 
 # Step 3: Install dependencies if package.json changed
 print_status "📦 Checking dependencies..."
