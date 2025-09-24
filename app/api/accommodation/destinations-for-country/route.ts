@@ -143,10 +143,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Convert to array format
+    // Convert to array format and store the TourPlan name for API calls
     const destinations = Array.from(destinationSet).map(destination => ({
       value: destination.toLowerCase().replace(/\s+/g, '-'),
-      label: destination
+      label: destination,
+      tourPlanName: destination // Store the exact TourPlan locality name
     })).sort((a, b) => a.label.localeCompare(b.label))
 
     console.log(`🏨 Found ${destinations.length} destinations with accommodations for ${country}:`, destinations.map(d => d.label))

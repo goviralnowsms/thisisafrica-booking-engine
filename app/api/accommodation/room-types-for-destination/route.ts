@@ -88,93 +88,110 @@ export async function GET(request: NextRequest) {
 
     const xmlResponse = await response.text()
 
-    // Extract room types, filtering by destination if provided
-    const roomTypeSet = new Set<string>()
-    const shouldFilterByDestination = destination && destination !== 'all-destinations'
+    // Parse the full TourPlan API response using the standard XML parser
+    const xmlParser = new (await import('@/lib/tourplan/xml-parser')).TourPlanXMLParser()
 
-    // Split response into Option sections for destination filtering
-    const optionSections = xmlResponse.split('<Option>')
-
-    for (const section of optionSections) {
-      if (!section.includes('</Option>')) continue
-
-      // Check if this section matches our destination filter
-      if (shouldFilterByDestination) {
-        const localityMatch = section.match(/<LocalityDescription>(.*?)<\/LocalityDescription>/)
-        if (localityMatch) {
-          const sectionLocality = localityMatch[1].trim().toLowerCase()
-          const searchDestination = destination.toLowerCase().replace(/-/g, ' ')
-
-          // Skip if this section doesn't match our destination
-          if (!sectionLocality.includes(searchDestination) &&
-              !searchDestination.includes(sectionLocality) &&
-              sectionLocality !== searchDestination) {
-            continue
-          }
-        } else {
-          continue // Skip sections without locality info when filtering
-        }
-      }
-
-      // Extract room types from this section
-      const descriptionMatches = section.matchAll(/<Description>(.*?)<\/Description>/g)
-      for (const match of descriptionMatches) {
-        const description = match[1].trim()
-        if (description && description.length > 0 && description !== 'No description available') {
-          const cleanDescription = description
-            .replace(/\s+/g, ' ')
-            .replace(/^.*?-\s*/, '')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .replace(/&#39;/g, "'")
-            .trim()
-
-          if (cleanDescription.length > 0) {
-            roomTypeSet.add(cleanDescription)
-          }
-        }
-      }
-
-      // Extract from product codes
-      const optMatches = section.matchAll(/<Opt>(.*?)<\/Opt>/g)
-      for (const match of optMatches) {
-        const productCode = match[1]
-        if (productCode.includes('AC')) {
-          const acIndex = productCode.indexOf('AC')
-          const afterAC = productCode.substring(acIndex + 2)
-
-          if (afterAC.includes('LS')) roomTypeSet.add('Luxury Suite')
-          if (afterAC.includes('LM')) roomTypeSet.add('Manor Suite')
-          if (afterAC.includes('LV')) roomTypeSet.add('Villa')
-          if (afterAC.includes('DL')) roomTypeSet.add('Deluxe Room')
-          if (afterAC.includes('ST')) roomTypeSet.add('Standard Room')
-          if (afterAC.includes('EX')) roomTypeSet.add('Executive Suite')
-          if (afterAC.includes('SU')) roomTypeSet.add('Suite')
-          if (afterAC.includes('TN')) roomTypeSet.add('Tent')
-        }
-      }
-
-      // Extract from names
-      const nameMatches = section.matchAll(/<Name>(.*?)<\/Name>/g)
-      for (const match of nameMatches) {
-        const name = match[1].trim()
-        if (name && name.length > 0) {
-          const lowerName = name.toLowerCase()
-          if (lowerName.includes('luxury') && lowerName.includes('suite')) roomTypeSet.add('Luxury Suite')
-          else if (lowerName.includes('deluxe') && lowerName.includes('suite')) roomTypeSet.add('Deluxe Suite')
-          else if (lowerName.includes('executive') && lowerName.includes('suite')) roomTypeSet.add('Executive Suite')
-          else if (lowerName.includes('manor') && (lowerName.includes('suite') || lowerName.includes('house'))) roomTypeSet.add('Manor Suite')
-          else if (lowerName.includes('villa')) roomTypeSet.add('Villa')
-          else if (lowerName.includes('tent')) roomTypeSet.add('Luxury Tent')
-          else if (lowerName.includes('suite')) roomTypeSet.add('Suite')
-          else if (lowerName.includes('deluxe')) roomTypeSet.add('Deluxe Room')
-          else if (lowerName.includes('standard')) roomTypeSet.add('Standard Room')
-          else if (lowerName.includes('family')) roomTypeSet.add('Family Room')
-        }
-      }
+    let parsedResponse
+    try {
+      parsedResponse = xmlParser.parseResponse(xmlResponse)
+    } catch (error) {
+      console.error('🏨 XML parsing error for room types:', error)
+      return NextResponse.json({
+        success: false,
+        roomTypes: [],
+        error: 'Failed to parse TourPlan response'
+      }, { status: 500 })
     }
+
+    // Extract options from parsed response
+    const optionInfoReply = parsedResponse.OptionInfoReply
+    let rawOptions = []
+
+    if (optionInfoReply && optionInfoReply.Option) {
+      rawOptions = Array.isArray(optionInfoReply.Option) ? optionInfoReply.Option : [optionInfoReply.Option]
+    }
+
+    console.log(`🏨 Found ${rawOptions.length} total accommodation options for room type extraction`)
+
+    // Filter by destination if provided
+    let filteredOptions = rawOptions
+    if (destination && destination !== 'all-destinations') {
+      console.log(`🏨 Filtering room types by destination: ${destination}`)
+
+      filteredOptions = rawOptions.filter((option: any) => {
+        const locality = option.OptGeneral?.LocalityDescription || ''
+        const address1 = option.OptGeneral?.Address1 || ''
+        const address2 = option.OptGeneral?.Address2 || ''
+        const address3 = option.OptGeneral?.Address3 || ''
+        const supplierName = option.OptGeneral?.SupplierName || ''
+
+        const searchText = `${locality} ${address1} ${address2} ${address3} ${supplierName}`.toLowerCase()
+        const searchDestination = destination.toLowerCase().replace(/[-&]/g, ' ').replace(/\s+/g, ' ').trim()
+
+        // Handle Victoria & Alfred Waterfront variations
+        if (searchDestination.includes('victoria') && searchDestination.includes('alfred')) {
+          return searchText.includes('victoria') && searchText.includes('alfred') ||
+                 searchText.includes('v&a') || searchText.includes('v & a') ||
+                 searchText.includes('waterfront')
+        }
+
+        // Handle Sabi Sand/Sabi Sabi variations
+        if (searchDestination.includes('sabi')) {
+          return searchText.includes('sabi')
+        }
+
+        // General matching
+        return locality.toLowerCase().includes(searchDestination) ||
+               searchDestination.includes(locality.toLowerCase()) ||
+               searchText.includes(searchDestination)
+      })
+
+      console.log(`🏨 Filtered to ${filteredOptions.length} options for destination: ${destination}`)
+    }
+
+    // Extract room types from filtered options
+    const roomTypeSet = new Set<string>()
+
+    // Extract room types directly from the parsed API data
+    filteredOptions.forEach((option: any) => {
+      const description = option.OptGeneral?.Description || ''
+      const productCode = option.Opt || ''
+      const supplierName = option.OptGeneral?.SupplierName || ''
+
+      // Use the same room type extraction logic as the hotel-rooms API
+      if (description && description.trim() !== '') {
+        // Clean and normalize the description
+        const cleanDescription = description
+          .replace(/\s+/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim()
+
+        if (cleanDescription.length > 0) {
+          roomTypeSet.add(cleanDescription)
+        }
+      }
+
+      // Also extract from product codes as fallback
+      if (productCode.includes('AC')) {
+        const acIndex = productCode.indexOf('AC')
+        const afterAC = productCode.substring(acIndex + 2)
+
+        // Extract room type from code patterns
+        if (afterAC.includes('LS') || afterAC.endsWith('LS')) roomTypeSet.add('Luxury Suite')
+        else if (afterAC.includes('LV') || afterAC.endsWith('LV')) roomTypeSet.add('Luxury Villa')
+        else if (afterAC.includes('LM') || afterAC.endsWith('LM')) roomTypeSet.add('Manor Suite')
+        else if (afterAC.includes('DL') || afterAC.endsWith('DL')) roomTypeSet.add('Deluxe Suite')
+        else if (afterAC.includes('EX') || afterAC.endsWith('EX')) roomTypeSet.add('Executive Suite')
+        else if (afterAC.includes('SU') || afterAC.endsWith('SU')) roomTypeSet.add('Suite')
+        else if (afterAC.includes('ST') || afterAC.endsWith('ST')) roomTypeSet.add('Standard Room')
+        else if (afterAC.includes('TN') || afterAC.endsWith('TN')) roomTypeSet.add('Luxury Tent')
+        else if (afterAC.includes('FM') || afterAC.endsWith('FM')) roomTypeSet.add('Family Room')
+      }
+    })
 
     // Convert to array format
     const roomTypes = Array.from(roomTypeSet).map(roomType => ({

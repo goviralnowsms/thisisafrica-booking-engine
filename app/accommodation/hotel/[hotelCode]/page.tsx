@@ -106,9 +106,10 @@ export default function HotelDetailsPage() {
       setError(null)
       
       try {
-        // Get the product code from URL params
+        // Get the product code and room type filter from URL params
         const urlParams = new URLSearchParams(window.location.search)
         const productCode = urlParams.get('productCode') || ''
+        const roomTypeFilter = urlParams.get('roomType') || '' // Room type from search filter
         
         // Extract supplier code from product code if available
         let supplierCode = ''
@@ -150,11 +151,16 @@ export default function HotelDetailsPage() {
         
         // Fetch room types for this hotel
         const hotelName = decodeURIComponent(hotelCode)
-        const apiUrl = productCode 
+        let apiUrl = productCode
           ? `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}&productCode=${productCode}`
-          : supplierCode 
+          : supplierCode
             ? `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}&supplierCode=${supplierCode}`
             : `/api/accommodation/hotel-rooms?hotelName=${encodeURIComponent(hotelName)}`
+
+        // Add room type filter if provided
+        if (roomTypeFilter) {
+          apiUrl += `&roomTypeFilter=${encodeURIComponent(roomTypeFilter)}`
+        }
         
         const response = await fetch(apiUrl)
         const data = await response.json()

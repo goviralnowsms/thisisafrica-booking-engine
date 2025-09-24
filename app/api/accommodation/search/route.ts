@@ -282,8 +282,8 @@ export async function GET(request: NextRequest) {
           roomType: stayResults.RoomList?.RoomType || 'DB'
         }] : [],
         hasAvailability: isRealAccommodation ? stayResults.Availability === 'OK' : true,
-        // Accommodation-specific fields
-        roomType: option.OptGeneral?.Description || 'Standard Room',
+        // Accommodation-specific fields - extract room type more accurately
+        roomType: extractRoomTypeFromOption(option),
         hotelName: option.OptGeneral?.SupplierName || 'Safari Lodge',
         address: [
           option.OptGeneral?.Address2,
@@ -331,35 +331,31 @@ export async function GET(request: NextRequest) {
     } else if (useButtonDestinations) {
       console.log('🏨 Using real accommodation results from ButtonDestinations')
       
-      // Apply room type filtering if specified
+      // Apply exact room type filtering if specified - pass to TourPlan API
       if (roomClass) {
-        console.log(`🏨 Filtering by room type: ${roomClass}`)
+        console.log(`🏨 Should filter by exact room type in API call: ${roomClass}`)
+        // Note: Room type filtering should be done in the API request, not client-side
+        // The current implementation will be updated to pass room type to TourPlan API
+
         const beforeFilter = accommodations.length
+        const classLabel = roomClass.replace('-', ' ').toLowerCase()
+
+        // For now, apply strict exact matching until API filtering is implemented
         accommodations = accommodations.filter((acc: any) => {
-          const roomType = acc.roomType?.toLowerCase() || ''
-          const name = acc.name?.toLowerCase() || ''
-          const description = acc.description?.toLowerCase() || ''
-          const classFilter = roomClass.toLowerCase().replace('-', ' ')
-          
-          // Exact matching for specific room types
-          if (classFilter.includes('luxury')) {
-            // Luxury Room should ONLY match "luxury" but NOT "deluxe" or "tent"
-            return (roomType.includes('luxury') && !roomType.includes('deluxe') && !roomType.includes('tent')) ||
-                   (name.includes('luxury') && !name.includes('deluxe') && !name.includes('tent'))
-          } else if (classFilter.includes('deluxe')) {
-            // Deluxe Suite should only match deluxe
-            return roomType.includes('deluxe') || name.includes('deluxe')
-          } else if (classFilter.includes('tent')) {
-            // Luxury Tent should only match tent
-            return roomType.includes('tent') || name.includes('tent')
-          } else {
-            // Other room types - normal matching
-            return roomType.includes(classFilter) || 
-                   name.includes(classFilter) || 
-                   description.includes(classFilter)
-          }
+          const roomType = (acc.roomType || '').toLowerCase()
+          const name = (acc.name || '').toLowerCase()
+          const description = (acc.description || '').toLowerCase()
+
+          // Exact word matching - prevent "luxury suite" from matching "luxury villa"
+          const matchesRoomType = roomType === classLabel ||
+                                  roomType.includes(classLabel) && isExactRoomTypeMatch(roomType, classLabel)
+          const matchesName = name.includes(classLabel) && isExactRoomTypeMatch(name, classLabel)
+          const matchesDescription = description.includes(classLabel) && isExactRoomTypeMatch(description, classLabel)
+
+          return matchesRoomType || matchesName || matchesDescription
         })
-        console.log(`🏨 Filtered from ${beforeFilter} to ${accommodations.length} results for room type: ${roomClass}`)
+
+        console.log(`🏨 Exact room type filter: from ${beforeFilter} to ${accommodations.length} results for: ${roomClass}`)
       } else if (groupByHotel) {
         // Group by hotel name when no room type specified AND grouping is enabled
         console.log('🏨 Grouping accommodations by hotel name')
@@ -462,15 +458,79 @@ function determineAccommodationType(name: string, description: string): string {
   return 'lodge'
 }
 
+// Helper function to check exact room type matching
+function isExactRoomTypeMatch(text: string, filter: string): boolean {
+  // Handle specific room type conflicts
+  if (filter.includes('villa')) {
+    // "Villa" should ONLY match villa, not suite
+    return text.includes('villa') && !text.includes('suite')
+  } else if (filter.includes('suite')) {
+    // "Suite" should match suite but check for specific type
+    if (filter.includes('luxury')) {
+      return text.includes('luxury') && text.includes('suite') && !text.includes('villa')
+    } else if (filter.includes('deluxe')) {
+      return text.includes('deluxe') && text.includes('suite')
+    } else {
+      return text.includes('suite') && !text.includes('villa')
+    }
+  } else if (filter.includes('tent')) {
+    // "Tent" should only match tent
+    return text.includes('tent')
+  } else if (filter.includes('room')) {
+    // "Room" should match room but not suite or villa
+    return text.includes('room') && !text.includes('suite') && !text.includes('villa')
+  } else {
+    // Default exact match
+    return text.includes(filter)
+  }
+}
+
+// Helper function to extract room type from TourPlan option data
+function extractRoomTypeFromOption(option: any): string {
+  // Try multiple sources in order of preference
+  const description = option.OptGeneral?.Description || ''
+  const comment = option.OptGeneral?.Comment || ''
+  const supplierName = option.OptGeneral?.SupplierName || ''
+  const productCode = option.Opt || ''
+
+  // First try to extract from description (most reliable)
+  if (description) {
+    const lowerDesc = description.toLowerCase()
+
+    // Check for specific room types in order of specificity
+    if (lowerDesc.includes('luxury') && lowerDesc.includes('villa')) return 'Luxury Villa'
+    if (lowerDesc.includes('luxury') && lowerDesc.includes('suite')) return 'Luxury Suite'
+    if (lowerDesc.includes('deluxe') && lowerDesc.includes('suite')) return 'Deluxe Suite'
+    if (lowerDesc.includes('executive') && lowerDesc.includes('suite')) return 'Executive Suite'
+    if (lowerDesc.includes('manor') && (lowerDesc.includes('suite') || lowerDesc.includes('house'))) return 'Manor Suite'
+    if (lowerDesc.includes('presidential') && lowerDesc.includes('suite')) return 'Presidential Suite'
+    if (lowerDesc.includes('villa')) return 'Villa'
+    if (lowerDesc.includes('luxury') && lowerDesc.includes('tent')) return 'Luxury Tent'
+    if (lowerDesc.includes('suite')) return 'Suite'
+    if (lowerDesc.includes('deluxe') && lowerDesc.includes('room')) return 'Deluxe Room'
+    if (lowerDesc.includes('luxury') && lowerDesc.includes('room')) return 'Luxury Room'
+    if (lowerDesc.includes('standard') && lowerDesc.includes('room')) return 'Standard Room'
+    if (lowerDesc.includes('family') && lowerDesc.includes('room')) return 'Family Room'
+    if (lowerDesc.includes('tent')) return 'Tent'
+    if (lowerDesc.includes('room')) return 'Room'
+
+    // Return the description as-is if it doesn't match patterns
+    return description
+  }
+
+  // Fallback to product code analysis
+  return extractRoomTypeFromCode(productCode)
+}
+
 // Helper function to extract room type from product code (based on client's example)
 function extractRoomTypeFromCode(code: string): string {
   if (!code) return 'Standard Room'
-  
+
   // Based on client example: GKPACSAB019SABSUI
   // Format: [DEST][AC][SUPPLIER][ROOMTYPE]
-  
+
   const roomTypePart = code.substring(code.length - 6) // Last 6 characters
-  
+
   // Common room type mappings
   if (roomTypePart.includes('SUI')) return 'Luxury Suite'
   if (roomTypePart.includes('LUX')) return 'Luxury Room'
@@ -478,7 +538,7 @@ function extractRoomTypeFromCode(code: string): string {
   if (roomTypePart.includes('FAM')) return 'Family Room'
   if (roomTypePart.includes('VIL')) return 'Villa'
   if (roomTypePart.includes('TEN')) return 'Tented Suite'
-  
+
   // Default based on product name patterns
   return 'Safari Room'
 }

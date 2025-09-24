@@ -221,8 +221,46 @@ export function EnhancedRecommendationAssistant() {
     // Wait a moment before responding (simulates API processing)
     setTimeout(async () => {
       try {
+        // Enhanced intent detection and smart routing
+        // Handle contextual questions first
+        if (isAskingAboutPrice && hasCurrentProduct) {
+          const priceMessage: Message = {
+            id: generateMessageId(),
+            content: `${recommendationState.currentProduct!.name} is priced at ${recommendationState.currentProduct!.price}. This typically includes accommodation, meals, and activities as specified in the tour details. Would you like me to check current availability and exact pricing?`,
+            sender: "bot",
+            timestamp: new Date(),
+            options: [`Check current pricing for ${recommendationState.currentProduct!.name}`, "Compare with other tours", "See what's included", "Book this tour"]
+          }
+          setMessages((prev) => prev.filter(m => !m.isLoading).concat([priceMessage]))
+          return
+        }
+
+        if (isAskingAboutDuration && hasCurrentProduct) {
+          const durationMessage: Message = {
+            id: generateMessageId(),
+            content: `${recommendationState.currentProduct!.name} is a ${recommendationState.currentProduct!.duration} experience. This includes all activities, transfers, and experiences outlined in the itinerary.`,
+            sender: "bot",
+            timestamp: new Date(),
+            options: [`See detailed itinerary`, `Check availability`, `Compare duration with other tours`, `Book this tour`]
+          }
+          setMessages((prev) => prev.filter(m => !m.isLoading).concat([durationMessage]))
+          return
+        }
+
+        if (isComparingOptions && hasRecentProducts) {
+          const compareMessage: Message = {
+            id: generateMessageId(),
+            content: `I can help you compare the tours we've been looking at. Here are the key differences in duration, pricing, and experiences:`,
+            sender: "bot",
+            timestamp: new Date(),
+            products: recommendationState.lastProducts?.slice(0, 3),
+            options: ["Tell me more about differences", "Which is best value?", "Book the most popular", "See different options"]
+          }
+          setMessages((prev) => prev.filter(m => !m.isLoading).concat([compareMessage]))
+          return
+        }
+
         // Check if user is asking for dates regardless of stage
-        const lowerInput = input.toLowerCase()
         if (lowerInput.includes("see dates for") || lowerInput.includes("check availability for") || lowerInput.includes("see available dates")) {
           await handleFollowUpQuestion(input)
         } else if (lowerInput.includes("continue with preferences")) {
@@ -328,15 +366,21 @@ export function EnhancedRecommendationAssistant() {
       products: products.length > 0 ? products : undefined
     }
 
-    // If we have products, offer immediate actions
-    const followUpOptions = products.length > 0 
-      ? products.slice(0, 2).map(p => `See dates for ${p.name}`).concat(["Continue with preferences", "Contact specialist"])
+    // Smart follow-up options based on products found
+    const followUpOptions = products.length > 0
+      ? [
+          `Book ${products[0].name}`,
+          `Check availability for ${products[0].name}`,
+          products.length > 1 ? `Compare top ${Math.min(products.length, 3)} tours` : "See similar tours",
+          "Continue with preferences",
+          "Contact specialist"
+        ]
       : ["$1,000-$3,000", "$3,000-$5,000", "$5,000-$10,000", "$10,000+", "Show me all options"]
 
     const followUpMessage: Message = {
       id: generateMessageId(),
-      content: products.length > 0 
-        ? "Would you like to check availability for any of these tours, or shall we continue refining your preferences?"
+      content: products.length > 0
+        ? `These ${products.length} tours match your interests! You can book directly, check dates, or let me help refine your search further.`
         : "What's your approximate budget per person for this trip?",
       sender: "bot",
       timestamp: new Date(),
@@ -461,6 +505,17 @@ export function EnhancedRecommendationAssistant() {
 
   const handleFollowUpQuestion = async (input: string) => {
     const lowerInput = input.toLowerCase()
+
+    // Enhanced context awareness - remember what user just interacted with
+    const hasRecentProducts = recommendationState.lastProducts && recommendationState.lastProducts.length > 0
+    const hasCurrentProduct = recommendationState.currentProduct !== undefined
+
+    // Enhanced intent detection for better conversation intelligence
+    const isAskingAboutPrice = lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive') || lowerInput.includes('cheap') || lowerInput.includes('budget')
+    const isAskingAboutDuration = lowerInput.includes('long') || lowerInput.includes('days') || lowerInput.includes('duration') || lowerInput.includes('how many')
+    const isAskingAboutInclusions = lowerInput.includes('include') || lowerInput.includes('what\'s included') || lowerInput.includes('meals') || lowerInput.includes('accommodation')
+    const isComparingOptions = lowerInput.includes('compare') || lowerInput.includes('difference') || lowerInput.includes('which is better') || lowerInput.includes('vs')
+    const wantsRecommendations = lowerInput.includes('recommend') || lowerInput.includes('suggest') || lowerInput.includes('best') || lowerInput.includes('top')
     
     // Check if user is asking about special deals/offers
     if (lowerInput.includes("special deal") || lowerInput.includes("special offer") || lowerInput.includes("deal") || lowerInput.includes("discount") || lowerInput.includes("promotion")) {
@@ -559,25 +614,66 @@ export function EnhancedRecommendationAssistant() {
       }
     }
     
-    // Handle booking request
-    if (lowerInput.includes("book this") || lowerInput.includes("book the")) {
-      if (recommendationState.currentProduct) {
+    // Handle booking request - Enhanced logic to catch all booking variations
+    if (lowerInput.includes("book this") || lowerInput.includes("book the") || lowerInput.includes("book now") || lowerInput.startsWith("book ")) {
+      let productToBook: Product | undefined
+
+      // If user clicked "Book [product name]" button, extract the product
+      if (lowerInput.startsWith("book ") && !lowerInput.includes("book this")) {
+        const productName = lowerInput.replace(/^book /, '')
+        if (recommendationState.lastProducts) {
+          productToBook = recommendationState.lastProducts.find(p =>
+            p.name.toLowerCase() === productName.toLowerCase()
+          )
+        }
+      } else {
+        // Use current product for "book this" or "book now"
+        productToBook = recommendationState.currentProduct
+      }
+
+      if (productToBook) {
+        // Direct redirect to booking page with window.open to ensure it works
+        const bookingUrl = productToBook.url.startsWith('/')
+          ? `${window.location.origin}${productToBook.url}`
+          : productToBook.url
+
         const bookingMessage: Message = {
           id: generateMessageId(),
-          content: `Great choice! I'll help you book the ${recommendationState.currentProduct.name}. Click the link below to start your booking:`,
+          content: `Perfect! Opening the booking page for ${productToBook.name}...`,
           sender: "bot",
           timestamp: new Date(),
         }
-        
-        const bookingLinkMessage: Message = {
+
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([bookingMessage]))
+
+        // Open booking page in new tab after short delay
+        setTimeout(() => {
+          window.open(bookingUrl, '_blank', 'noopener,noreferrer')
+
+          // Add follow-up message
+          const followUpMessage: Message = {
+            id: generateMessageId(),
+            content: "The booking page has opened in a new tab. If it didn't open, you can also click the 'View Details' button on any product card to access the booking page.",
+            sender: "bot",
+            timestamp: new Date(),
+            options: ["Need booking help?", "View other tours", "Contact specialist", "Start new search"]
+          }
+          setMessages((prev) => [...prev, followUpMessage])
+        }, 1000)
+
+        return
+      } else {
+        // No product context - ask user to select
+        const noProductMessage: Message = {
           id: generateMessageId(),
-          content: `🔗 [Start Booking ${recommendationState.currentProduct.name}](${recommendationState.currentProduct.url})`,
+          content: "I'd be happy to help you book! Which tour would you like to book? Please click 'Check availability' on any product card first, or tell me the specific tour name.",
           sender: "bot",
           timestamp: new Date(),
-          options: ["Need help with booking?", "View other tours", "Contact specialist"]
+          options: recommendationState.lastProducts ?
+            recommendationState.lastProducts.map(p => `Book ${p.name}`).slice(0, 3).concat(["Show all tours"]) :
+            ["Show available tours", "Browse destinations", "Contact specialist"]
         }
-        
-        setMessages((prev) => prev.filter(m => !m.isLoading).concat([bookingMessage, bookingLinkMessage]))
+        setMessages((prev) => prev.filter(m => !m.isLoading).concat([noProductMessage]))
         return
       }
     }
@@ -766,6 +862,51 @@ export function EnhancedRecommendationAssistant() {
       }
     }
     
+    // Handle compare tours functionality
+    if (lowerInput.includes("compare") && hasRecentProducts) {
+      const toursToCompare = recommendationState.lastProducts!.slice(0, 3)
+      const compareDetails = toursToCompare.map(tour =>
+        `**${tour.name}**\n• Duration: ${tour.duration}\n• Price: ${tour.price}\n• Location: ${tour.location}`
+      ).join('\n\n')
+
+      const compareMessage: Message = {
+        id: generateMessageId(),
+        content: `Here's a comparison of the tours we've been discussing:\n\n${compareDetails}\n\nEach tour offers unique experiences and value. Would you like me to explain the differences in more detail?`,
+        sender: "bot",
+        timestamp: new Date(),
+        options: [
+          "Explain main differences",
+          "Which offers best value?",
+          `Book ${toursToCompare[0].name}`,
+          "See other options",
+          "Contact specialist"
+        ]
+      }
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([compareMessage]))
+      return
+    }
+
+    // Handle value questions
+    if ((lowerInput.includes("best value") || lowerInput.includes("which is better") || lowerInput.includes("recommend")) && hasRecentProducts) {
+      const recommendedTour = recommendationState.lastProducts![0] // First tour as recommendation
+      const valueMessage: Message = {
+        id: generateMessageId(),
+        content: `Based on duration, inclusions, and experiences, I'd recommend **${recommendedTour.name}** as the best value. It offers ${recommendedTour.duration} of comprehensive experiences at ${recommendedTour.price}, including all the highlights you'd expect from a premium African adventure.`,
+        sender: "bot",
+        timestamp: new Date(),
+        options: [
+          `Book ${recommendedTour.name}`,
+          `Check availability for ${recommendedTour.name}`,
+          "Why is this the best value?",
+          "See other options",
+          "Contact specialist"
+        ]
+      }
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([valueMessage]))
+      setRecommendationState({ ...recommendationState, currentProduct: recommendedTour })
+      return
+    }
+
     // Handle start over
     if (lowerInput.includes("start over") || lowerInput.includes("restart") || lowerInput.includes("start new")) {
       setRecommendationState({ stage: "asking_destination" })
@@ -780,31 +921,47 @@ export function EnhancedRecommendationAssistant() {
       return
     }
     
-    // Better default response based on context
-    if (recommendationState.lastProducts && recommendationState.lastProducts.length > 0) {
-      // User has seen products, offer relevant actions
-      const contextualMessage: Message = {
+    // Enhanced default response with better context awareness
+    if (hasCurrentProduct) {
+      // User has a specific product in context - offer product-specific actions
+      const currentProductMessage: Message = {
         id: generateMessageId(),
-        content: "I can help you with these options for the tours we've been discussing:",
+        content: `I can help you with ${recommendationState.currentProduct!.name} or show you other options:`,
         sender: "bot",
         timestamp: new Date(),
         options: [
-          "Check availability for tours", 
+          `Book ${recommendationState.currentProduct!.name}`,
+          `Check availability for ${recommendationState.currentProduct!.name}`,
+          "See similar tours",
+          "View special offers",
+          "Speak with specialist"
+        ],
+      }
+      setMessages((prev) => prev.filter(m => !m.isLoading).concat([currentProductMessage]))
+    } else if (hasRecentProducts) {
+      // User has seen products but no specific one selected
+      const contextualMessage: Message = {
+        id: generateMessageId(),
+        content: "I can help you with the tours we've been discussing or explore new options:",
+        sender: "bot",
+        timestamp: new Date(),
+        options: [
+          "Check availability for tours",
           "Show special offers",
           "See different destinations",
-          "Speak with specialist",
-          "Start new search"
+          "Compare these tours",
+          "Speak with specialist"
         ],
       }
       setMessages((prev) => prev.filter(m => !m.isLoading).concat([contextualMessage]))
     } else {
-      // No context, offer general help
+      // No context, offer fresh start
       const helpMessage: Message = {
         id: generateMessageId(),
-        content: "I'm here to help you find the perfect African adventure. What would you like to explore?",
+        content: "I'm here to help you find the perfect African adventure. What interests you most?",
         sender: "bot",
         timestamp: new Date(),
-        options: ["Browse all tours", "Show special offers", "Search by destination", "Speak with specialist"],
+        options: ["Safari adventures", "River cruises", "Luxury rail", "Show special offers", "Browse all tours"],
       }
       setMessages((prev) => prev.filter(m => !m.isLoading).concat([helpMessage]))
     }
@@ -915,17 +1072,43 @@ export function EnhancedRecommendationAssistant() {
                               })
                               handleOptionClick(`Check availability for ${product.name}`)
                             }}
-                            className="flex-1 min-w-[100px] px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600 transition-colors"
+                            className="flex-1 min-w-[90px] px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600 transition-colors"
                           >
-                            See Available Dates
+                            Check Dates
                           </button>
-                          <Link 
-                            href={product.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex-1 min-w-[100px] px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded text-xs hover:bg-gray-50 transition-colors text-center"
+                          <button
+                            onClick={() => {
+                              setRecommendationState({
+                                ...recommendationState,
+                                currentProduct: product,
+                                lastProducts: message.products
+                              })
+                              // Direct booking action
+                              const bookingUrl = product.url.startsWith('/')
+                                ? `${window.location.origin}${product.url}`
+                                : product.url
+                              window.open(bookingUrl, '_blank', 'noopener,noreferrer')
+
+                              // Add confirmation message
+                              const confirmMessage: Message = {
+                                id: generateMessageId(),
+                                content: `Opening booking page for ${product.name}...`,
+                                sender: "bot",
+                                timestamp: new Date(),
+                              }
+                              setMessages((prev) => [...prev, confirmMessage])
+                            }}
+                            className="flex-1 min-w-[80px] px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
                           >
-                            View Details
+                            Book Now
+                          </button>
+                          <Link
+                            href={product.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 min-w-[80px] px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded text-xs hover:bg-gray-50 transition-colors text-center"
+                          >
+                            Details
                           </Link>
                         </div>
                       </div>

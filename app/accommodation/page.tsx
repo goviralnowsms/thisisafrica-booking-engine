@@ -383,38 +383,33 @@ export default function AccommodationPage() {
       console.log(`🌍 Filtered ${tours.length} tours to ${filtered.length} based on destinations:`, selectedDestinationFilters)
     }
     
-    // Apply specific destination filtering from dropdown if selected
+    // Apply STRICT destination filtering to prevent cross-contamination
     if (selectedDestination && selectedDestination !== "select-option" && selectedDestination !== "all-destinations" && availableDestinations.length > 0) {
       const destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
       if (destinationLabel) {
+        const before = filtered.length
+
         filtered = filtered.filter((tour: any) => {
-          // Check if the accommodation's locality matches the selected destination
-          const localityMatch = tour.locality === destinationLabel
-          
-          // Enhanced partial matching for common name variations
-          const partialLocalityMatch = tour.locality && destinationLabel && 
-            (tour.locality.toLowerCase().includes(destinationLabel.toLowerCase()) ||
-             destinationLabel.toLowerCase().includes(tour.locality.toLowerCase()))
-          
-          // Special handling for known name variations
-          const normalizedDestination = destinationLabel.toLowerCase().replace(/\s+/g, ' ').trim()
-          const normalizedLocality = (tour.locality || '').toLowerCase().replace(/\s+/g, ' ').trim()
-          
-          // Handle "Sabi Sand" vs "Sabi Sabi" variations
-          const sabiMatch = (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sabi')) ||
-                           (normalizedDestination.includes('sabi sabi') && normalizedLocality.includes('sabi sand')) ||
-                           (normalizedDestination.includes('sabi sand') && normalizedLocality.includes('sabi sand')) ||
-                           (normalizedDestination.includes('sabi') && normalizedLocality.includes('sabi'))
-          
-          // Handle other game reserve variations
-          const gameReserveMatch = normalizedDestination.includes('game reserve') && normalizedLocality.includes('game reserve') &&
-            normalizedDestination.replace('game reserve', '').trim() === normalizedLocality.replace('game reserve', '').trim()
-          
-          return localityMatch || partialLocalityMatch || sabiMatch || gameReserveMatch ||
-                 tour.destination === destinationLabel ||
-                 tour.actualDestination === destinationLabel
+          const locality = (tour.locality || '').toLowerCase().trim()
+          const destination = destinationLabel.toLowerCase().trim()
+
+          // STRICT matching to prevent cross-contamination
+          if (destination.includes('victoria') && destination.includes('alfred')) {
+            // V&A Waterfront: ONLY match if locality contains victoria, alfred, waterfront or v&a
+            return locality.includes('victoria') || locality.includes('alfred') ||
+                   locality.includes('waterfront') || locality.includes('v&a') || locality.includes('v & a')
+          }
+          else if (destination.includes('sabi')) {
+            // Sabi Sand: ONLY match if locality contains sabi
+            return locality.includes('sabi')
+          }
+          else {
+            // Other destinations: exact or partial match
+            return locality === destination || locality.includes(destination) || destination.includes(locality)
+          }
         })
-        console.log(`🎯 Further filtered to ${filtered.length} tours for destination: ${destinationLabel}`)
+
+        console.log(`🎯 STRICT filtered from ${before} to ${filtered.length} for: ${destinationLabel}`)
       }
     }
     
@@ -481,15 +476,14 @@ export default function AccommodationPage() {
     
     try {
       const params = new URLSearchParams()
-      
-      // Always search for the broader country first, then filter client-side
-      // This ensures we get all accommodations in the country, then filter by specific destination
+
+      // Always search by country, then filter client-side (working approach)
       const country = availableCountries.find(c => c.value === selectedCountry)
       const tourPlanDestination = country?.label || selectedCountry
-      
+
       params.set('destination', tourPlanDestination)
       params.set('useButtonDestinations', 'true')
-      
+
       if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
       
       console.log('🏨 Accommodation search params:', params.toString())
@@ -814,8 +808,8 @@ export default function AccommodationPage() {
 
                       {/* CTA Buttons */}
                       <div className="flex flex-col gap-2">
-                        <Link 
-                          href={`/accommodation/hotel/${encodeURIComponent(tour.name.split(' - ')[0])}?productCode=${tour.code || tour.id}`}
+                        <Link
+                          href={`/accommodation/hotel/${encodeURIComponent(tour.name.split(' - ')[0])}?productCode=${tour.code || tour.id}${selectedClass ? `&roomType=${encodeURIComponent(selectedClass)}` : ''}`}
                           className="w-full"
                         >
                           <Button className="w-full bg-amber-500 hover:bg-amber-600">

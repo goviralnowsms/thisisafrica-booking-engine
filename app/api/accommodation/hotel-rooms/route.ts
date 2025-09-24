@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const hotelName = searchParams.get('hotelName') || ''
     const productCode = searchParams.get('productCode') || ''
     const supplierCodeParam = searchParams.get('supplierCode') || ''
+    const roomTypeFilter = searchParams.get('roomTypeFilter') || '' // Room type filter from search
     const destination = searchParams.get('destination') || 'South Africa'
     const dateFrom = searchParams.get('dateFrom') || '2026-07-15'
     const dateTo = searchParams.get('dateTo') || '2026-07-18'
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
       hotelName,
       productCode,
       supplierCodeParam,
+      roomTypeFilter,
       destination,
       dateFrom,
       dateTo,
@@ -314,8 +316,37 @@ export async function GET(request: NextRequest) {
       }
     })
     
+    // Apply room type filter if provided (exact matching to prevent Villa/Suite confusion)
+    let filteredRooms = rooms
+    if (roomTypeFilter) {
+      console.log(`🏨 Applying room type filter: "${roomTypeFilter}"`)
+
+      const filterLower = roomTypeFilter.toLowerCase().replace('-', ' ')
+
+      filteredRooms = rooms.filter((room: any) => {
+        const roomTypeLower = room.roomType.toLowerCase()
+
+        // Exact matching to prevent conflicts
+        if (filterLower.includes('villa')) {
+          // Villa should ONLY match villa, not suite
+          return roomTypeLower.includes('villa') && !roomTypeLower.includes('suite')
+        } else if (filterLower.includes('luxury') && filterLower.includes('suite')) {
+          // Luxury Suite should match luxury suite but not villa
+          return roomTypeLower.includes('luxury') && roomTypeLower.includes('suite') && !roomTypeLower.includes('villa')
+        } else if (filterLower.includes('deluxe')) {
+          return roomTypeLower.includes('deluxe')
+        } else if (filterLower.includes('suite')) {
+          return roomTypeLower.includes('suite') && !roomTypeLower.includes('villa')
+        } else {
+          return roomTypeLower.includes(filterLower)
+        }
+      })
+
+      console.log(`🏨 Filtered from ${rooms.length} to ${filteredRooms.length} rooms matching "${roomTypeFilter}"`)
+    }
+
     // Remove duplicates based on room type
-    const uniqueRooms = rooms.reduce((acc: any[], room: any) => {
+    const uniqueRooms = filteredRooms.reduce((acc: any[], room: any) => {
       const existing = acc.find(r => r.roomType === room.roomType)
       if (!existing || !existing.productCode) {
         // If no existing room with this type, or existing has no code, use this one
