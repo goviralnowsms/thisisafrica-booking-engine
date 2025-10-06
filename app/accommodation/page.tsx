@@ -204,6 +204,7 @@ interface Accommodation {
   category: string
   image: string
   roomType?: string
+  starRating?: string
   rates?: any[]
   hasAvailability?: boolean
   features?: string[]
@@ -264,15 +265,8 @@ export default function AccommodationPage() {
       }
     }
 
-    const loadSupplierImages = async () => {
-      const images = await fetchSupplierImages()
-      console.log(`🖼️ Loaded ${images.size} supplier images from Sanity`)
-      setSupplierImages(images)
-    }
-
+    // Only load countries on mount - images will be loaded when search is performed
     loadAvailableCountries()
-    loadSupplierImages()
-    preloadImageMapBackground()
   }, [])
 
   // Update available destinations when country changes - get destinations with actual accommodations
@@ -306,22 +300,23 @@ export default function AccommodationPage() {
     loadDestinationsFromAPI()
   }, [selectedCountry, availableCountries])
 
-  // Update available room types when country or destination changes - progressive filtering
+  // Update available star ratings when country changes - should work with just country selection
   useEffect(() => {
-    const loadRoomTypesFromAPI = async () => {
+    const loadStarRatingsFromAPI = async () => {
       if (selectedCountry && availableCountries.length > 0) {
         try {
           const countryLabel = availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry
           let destinationLabel = null
 
-          // If a destination is selected, get its label for filtering
-          if (selectedDestination && selectedDestination !== "select-option" && selectedDestination !== "all-destinations") {
+          // If a destination is selected (but not "all-destinations"), get its label for filtering
+          if (selectedDestination && selectedDestination !== "" && selectedDestination !== "select-option" && selectedDestination !== "all-destinations") {
             destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
           }
+          // For no destination or "all-destinations", we'll fetch star ratings for the whole country
 
-          console.log('🏨 Fetching room types for:', { country: selectedCountry, destination: destinationLabel })
+          console.log('🏨 Fetching star ratings for:', { country: countryLabel, destination: destinationLabel || 'Country-wide' })
 
-          // Build API URL with progressive filtering
+          // Build API URL - always include country
           let apiUrl = `/api/accommodation/room-types-for-destination?country=${encodeURIComponent(countryLabel)}`
           if (destinationLabel) {
             apiUrl += `&destination=${encodeURIComponent(destinationLabel)}`
@@ -331,14 +326,14 @@ export default function AccommodationPage() {
           const result = await response.json()
 
           if (result.success && result.roomTypes) {
-            console.log('🏨 Got room types:', result.roomTypes)
+            console.log('🏨 Got star ratings:', result.roomTypes)
             setAvailableClasses(result.roomTypes)
           } else {
-            console.warn('🏨 No room types found for this location')
+            console.warn('🏨 No star ratings found for this location')
             setAvailableClasses([])
           }
         } catch (error) {
-          console.error('🏨 Error fetching room types:', error)
+          console.error('🏨 Error fetching star ratings:', error)
           setAvailableClasses([])
         }
       } else {
@@ -347,7 +342,7 @@ export default function AccommodationPage() {
       }
     }
 
-    loadRoomTypesFromAPI()
+    loadStarRatingsFromAPI()
   }, [selectedCountry, availableCountries, selectedDestination, availableDestinations])
 
   // Reset dependent fields when country changes
@@ -361,29 +356,31 @@ export default function AccommodationPage() {
     setError(null)
   }, [selectedCountry])
 
-  // Reset room type when destination changes
-  useEffect(() => {
-    // Clear class when destination changes (room types are destination-specific)
-    setSelectedClass("")
-  }, [selectedDestination])
+  // Don't reset star rating when destination changes - user should be able to filter by destination + star rating
+  // useEffect(() => {
+  //   setSelectedClass("")
+  // }, [selectedDestination])
   
   // Apply destination filtering when selectedDestinationFilters changes
   useEffect(() => {
+    console.log(`🔍 Starting filtering with ${tours.length} tours`)
+    console.log(`🔍 Filters: Destination="${selectedDestination}", StarRating="${selectedClass}"`)
+
     let filtered = tours
-    
-    // Apply destination filtering
+
+    // Apply destination filtering from checkboxes
     if (selectedDestinationFilters.length > 0) {
       filtered = filtered.filter((tour: any) => {
         return selectedDestinationFilters.some(selectedDest =>
-          tour.locality === selectedDest || 
+          tour.locality === selectedDest ||
           tour.destination === selectedDest ||
           (tour.countries && tour.countries.includes(selectedDest))
         )
       })
-      console.log(`🌍 Filtered ${tours.length} tours to ${filtered.length} based on destinations:`, selectedDestinationFilters)
+      console.log(`🌍 Checkbox filtered ${tours.length} tours to ${filtered.length} based on destinations:`, selectedDestinationFilters)
     }
-    
-    // Apply STRICT destination filtering to prevent cross-contamination
+
+    // Apply STRICT destination filtering from dropdown to prevent cross-contamination
     if (selectedDestination && selectedDestination !== "select-option" && selectedDestination !== "all-destinations" && availableDestinations.length > 0) {
       const destinationLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
       if (destinationLabel) {
@@ -392,59 +389,51 @@ export default function AccommodationPage() {
         filtered = filtered.filter((tour: any) => {
           const locality = (tour.locality || '').toLowerCase().trim()
           const destination = destinationLabel.toLowerCase().trim()
+          const hotelName = (tour.name || '').toLowerCase().trim()
+          const supplier = (tour.supplier || '').toLowerCase().trim()
 
-          // STRICT matching to prevent cross-contamination
-          if (destination.includes('victoria') && destination.includes('alfred')) {
-            // V&A Waterfront: ONLY match if locality contains victoria, alfred, waterfront or v&a
-            return locality.includes('victoria') || locality.includes('alfred') ||
-                   locality.includes('waterfront') || locality.includes('v&a') || locality.includes('v & a')
+          // Debug logging for troubleshooting
+          const isMatch = (() => {
+            if (destination.includes('victoria') && destination.includes('alfred')) {
+              // V&A Waterfront: MUST contain waterfront keywords AND NOT sabi
+              const hasWaterfront = locality.includes('victoria') || locality.includes('alfred') ||
+                                    locality.includes('waterfront') || locality.includes('v&a') || locality.includes('v & a')
+              const hasSabi = locality.includes('sabi') || hotelName.includes('sabi') || supplier.includes('sabi')
+              return hasWaterfront && !hasSabi
+            }
+            else if (destination.includes('sabi')) {
+              // Sabi Sand: MUST contain sabi AND NOT waterfront
+              const hasSabi = locality.includes('sabi') || hotelName.includes('sabi') || supplier.includes('sabi')
+              const hasWaterfront = locality.includes('waterfront') || locality.includes('victoria') || locality.includes('alfred')
+              return hasSabi && !hasWaterfront
+            }
+            else {
+              // Other destinations: exact or partial match
+              return locality === destination || locality.includes(destination) || destination.includes(locality)
+            }
+          })()
+
+          // Debug log for Portswood specifically
+          if (hotelName.includes('portswood') || supplier.includes('portswood')) {
+            console.log(`🏨 PORTSWOOD DEBUG - Destination: "${destination}", Locality: "${locality}", Hotel: "${hotelName}", Match: ${isMatch}`)
           }
-          else if (destination.includes('sabi')) {
-            // Sabi Sand: ONLY match if locality contains sabi
-            return locality.includes('sabi')
-          }
-          else {
-            // Other destinations: exact or partial match
-            return locality === destination || locality.includes(destination) || destination.includes(locality)
-          }
+
+          return isMatch
         })
 
         console.log(`🎯 STRICT filtered from ${before} to ${filtered.length} for: ${destinationLabel}`)
       }
     }
     
-    // Apply room type filtering from dropdown if selected
+    // Apply star rating filtering from dropdown if selected
     if (selectedClass && selectedClass !== "select-option") {
-      const classLabel = availableClasses.find(c => c.value === selectedClass)?.label?.toLowerCase()
-      if (classLabel) {
-        filtered = filtered.filter((tour: any) => {
-          const roomType = (tour.roomTypeForFiltering || tour.duration || '').toLowerCase()
-          const name = (tour.name || '').toLowerCase()
-          const description = (tour.description || '').toLowerCase()
-          
-          // Handle specific room type matching
-          if (classLabel.includes('luxury') && !classLabel.includes('tent')) {
-            return (roomType.includes('luxury') && !roomType.includes('tent')) ||
-                   (name.includes('luxury') && !name.includes('tent'))
-          } else if (classLabel.includes('deluxe')) {
-            return roomType.includes('deluxe') || name.includes('deluxe')
-          } else if (classLabel.includes('tent')) {
-            return roomType.includes('tent') || name.includes('tent')
-          } else if (classLabel.includes('suite')) {
-            return roomType.includes('suite') || name.includes('suite')
-          } else if (classLabel.includes('villa')) {
-            return roomType.includes('villa') || name.includes('villa')
-          } else if (classLabel.includes('standard')) {
-            return roomType.includes('standard') || name.includes('standard')
-          } else {
-            // General matching for other types
-            return roomType.includes(classLabel) || 
-                   name.includes(classLabel) || 
-                   description.includes(classLabel)
-          }
-        })
-        console.log(`🏨 Further filtered to ${filtered.length} tours for room type: ${classLabel}`)
-      }
+      // selectedClass now contains the TourPlan star code (15, 25, 35, 45, 55, 65)
+      filtered = filtered.filter((tour: any) => {
+        // Match the star rating exactly
+        return tour.starRating === selectedClass
+      })
+      const starLabel = availableClasses.find(c => c.value === selectedClass)?.label
+      console.log(`🏨 Filtered to ${filtered.length} accommodations with star rating: ${starLabel} (code: ${selectedClass})`)
     }
     
     setFilteredTours(filtered)
@@ -473,7 +462,23 @@ export default function AccommodationPage() {
     setLoading(true)
     setError(null)
     setSearchPerformed(true)
-    
+
+    // Load supplier images only when needed (on search)
+    let currentSupplierImages = supplierImages
+    if (!currentSupplierImages) {
+      try {
+        const images = await fetchSupplierImages()
+        console.log(`🖼️ Loaded ${images.size} supplier images from Sanity`)
+        setSupplierImages(images)
+        currentSupplierImages = images
+      } catch (error) {
+        console.warn('Failed to load supplier images:', error)
+        const emptyMap = new Map()
+        setSupplierImages(emptyMap) // Set empty map to prevent retrying
+        currentSupplierImages = emptyMap
+      }
+    }
+
     try {
       const params = new URLSearchParams()
 
@@ -484,16 +489,16 @@ export default function AccommodationPage() {
       params.set('destination', tourPlanDestination)
       params.set('useButtonDestinations', 'true')
 
-      if (selectedClass && selectedClass !== "select-option") params.set('class', selectedClass)
-      
+      if (selectedClass && selectedClass !== "select-option") params.set('starRating', selectedClass)
+
       console.log('🏨 Accommodation search params:', params.toString())
-      
+
       const response = await fetch(`/api/accommodation/search?${params}`)
       const data = await response.json()
-      
+
       if (data.success && data.accommodations) {
         console.log(`🏨 Found ${data.accommodations.length} accommodations`)
-        
+
         // Transform accommodations to match tour structure
         const transformedTours = data.accommodations.map((acc: any) => {
           const imageData = getAccommodationImage(
@@ -501,7 +506,7 @@ export default function AccommodationPage() {
             acc.name || '',
             acc.supplier || '',
             acc.code || acc.id,
-            supplierImages
+            currentSupplierImages
           )
 
           return {
@@ -511,11 +516,12 @@ export default function AccommodationPage() {
             image: imageData.imageUrl,
             imageAlt: imageData.alt,
             description: acc.description || acc.hotelDescription || '',
-            duration: `${acc.roomType || 'Accommodation'}`,
+            duration: `${acc.roomType || 'Accommodation'}`,  // Keep for internal use but not displayed
             destination: tourPlanDestination,
             locality: acc.locality || '',
             actualDestination: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
             roomTypeForFiltering: acc.roomType || '',
+            starRating: acc.starRating || '',  // Ensure starRating is passed through
             selectedDestinationFromDropdown: selectedDestination ? (availableDestinations.find(d => d.value === selectedDestination)?.label || selectedDestination) : '',
             countries: [selectedCountry] // For filtering
           }
@@ -570,6 +576,42 @@ export default function AccommodationPage() {
     }
   }
 
+  const renderStarRating = (starRating: string | undefined) => {
+    if (!starRating) return null
+
+    // Parse the star rating (now comes as simple numbers: 1, 2, 3, 4, 5, 6)
+    const rating = parseInt(starRating)
+
+    if (isNaN(rating) || rating < 1 || rating > 6) return null
+
+    // For 6 star, show as luxury/special
+    if (rating === 6) {
+      return (
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Star
+              key={i}
+              className="h-4 w-4 fill-amber-500 text-amber-500"
+            />
+          ))}
+          <span className="text-sm text-amber-600 font-semibold ml-1">Luxury</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star
+            key={i}
+            className={`h-4 w-4 ${i < rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'}`}
+          />
+        ))}
+        <span className="text-sm text-gray-600 ml-1">({rating} Star Hotel)</span>
+      </div>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -602,7 +644,7 @@ export default function AccommodationPage() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-100 rounded-lg p-6">
               <p className="text-sm text-gray-700 mb-4 text-center">
-                Select a country and room type to find specific accommodations. Room type selection helps filter to your preferred accommodation level.
+                Select a country and star rating to find specific accommodations. Star rating helps filter to your preferred hotel class.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={selectedCountry} onValueChange={(value) => setSelectedCountry(value)}>
@@ -618,13 +660,13 @@ export default function AccommodationPage() {
                   </SelectContent>
                 </Select>
 
-                <Select 
-                  value={selectedDestination} 
+                <Select
+                  value={selectedDestination}
                   onValueChange={(value) => setSelectedDestination(value)}
                   disabled={!selectedCountry || !availableDestinations || availableDestinations.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder="Select Destination" />
+                    <SelectValue placeholder="Select Destination (Optional)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem key="all-destinations" value="all-destinations">
@@ -638,15 +680,20 @@ export default function AccommodationPage() {
                   </SelectContent>
                 </Select>
 
-                <Select 
-                  value={selectedClass} 
-                  onValueChange={(value) => setSelectedClass(value)}
+                <Select
+                  value={selectedClass}
+                  onValueChange={(value) => setSelectedClass(value === 'clear' ? '' : value)}
                   disabled={!selectedCountry || !availableClasses || availableClasses.length === 0}
                 >
                   <SelectTrigger className="bg-amber-500 text-white border-amber-500 disabled:bg-gray-400 disabled:text-gray-600">
-                    <SelectValue placeholder="Select Room Type (Optional)" />
+                    <SelectValue placeholder="Select Star Rating (Optional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    {selectedClass && (
+                      <SelectItem key="clear-rating" value="clear">
+                        Clear Star Rating
+                      </SelectItem>
+                    )}
                     {availableClasses?.map((cls, index) => (
                       <SelectItem key={`${cls.value}-${index}`} value={cls.value}>
                         {cls.label}
@@ -673,6 +720,21 @@ export default function AccommodationPage() {
                   )}
                 </Button>
               </div>
+              {/* Clear Filters Button - shows when filters are applied */}
+              {(selectedDestination || selectedClass) && (
+                <div className="mt-4 text-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedDestination("")
+                      setSelectedClass("")
+                    }}
+                    className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -727,11 +789,11 @@ export default function AccommodationPage() {
                         if (classLabel) parts.push(classLabel)
                       }
                       parts.push('accommodations in')
-                      if (selectedDestination && selectedDestination !== "select-option") {
+                      if (selectedDestination && selectedDestination !== "select-option" && selectedDestination !== "all-destinations") {
                         const destLabel = availableDestinations.find(d => d.value === selectedDestination)?.label
                         if (destLabel) parts.push(destLabel)
                       } else {
-                        parts.push(selectedCountry)
+                        parts.push(availableCountries.find(c => c.value === selectedCountry)?.label || selectedCountry)
                       }
                       return `Showing ${parts.join(' ')}`
                     })()}
@@ -748,6 +810,25 @@ export default function AccommodationPage() {
                   <p className="text-gray-600">Use the search form above to find accommodations.</p>
                 )}
               </div>
+              {/* New Search Button */}
+              {filteredTours.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCountry("")
+                    setSelectedDestination("")
+                    setSelectedClass("")
+                    setSearchPerformed(false)
+                    setTours([])
+                    setFilteredTours([])
+                    setSelectedDestinationFilters([])
+                    setError(null)
+                  }}
+                  className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                >
+                  Start New Search
+                </Button>
+              )}
             </div>
 
       {/* Error Message */}
@@ -796,11 +877,17 @@ export default function AccommodationPage() {
                         <MapPin className="h-4 w-4 mr-1" />
                         <span className="text-sm">{tour.destination}</span>
                       </div>
-                      
-                      <div className="flex items-center text-gray-600 mb-3">
-                        <Bed className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{tour.duration}</span>
-                      </div>
+
+                      {tour.starRating ? (
+                        <div className="mb-3">
+                          {renderStarRating(tour.starRating)}
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-gray-600 mb-3">
+                          <Hotel className="h-4 w-4 mr-1" />
+                          <span className="text-sm">Hotel Accommodation</span>
+                        </div>
+                      )}
                       
                       <p className="text-gray-600 mb-4 line-clamp-3">
                         {tour.description}

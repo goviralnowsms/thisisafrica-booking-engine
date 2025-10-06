@@ -58,7 +58,7 @@ export default defineType({
       of: [
         {
           type: 'object',
-          name: 'galleryImage',
+          name: 'productGalleryImage',
           title: 'Gallery Image',
           fields: [
             {

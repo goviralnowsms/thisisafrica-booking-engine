@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Extract search parameters
     const destination = searchParams.get('destination') || undefined
     const productCode = searchParams.get('productCode') || undefined
-    const roomClass = searchParams.get('class') || undefined // Room type filter
+    const starRating = searchParams.get('starRating') || undefined // Star rating filter (TourPlan codes: 15, 25, 35, 45, 55, 65)
     const dateFrom = searchParams.get('dateFrom') || '2026-07-15'
     const dateTo = searchParams.get('dateTo') || '2026-07-18'
     const adults = searchParams.get('adults') ? parseInt(searchParams.get('adults')!) : 2
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     console.log('🏨 Accommodation search request:', {
       destination,
       productCode,
-      roomClass,
+      starRating,
       dateFrom,
       dateTo,
       adults,
@@ -70,10 +70,9 @@ export async function GET(request: NextRequest) {
 </Request>`;
     } else if (useButtonDestinations && destination) {
       // Strategy 2: Use TourPlan recommended ButtonDestinations structure
-      // Use Info="G" (general) to get all accommodations first
-      // Can switch to "GS" later if we need pricing
+      // Use Info="G" for general data to get star ratings and basic info
       const infoParam = 'G';
-      
+
       xml = `<?xml version="1.0"?>
 <!DOCTYPE Request SYSTEM "hostConnect_5_05_000.dtd">
 <Request>
@@ -93,7 +92,7 @@ export async function GET(request: NextRequest) {
       <RoomConfig>
         <Adults>${adults}</Adults>
         ${children > 0 ? `<Children>${children}</Children>` : ''}
-        <Type>DB</Type>
+        <RoomType>DB</RoomType>
       </RoomConfig>
     </RoomConfigs>
   </OptionInfoRequest>
@@ -290,7 +289,25 @@ export async function GET(request: NextRequest) {
           option.OptGeneral?.Address3,
           option.OptGeneral?.Address4
         ].filter(Boolean).join(', '),
-        starRating: option.OptGeneral?.Class || '',
+        // Extract star rating to match the format used in dropdown ("5" not "5S")
+        starRating: (() => {
+          const classDesc = option.OptGeneral?.ClassDescription || ''
+          const classCode = option.OptGeneral?.Class || ''
+
+          // Try ClassDescription first (e.g., "5 Star" -> "5")
+          if (classDesc) {
+            const match = classDesc.match(/(\d+)\s*[Ss]tar/)
+            if (match) return match[1]
+          }
+
+          // Try Class field (e.g., "5S" -> "5")
+          if (classCode) {
+            const match = classCode.match(/(\d+)S/)
+            if (match) return match[1]
+          }
+
+          return classCode // Fallback to raw value
+        })(),
         locality: locality,
         // Pricing info (convert from cents to dollars)
         pricePerNight: isRealAccommodation && stayResults.TotalPrice ? Math.round(stayResults.TotalPrice / 100) : null,
@@ -330,32 +347,28 @@ export async function GET(request: NextRequest) {
       console.log(`🏨 Filtered from ${beforeFilter} to ${accommodations.length} accommodation-focused results`)
     } else if (useButtonDestinations) {
       console.log('🏨 Using real accommodation results from ButtonDestinations')
-      
-      // Apply exact room type filtering if specified - pass to TourPlan API
-      if (roomClass) {
-        console.log(`🏨 Should filter by exact room type in API call: ${roomClass}`)
-        // Note: Room type filtering should be done in the API request, not client-side
-        // The current implementation will be updated to pass room type to TourPlan API
+
+      // Apply star rating filtering if specified
+      if (starRating) {
+        console.log(`🏨 Filtering by star rating: ${starRating}`)
 
         const beforeFilter = accommodations.length
-        const classLabel = roomClass.replace('-', ' ').toLowerCase()
 
-        // For now, apply strict exact matching until API filtering is implemented
+        // Filter by exact star rating match
         accommodations = accommodations.filter((acc: any) => {
-          const roomType = (acc.roomType || '').toLowerCase()
-          const name = (acc.name || '').toLowerCase()
-          const description = (acc.description || '').toLowerCase()
-
-          // Exact word matching - prevent "luxury suite" from matching "luxury villa"
-          const matchesRoomType = roomType === classLabel ||
-                                  roomType.includes(classLabel) && isExactRoomTypeMatch(roomType, classLabel)
-          const matchesName = name.includes(classLabel) && isExactRoomTypeMatch(name, classLabel)
-          const matchesDescription = description.includes(classLabel) && isExactRoomTypeMatch(description, classLabel)
-
-          return matchesRoomType || matchesName || matchesDescription
+          return acc.starRating === starRating
         })
 
-        console.log(`🏨 Exact room type filter: from ${beforeFilter} to ${accommodations.length} results for: ${roomClass}`)
+        const starRatingLabel = {
+          '1': '1 Star',
+          '2': '2 Star',
+          '3': '3 Star',
+          '4': '4 Star',
+          '5': '5 Star',
+          '6': 'Luxury (6 Star)'
+        }[starRating] || `${starRating} Star`
+
+        console.log(`🏨 Star rating filter: from ${beforeFilter} to ${accommodations.length} results for: ${starRatingLabel}`)
       } else if (groupByHotel) {
         // Group by hotel name when no room type specified AND grouping is enabled
         console.log('🏨 Grouping accommodations by hotel name')

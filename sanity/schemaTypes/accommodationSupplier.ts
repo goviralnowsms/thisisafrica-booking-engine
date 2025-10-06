@@ -43,7 +43,7 @@ export default defineType({
       of: [
         defineField({
           type: 'object',
-          name: 'galleryImage',
+          name: 'accommodationGalleryImage',
           title: 'Gallery Image',
           fields: [
             defineField({

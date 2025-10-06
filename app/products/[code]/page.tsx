@@ -947,24 +947,65 @@ export default function ProductDetailsPage() {
               </p>
               
               <div className="flex gap-4">
-                {product.rates?.find(rate => {
-                  const rateValue = rate.twinRateTotal || rate.twinRate || 0
-                  return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
-                }) ? (
-                  <Link 
-                    href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&inquiry=best-rates`}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
-                  >
-                    Contact Us for Best Rates
-                  </Link>
-                ) : (
-                  <Link 
-                    href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}`}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
-                  >
-                    Request Quote
-                  </Link>
-                )}
+                {(() => {
+                  const hasRates = product.rates?.find(rate => {
+                    const rateValue = rate.twinRateTotal || rate.twinRate || 0
+                    return (typeof rateValue === 'string' ? parseFloat(rateValue) : rateValue) > 0
+                  })
+
+                  // Check if this is a group tour (GT codes) with known availability
+                  const isGroupTour = product.code?.includes('GT') || false
+                  const isGroupTourWithAvailability = product.code && [
+                    'NBOGTARP001CKSE',      // Classic Kenya - Serena lodges
+                    'NBOGTARP001CKEKEE',    // Classic Kenya - Keekorok lodges
+                    'NBOGTARP001CKSM',      // Classic Kenya - Mixed lodges
+                    'NBOGTSOAEASSNM061',    // East Africa tour
+                    'NBOGTSOAEASSNM131',    // East Africa tour variant
+                  ].includes(product.code)
+
+                  // Debug logging
+                  console.log(`🔍 Product Debug:`, {
+                    code: product.code,
+                    hasRates: !!hasRates,
+                    isGroupTour,
+                    isGroupTourWithAvailability,
+                    shouldShowBookNow: hasRates && isGroupTour && isGroupTourWithAvailability
+                  })
+
+                  // Group tours with rates and availability should show Book Now
+                  if (hasRates && isGroupTour && isGroupTourWithAvailability) {
+                    return (
+                      <Link
+                        href={`/booking-new?productCode=${product.code}&productName=${encodeURIComponent(product.name)}`}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-lg text-lg"
+                      >
+                        🎯 Book Now
+                      </Link>
+                    )
+                  }
+                  // All other products with rates (accommodation, packages, etc.) should contact for best rates
+                  else if (hasRates) {
+                    return (
+                      <Link
+                        href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}&inquiry=best-rates`}
+                        className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
+                      >
+                        Contact Us for Best Rates
+                      </Link>
+                    )
+                  }
+                  // No rates - request quote
+                  else {
+                    return (
+                      <Link
+                        href={`/contact?tour=${product.code}&name=${encodeURIComponent(product.name)}`}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-3 rounded-lg text-lg"
+                      >
+                        Request Quote
+                      </Link>
+                    )
+                  }
+                })()}
                 <a 
                   href="#overview"
                   className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-3 rounded-lg text-lg inline-block"

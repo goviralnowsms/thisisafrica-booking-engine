@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
     <RoomConfigs>
       <RoomConfig>
         <Adults>2</Adults>
-        <Type>DB</Type>
+        <Children>0</Children>
+        <RoomType>DB</RoomType>
       </RoomConfig>
     </RoomConfigs>
   </OptionInfoRequest>
@@ -149,58 +150,103 @@ export async function GET(request: NextRequest) {
       console.log(`🏨 Filtered to ${filteredOptions.length} options for destination: ${destination}`)
     }
 
-    // Extract room types from filtered options
-    const roomTypeSet = new Set<string>()
+    // Extract star ratings from filtered options
+    const starRatingSet = new Set<string>()
 
-    // Extract room types directly from the parsed API data
-    filteredOptions.forEach((option: any) => {
-      const description = option.OptGeneral?.Description || ''
-      const productCode = option.Opt || ''
-      const supplierName = option.OptGeneral?.SupplierName || ''
+    // Extract star ratings from the parsed API data
+    filteredOptions.forEach((option: any, index: number) => {
+      const starRating = option.OptGeneral?.Class || ''
+      const optCode = option.Opt || 'Unknown'
+      const supplierName = option.OptGeneral?.SupplierName || 'Unknown'
 
-      // Use the same room type extraction logic as the hotel-rooms API
-      if (description && description.trim() !== '') {
-        // Clean and normalize the description
-        const cleanDescription = description
-          .replace(/\s+/g, ' ')
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .trim()
+      console.log(`🏨 Option ${index + 1}: Code=${optCode}, Supplier=${supplierName}, Class="${starRating}"`)
 
-        if (cleanDescription.length > 0) {
-          roomTypeSet.add(cleanDescription)
-        }
+      // Debug: Check what other fields might contain star rating info
+      if (option.OptGeneral) {
+        const keys = Object.keys(option.OptGeneral)
+        console.log(`🏨   Available OptGeneral fields:`, keys)
+
+        // Look for any field that might contain rating info
+        keys.forEach(key => {
+          const value = option.OptGeneral[key]
+          if (typeof value === 'string' && /\d/.test(value)) {
+            console.log(`🏨   ${key}: "${value}"`)
+          }
+        })
       }
 
-      // Also extract from product codes as fallback
-      if (productCode.includes('AC')) {
-        const acIndex = productCode.indexOf('AC')
-        const afterAC = productCode.substring(acIndex + 2)
+      // Check ClassDescription first (more reliable)
+      const classDescription = option.OptGeneral?.ClassDescription || ''
 
-        // Extract room type from code patterns
-        if (afterAC.includes('LS') || afterAC.endsWith('LS')) roomTypeSet.add('Luxury Suite')
-        else if (afterAC.includes('LV') || afterAC.endsWith('LV')) roomTypeSet.add('Luxury Villa')
-        else if (afterAC.includes('LM') || afterAC.endsWith('LM')) roomTypeSet.add('Manor Suite')
-        else if (afterAC.includes('DL') || afterAC.endsWith('DL')) roomTypeSet.add('Deluxe Suite')
-        else if (afterAC.includes('EX') || afterAC.endsWith('EX')) roomTypeSet.add('Executive Suite')
-        else if (afterAC.includes('SU') || afterAC.endsWith('SU')) roomTypeSet.add('Suite')
-        else if (afterAC.includes('ST') || afterAC.endsWith('ST')) roomTypeSet.add('Standard Room')
-        else if (afterAC.includes('TN') || afterAC.endsWith('TN')) roomTypeSet.add('Luxury Tent')
-        else if (afterAC.includes('FM') || afterAC.endsWith('FM')) roomTypeSet.add('Family Room')
+      // Extract star rating from ClassDescription (e.g., "5 Star" → "5")
+      if (classDescription) {
+        const starMatch = classDescription.match(/(\d+)\s*[Ss]tar/)
+        if (starMatch) {
+          const starNumber = starMatch[1]
+          starRatingSet.add(starNumber)
+          console.log(`🏨   ✅ Added star rating from ClassDescription: ${starNumber} (from "${classDescription}")`)
+        } else {
+          console.log(`🏨   ❌ ClassDescription "${classDescription}" doesn't match star pattern`)
+        }
+      }
+      // Fallback: Handle Class field with various formats
+      else if (starRating) {
+        // Handle "5S" format
+        const starSMatch = starRating.match(/(\d+)S/)
+        if (starSMatch) {
+          const starNumber = starSMatch[1]
+          starRatingSet.add(starNumber)
+          console.log(`🏨   ✅ Added star rating from Class: ${starNumber} (from "${starRating}")`)
+        }
+        // Handle numeric codes (15, 25, 35, 45, 55, 65)
+        else if (['15', '25', '35', '45', '55', '65'].includes(starRating.toString())) {
+          const starNumber = Math.floor(parseInt(starRating) / 10).toString()
+          starRatingSet.add(starNumber)
+          console.log(`🏨   ✅ Added star rating from numeric code: ${starNumber} (from code "${starRating}")`)
+        }
+        // Handle descriptive codes
+        else {
+          const descriptiveToStar: { [key: string]: string } = {
+            'BA': '2',   // Basic → 2 Star
+            'DL': '3',   // Deluxe → 3 Star
+            'DL+': '4',  // Deluxe plus → 4 Star
+            'LU': '5',   // Luxury → 5 Star
+            'ST': '3',   // Standard → 3 Star
+          }
+
+          const mappedStar = descriptiveToStar[starRating.toString().toUpperCase()]
+          if (mappedStar) {
+            starRatingSet.add(mappedStar)
+            console.log(`🏨   ✅ Mapped class "${starRating}" to star rating: ${mappedStar}`)
+          } else {
+            console.log(`🏨   ❌ Star rating "${starRating}" not recognized`)
+          }
+        }
+      } else {
+        console.log(`🏨   ❌ No Class or ClassDescription field found`)
       }
     })
 
-    // Convert to array format
-    const roomTypes = Array.from(roomTypeSet).map(roomType => ({
-      value: roomType.toLowerCase().replace(/\s+/g, '-'),
-      label: roomType
-    })).sort((a, b) => a.label.localeCompare(b.label))
+    // Map star numbers to labels
+    const starRatingMap: { [key: string]: string } = {
+      '1': '1 Star',
+      '2': '2 Star',
+      '3': '3 Star',
+      '4': '4 Star',
+      '5': '5 Star',
+      '6': 'Luxury (6 Star)'
+    }
+
+    // Convert to array format, ordered by star rating
+    const roomTypes = Array.from(starRatingSet)
+      .sort() // This will sort '15', '25', '35', etc. in order
+      .map(code => ({
+        value: code,  // Keep the TourPlan code as value for filtering
+        label: starRatingMap[code] || `${code} Star`
+      }))
 
     const locationDesc = destination ? `${country} > ${destination}` : country
-    console.log(`🏨 Found ${roomTypes.length} room types for ${locationDesc}:`, roomTypes.map(rt => rt.label))
+    console.log(`🏨 Found ${roomTypes.length} star ratings for ${locationDesc}:`, roomTypes.map(rt => rt.label))
 
     // Cache the results
     roomTypesCache[cacheKey] = {
@@ -214,7 +260,7 @@ export async function GET(request: NextRequest) {
       country,
       destination,
       cached: false,
-      message: `Found ${roomTypes.length} room types for ${locationDesc}`
+      message: `Found ${roomTypes.length} star ratings for ${locationDesc}`
     })
 
   } catch (error) {

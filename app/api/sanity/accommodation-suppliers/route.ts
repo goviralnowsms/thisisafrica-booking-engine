@@ -6,6 +6,7 @@ const client = createClient({
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-01-01',
   useCdn: true,
+  token: process.env.SANITY_API_TOKEN, // Add token for write operations
 })
 
 export async function GET(request: NextRequest) {
@@ -89,6 +90,55 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: 'Failed to fetch accommodation suppliers'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+
+    // Validate required fields
+    if (!body.supplierName) {
+      return NextResponse.json(
+        { success: false, error: 'supplierName is required' },
+        { status: 400 }
+      )
+    }
+
+    // Create the accommodation supplier document
+    const doc = {
+      _type: 'accommodationSupplier',
+      supplierName: body.supplierName,
+      supplierCode: body.supplierCode || null,
+      description: body.description || null,
+      location: body.location || null,
+      type: body.type || null,
+      category: body.category || null,
+      associatedProductCodes: body.associatedProductCodes || [],
+      amenities: body.amenities || [],
+      active: body.active !== undefined ? body.active : true,
+      featured: body.featured || false,
+      sortOrder: body.sortOrder || null,
+      notes: body.notes || null,
+    }
+
+    const result = await client.create(doc)
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+      message: `Accommodation supplier "${body.supplierName}" created successfully`
+    })
+  } catch (error) {
+    console.error('Error creating accommodation supplier:', error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to create accommodation supplier',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
