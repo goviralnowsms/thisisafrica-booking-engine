@@ -413,11 +413,6 @@ export default function AccommodationPage() {
             }
           })()
 
-          // Debug log for Portswood specifically
-          if (hotelName.includes('portswood') || supplier.includes('portswood')) {
-            console.log(`🏨 PORTSWOOD DEBUG - Destination: "${destination}", Locality: "${locality}", Hotel: "${hotelName}", Match: ${isMatch}`)
-          }
-
           return isMatch
         })
 
@@ -744,37 +739,6 @@ export default function AccommodationPage() {
       {searchPerformed && (
         <section className="py-8">
           <div className="container mx-auto px-4">
-            {/* Destination Filter Checkboxes */}
-            {availableDestinationFilters.length > 1 && !selectedDestination && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold mb-3">Filter by Specific Locations:</h3>
-                <div className="flex flex-wrap gap-4">
-                  {availableDestinationFilters.map(destination => (
-                    <label key={destination} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`destination-${destination}`}
-                        checked={selectedDestinationFilters.includes(destination)}
-                        onCheckedChange={(checked) => 
-                          handleDestinationFilterChange(destination, checked === true)
-                        }
-                      />
-                      <span className="text-sm">{destination}</span>
-                    </label>
-                  ))}
-                </div>
-                {selectedDestinationFilters.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDestinationFilters([])}
-                    className="mt-3"
-                  >
-                    Clear location filters
-                  </Button>
-                )}
-              </div>
-            )}
-
             {/* Results Header */}
             <div className="flex justify-between items-center mb-6">
               <div>

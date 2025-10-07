@@ -180,10 +180,11 @@ export default function PackagesPage() {
       // No filters selected - show all tours
       setFilteredTours(tours)
     } else {
-      // Filter tours that include at least one of the selected countries
+      // Filter tours that include ALL of the selected countries (AND logic)
       const filtered = tours.filter((tour: any) => {
         if (!tour.countries || !Array.isArray(tour.countries)) return false
-        return selectedDestinationFilters.some(selectedCountry =>
+        // Tour must visit ALL selected countries
+        return selectedDestinationFilters.every(selectedCountry =>
           tour.countries.includes(selectedCountry)
         )
       })
