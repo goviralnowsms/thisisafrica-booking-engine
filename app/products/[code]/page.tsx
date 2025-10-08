@@ -765,45 +765,40 @@ export default function ProductDetailsPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{displayName}</h1>
             
             {/* Room Type Selector for Accommodation */}
-            {isAccommodation && (
+            {isAccommodation && availableRoomTypes.length > 0 && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                <div className="text-sm text-gray-600 mb-2">
-                  Debug: Accommodation={isAccommodation ? 'Yes' : 'No'}, 
-                  Loading={loadingRoomTypes ? 'Yes' : 'No'}, 
-                  Room Types Found={availableRoomTypes.length}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700">
+                    {availableRoomTypes.length > 1 ? 'Select Room Type:' : 'Room Type:'}
+                  </label>
+                  <Select
+                    value={selectedRoomType || productCode}
+                    onValueChange={handleRoomTypeChange}
+                    disabled={loadingRoomTypes || availableRoomTypes.length === 1}
+                  >
+                    <SelectTrigger className="w-64">
+                      <SelectValue placeholder="Choose room type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoomTypes.map((roomType) => (
+                        <SelectItem
+                          key={roomType.productCode}
+                          value={roomType.productCode}
+                        >
+                          {roomType.roomType}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {loadingRoomTypes && (
+                    <span className="text-sm text-gray-500">Loading room types...</span>
+                  )}
                 </div>
-                {(availableRoomTypes.length > 1 || loadingRoomTypes) && (
-                  <div className="flex items-center gap-4">
-                    <label className="text-sm font-medium text-gray-700">
-                      Select Room Type:
-                    </label>
-                    <Select 
-                      value={selectedRoomType || productCode} 
-                      onValueChange={handleRoomTypeChange}
-                      disabled={loadingRoomTypes}
-                    >
-                      <SelectTrigger className="w-64">
-                        <SelectValue placeholder="Choose room type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableRoomTypes.map((roomType) => (
-                          <SelectItem 
-                            key={roomType.productCode} 
-                            value={roomType.productCode}
-                          >
-                            {roomType.roomType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {loadingRoomTypes && (
-                      <span className="text-sm text-gray-500">Loading room types...</span>
-                    )}
-                  </div>
+                {availableRoomTypes.length > 1 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Different room types may have different pricing and availability
+                  </p>
                 )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Different room types may have different pricing and availability
-                </p>
               </div>
             )}
           </div>

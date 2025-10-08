@@ -32,7 +32,7 @@ export async function GET(
         <DestinationName>South Africa</DestinationName>
       </ButtonDestination>
     </ButtonDestinations>
-    <Info>G</Info>
+    <Info>GSI</Info>
     <DateFrom>2026-07-15</DateFrom>
     <DateTo>2026-07-18</DateTo>
     <RoomConfigs>

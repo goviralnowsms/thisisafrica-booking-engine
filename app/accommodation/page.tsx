@@ -860,7 +860,7 @@ export default function AccommodationPage() {
                       {/* CTA Buttons */}
                       <div className="flex flex-col gap-2">
                         <Link
-                          href={`/accommodation/hotel/${encodeURIComponent(tour.name.split(' - ')[0])}?productCode=${tour.code || tour.id}${selectedClass ? `&roomType=${encodeURIComponent(selectedClass)}` : ''}`}
+                          href={`/accommodation/hotel/${encodeURIComponent(tour.name.split(' - ')[0])}?productCode=${tour.code || tour.id}`}
                           className="w-full"
                         >
                           <Button className="w-full bg-amber-500 hover:bg-amber-600">
